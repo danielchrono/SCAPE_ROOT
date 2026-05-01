@@ -1,0 +1,5 @@
+*.db
+*.log
+SCAPE_Deploy/
+temp/
+.vscode/
