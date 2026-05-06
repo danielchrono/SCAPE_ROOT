@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Carving.Healer
@@ -14,9 +14,9 @@ function Initialize-ScapeHealer {
     [OutputType([void])]
     param()
     $Script:C = @{
-        CARVING = Get-ScapeConstant -Path "carving::SIGNATURES" -Fallback @{}
-        ENGINE  = Get-ScapeConstant -Path "carving::ENGINE" -Fallback @{}
-        FS      = Get-ScapeConstant -Path "fs::FS" -Fallback @{}
+        CARVING = Get-ScapeConstant -Path "storage::SIGNATURES" -Fallback @{}
+        ENGINE  = Get-ScapeConstant -Path "storage::ENGINE" -Fallback @{}
+        FS      = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{ Action = "LogLine"; Key = "HEALER_INITIALIZED"; Severity = "LOG_INFO" }
 }

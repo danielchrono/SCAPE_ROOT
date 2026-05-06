@@ -1,9 +1,9 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Analyzer
     Description: Root orchestrator for Layer 2. Routes raw buffers to FS Abstraction or Raw Carver based on detection.
-    Architecture: FP Strict | Zero Hardcode | Event-Pipeline | Hardware-Aware
+    Architecture: FP Strict | Zero Hardcode | Event-Pipeline | Hardware-Aware | TreeView-Ready
 #>
 
 $Script:C = $null
@@ -17,7 +17,7 @@ function Initialize-ScapeAnalyzer {
         if ($Script:Initialized) { return }
 
         $Script:C = @{
-            LIMITS = Get-ScapeConstant -Path "behavior::LIMITS" -Fallback @{}
+            LIMITS = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
             HW     = Get-ScapeConstant -Path "hardware" -Fallback @{}
         }
 
@@ -50,6 +50,13 @@ function Start-ScapeAnalysisStream {
 
         if (-not $Script:Initialized) { Initialize-ScapeAnalyzer }
 
+        # ── TreeView Hook: Notifica início do parsing por setor ──
+        if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
+            Publish-ScapeTreeUpdate -TreeId 'Analysis_Stream' -TitleKey 'ANALYSIS_FS_PARSED' -Nodes @(
+                @{ Path = "$VolumeSerial/Stream/Offset_$PhysicalOffset"; Icon = "Processing"; Status = 'Loading' }
+            )
+        }
+
         if (-not $ForceCarving) {
             $fsType = Resolve-ScapeFSType -Buffer $SectorBuffer
 
@@ -57,20 +64,33 @@ function Start-ScapeAnalysisStream {
                 $result = Invoke-ScapeFSParser -FSType $fsType -Buffer $SectorBuffer -Offset $PhysicalOffset -VolumeSerial $VolumeSerial
 
                 if ($null -ne $result) {
+                    # ── TreeView Hook: Atualiza status para Ready quando FS é parseado ──
+                    if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
+                        Publish-ScapeTreeUpdate -TreeId 'Analysis_Stream' -TitleKey 'ANALYSIS_FS_PARSED' -Nodes @(
+                            @{ Path = "$VolumeSerial/FS/$fsType/Offset_$PhysicalOffset"; Icon = "Database"; Status = 'Ready' }
+                        )
+                    }
                     Publish-ScapeEvent -Type "LOG_DEBUG" -Payload @{ Action = "LogLine"; Message = "FS parsed: $fsType at offset $PhysicalOffset" }
                     return $result
                 }
             }
         }
 
+        # Fallback para Carving
         $activeProfile = Get-ScapeActiveProfile
         $ramLimit = if ($activeProfile -and $activeProfile.ContainsKey('RAM_BUFFER_MB')) { [int]$activeProfile['RAM_BUFFER_MB'] } else { 0 }
         $enableBP = $ramLimit -lt 128
 
         $result = Invoke-ScapeRawCarving -Buffer $SectorBuffer -PhysicalOffset $PhysicalOffset -VolumeSerial $VolumeSerial -EnableBackpressure:$enableBP
 
-        Publish-ScapeEvent -Type "LOG_DEBUG" -Payload @{ Action = "LogLine"; Message = "Carving completed: $($result.Carved) artifacts at offset $PhysicalOffset" }
+        # ── TreeView Hook: Notifica artefatos recuperados via carving ──
+        if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue -and $result.Carved -gt 0) {
+            Publish-ScapeTreeUpdate -TreeId 'Analysis_Carving' -TitleKey 'CARVE_RECORD_ADDED' -Nodes @(
+                @{ Path = "$VolumeSerial/Carved/Artifacts_$($result.Carved)"; Icon = "FileArchive"; Status = 'Ready' }
+            )
+        }
 
+        Publish-ScapeEvent -Type "LOG_DEBUG" -Payload @{ Action = "LogLine"; Message = "Carving completed: $($result.Carved) artifacts at offset $PhysicalOffset" }
         return $result
     }
     end {
@@ -103,8 +123,23 @@ function Invoke-ScapeBatchAnalysis {
 
             if ($i % $progressInterval -eq 0) {
                 Publish-ScapeEvent -Type "PROGRESS" -Payload @{ Action = "ProgressBar"; TaskID = 1; Current = $i; Total = $SectorBatch.Count; Label = "Analyzing sectors..." }
+                if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+                # ── TreeView Hook: Atualiza progresso em lote ──
+                if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
+                    Publish-ScapeTreeUpdate -TreeId 'Analysis_Batch' -TitleKey 'PIPE_BATCH_START' -Nodes @(
+                        @{ Path = "$VolumeSerial/Batch/Progress_$i/$($SectorBatch.Count)"; Icon = "Processing"; Status = 'Loading' }
+                    )
+                }
             }
         }
+
+        # ── TreeView Hook: Finaliza batch ──
+        if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
+            Publish-ScapeTreeUpdate -TreeId 'Analysis_Batch' -TitleKey 'PIPE_BATCH_COMPLETE' -Nodes @(
+                @{ Path = "$VolumeSerial/Batch/Complete"; Icon = "Success"; Status = 'Ready' }
+            )
+        }
+
         return [System.Object[]]$results.ToArray()
     }
 }

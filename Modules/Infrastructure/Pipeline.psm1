@@ -1,7 +1,7 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Pipeline
-    Architecture: High-throughput, backpressure-aware memory data pipeline.
+    Description: High-throughput, backpressure-aware memory data pipeline.
 #>
 
 $Script:PipelineBuffer = $null
@@ -12,47 +12,65 @@ function Initialize-ScapePipeline {
     [OutputType([bool])]
     param()
 
-    $bufferSize = Get-ScapeConstant -Path "db::FILEMAP::FRAGMAP_CACHE_SIZE" -Fallback 10000
+    $bufferSize = Get-ScapeConstant -Path "storage::Buffer::BATCH_SIZE" -Fallback 10000
     $Script:PipelineBuffer = [System.Collections.Concurrent.BlockingCollection[PSCustomObject]]::new($bufferSize)
 
-    if (Get-Command "Register-ScapeEventListener" -ErrorAction SilentlyContinue) {
-        Register-ScapeEventListener -EventMatch "CARVED_ARTIFACT_FOUND" -Action { param($evt) Add-ScapePipelineArtifact -IncomingEvt $evt }
-        Register-ScapeEventListener -EventMatch "FS_RECORD_EXTRACTED" -Action { param($evt) Add-ScapePipelineRecord -IncomingEvt $evt }
+    if (Get-Command Register-ScapeEventListener -ErrorAction SilentlyContinue) {
+        Register-ScapeEventListener -EventMatch "CARVED_ARTIFACT_FOUND" -Action {
+            param($evt) Add-ScapePipelineArtifact -IncomingEvt $evt
+        }
+        Register-ScapeEventListener -EventMatch "FS_RECORD_EXTRACTED" -Action {
+            param($evt) Add-ScapePipelineRecord -IncomingEvt $evt
+        }
     }
 
-    if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
-        Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{ Action = "LogLine"; Key = "PIPELINE_INITIALIZED"; Args = @("Capacity: $bufferSize"); Severity = "LOG_INFO" }
+    $msgInit = Get-ScapeLogMsg -Key "CORE_ENGINE_START" -MsgArgs @()
+    Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
+        Action   = "LogLine"
+        Key      = "CORE_ENGINE_START"
+        Args     = @("Capacity: $bufferSize")
+        Severity = "LOG_INFO"
+        Message  = $msgInit
     }
     return $true
 }
 
 function Add-ScapePipelineArtifact {
     param([PSCustomObject]$IncomingEvt)
-    if ($null -eq $IncomingEvt -or $null -eq $IncomingEvt.Payload -or $Script:PipelineBuffer.IsAddingCompleted) { return }
+    if (-not $IncomingEvt -or -not $IncomingEvt.Payload -or $Script:PipelineBuffer.IsAddingCompleted) { return }
 
     $artifact = $IncomingEvt.Payload
     $confidence = if ($null -ne $artifact.Confidence) { $artifact.Confidence } else { 1.0 }
-    $minConf = Get-ScapeConstant -Path "db::FILEMAP::MIN_CONFIDENCE_THRESHOLD" -Fallback 0.6
+    $minConf = Get-ScapeConstant -Path "network::FILEMAP::MIN_CONFIDENCE_THRESHOLD" -Fallback 0.6
 
     if ($confidence -lt $minConf -and $Script:PipelineBuffer.Count -ge $Script:PipelineBuffer.BoundedCapacity) {
         $Script:Stats.Dropped++
-        if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) { Publish-ScapeEvent -Type "PIPELINE_DROPPED" -Severity "LOG_DEBUG" -Payload @{ Reason = "LOW_CONFIDENCE_BUFFER_FULL" } }
+        $msgDrop = Get-ScapeLogMsg -Key "STATUS_FAILED" -MsgArgs @("LOW_CONFIDENCE_BUFFER_FULL")
+        Publish-ScapeEvent -Type "PIPELINE_DROPPED" -Severity "LOG_DEBUG" -Payload @{ Reason = "STATUS_FAILED"; Message = $msgDrop }
         return
     }
 
-    $envelope = [PSCustomObject]@{ Source = "CARVER"; Type = "ARTIFACT"; Timestamp = [DateTime]::UtcNow; Data = $artifact }
-    $timeoutMs = Get-ScapeConstant -Path "behavior::BEHAVIOR::ASYNC_OP_TIMEOUT_MS" -Fallback 30000
-
+    $envelope = [PSCustomObject]@{
+        Source    = "CARVER"
+        Type      = "ARTIFACT"
+        Timestamp = [DateTime]::UtcNow
+        Data      = $artifact
+    }
+    $timeoutMs = Get-ScapeConstant -Path "system::Limits::ASYNC_OP_TIMEOUT_MS" -Fallback 30000
     if ($Script:PipelineBuffer.TryAdd($envelope, $timeoutMs)) { $Script:Stats.Received++ } else { $Script:Stats.Dropped++ }
 }
 
 function Add-ScapePipelineRecord {
     param([PSCustomObject]$IncomingEvt)
-    if ($null -eq $IncomingEvt -or $null -eq $IncomingEvt.Payload -or $Script:PipelineBuffer.IsAddingCompleted) { return }
+    if (-not $IncomingEvt -or -not $IncomingEvt.Payload -or $Script:PipelineBuffer.IsAddingCompleted) { return }
 
-    $record = if ($null -ne $IncomingEvt.Payload.Record) { $IncomingEvt.Payload.Record } else { $IncomingEvt.Payload }
-    $envelope = [PSCustomObject]@{ Source = "FS_PARSER"; Type = "METADATA"; Timestamp = [DateTime]::UtcNow; Data = $record }
-
+    $record = if ($IncomingEvt.Payload.Record) { $IncomingEvt.Payload.Record } else { $IncomingEvt.Payload }
+    $envelope = [PSCustomObject]@{
+        Source    = "FS_PARSER"
+        Type      = "METADATA"
+        Timestamp = [DateTime]::UtcNow
+        Data      = $record
+    }
     $Script:PipelineBuffer.Add($envelope)
     $Script:Stats.Received++
 }

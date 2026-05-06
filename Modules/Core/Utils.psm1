@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.Utils
     Pure logic helpers: mathematics, data transformation, safe extraction, and I/O Wrapper.
@@ -69,7 +69,7 @@ function Get-ScapeProperty {
         [Parameter()][object]$Fallback = $null
     )
     process {
-        if ([string]::IsNullOrWhiteSpace($PropertyName)) { return $Fallback }
+        if ($Object.ContainsKey($PropertyName)) { return $Object[$PropertyName] }
         if ($null -eq $Object) { return $Fallback }
         try {
             if ($Object -is [System.Collections.IDictionary]) {
@@ -178,5 +178,101 @@ function Invoke-ScapeMathClamp {
     )
     process {
         return [math]::Max($Min, [math]::Min($Max, $Value))
+    }
+}
+
+function Join-ScapePath {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $false)][AllowEmptyString()][string]$Base = "",
+        [Parameter(Mandatory = $false)][AllowEmptyString()][string]$Child = ""
+    )
+    process {
+        # Limpa barras sobrando para evitar \\ duplicadas
+        $b = $Base.TrimEnd('\', '/')
+        $c = $Child.TrimStart('\', '/')
+
+        if ([string]::IsNullOrWhiteSpace($b)) { return $c }
+        if ([string]::IsNullOrWhiteSpace($c)) { return $b }
+
+        try {
+            return [System.IO.Path]::Combine($b, $c)
+        }
+        catch {
+            # Fallback absoluto caso a classe do .NET falhe por caractere ilegal
+            return "$b\$c"
+        }
+    }
+}
+
+function Test-ScapePath {
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param(
+        [Parameter(Mandatory = $false)][AllowEmptyString()][string]$Base,
+        [Parameter(Mandatory = $false)][AllowEmptyString()][string]$Child,
+        [switch]$Leaf
+    )
+    process {
+        $full = Join-ScapePath -Base $Base -Child $Child
+        if ([string]::IsNullOrWhiteSpace($full)) { return $false }
+        if ($Leaf) {
+            Test-Path -LiteralPath $full -PathType Leaf
+        }
+        else {
+            Test-Path -LiteralPath $full
+        }
+    }
+}
+
+function Publish-ScapeTreeUpdate {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)][string]$TreeId, # Ex: 'Build_Extract', 'Analysis_FS'
+        [Parameter(Mandatory = $true)][hashtable[]]$Nodes,
+        [string]$TitleKey = 'TREE_DEFAULT_TITLE'
+    )
+    process {
+        Publish-ScapeEvent -Type "TREE_UPDATE" -Severity "INFO" -Payload @{
+            TreeId   = $TreeId
+            Nodes    = $Nodes
+            TitleKey = $TitleKey
+        }
+    }
+}
+
+function Invoke-ScapeProgressWrapper {
+    [CmdletBinding()]
+    [OutputType([array])]
+    param(
+        [Parameter(Mandatory = $true)][array]$Items,
+        [Parameter(Mandatory = $true)][string]$StageLabel,
+        [Parameter(Mandatory = $true)][ScriptBlock]$ActionBlock
+    )
+    process {
+        $total = $Items.Count
+        if ($total -eq 0) { return @() }
+
+        $results = New-Object System.Collections.Generic.List[object]
+        for ($i = 0; $i -lt $total; $i++) {
+            Publish-ScapeEvent -Type "PROGRESS" -Severity "LOG_INFO" -Payload @{
+                Stage   = $StageLabel
+                Current = $i
+                Total   = $total
+            }
+            if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) {
+                Invoke-ScapeIdlePump | Out-Null
+            }
+            $res = & $ActionBlock $Items[$i]
+            if ($null -ne $res) { $results.Add($res) }
+        }
+        Publish-ScapeEvent -Type "PROGRESS" -Severity "LOG_INFO" -Payload @{
+            Stage   = $StageLabel
+            Current = $total
+            Total   = $total
+        }
+        Invoke-ScapeIdlePump | Out-Null
+        return $results.ToArray()
     }
 }

@@ -1,12 +1,11 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.EventBus
-    Description: Thread-Safe, Lock-Free Asynchronous Event Bus. Implements dynamic
-                 Backpressure dropping and standardized Exception unrolling.
+    Architecture: Thread-Safe, Lock-Free Asynchronous Event Bus.
 #>
 
-# Encapsulamento em escopo de Script em vez de Global
 $Script:EventQueue = [System.Collections.Concurrent.ConcurrentQueue[object]]::new()
+$Script:EventSubscribers = [System.Collections.Generic.List[hashtable]]::new()
 
 function Publish-ScapeEvent {
     [CmdletBinding()]
@@ -16,10 +15,23 @@ function Publish-ScapeEvent {
         [string]$Severity = "LOG_INFO"
     )
 
-    # Lógica de Backpressure (Volume original preservado)
     $maxQueue = 10000
     if ($Script:EventQueue.Count -ge $maxQueue) {
         if ($Severity -match "^(TRACE|DEBUG|METRIC)$") { return }
+    }
+
+    # IDENTIFICAÇÃO DE ORIGEM (CALLER ID REAL)
+    $caller = "SYSTEM_CORE"
+    $stack = Get-PSCallStack
+    if ($null -ne $stack) {
+        # Ignora a própria publicação e os blocos anônimos dos listeners para achar o dono da ação
+        for ($i = 1; $i -lt $stack.Count; $i++) {
+            $cmd = $stack[$i].Command
+            if ($cmd -notmatch 'Publish-ScapeEvent|<ScriptBlock>') {
+                $caller = $cmd
+                break
+            }
+        }
     }
 
     $timeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ"
@@ -28,17 +40,13 @@ function Publish-ScapeEvent {
         Type      = $Type
         Severity  = $Severity
         Payload   = $Payload
+        Source    = $caller
     }
 
     $Script:EventQueue.Enqueue($EventFrame)
 }
 
 function Publish-ScapeError {
-    <#
-    .SYNOPSIS
-        Desempacota ErrorRecords nativos do PowerShell e System.Exceptions para
-        captura detalhada de bugs, impedindo a perda do StackTrace.
-    #>
     param(
         [Parameter(Mandatory = $true)]$ErrorRecord,
         [string]$Context = "UNHANDLED_EXCEPTION",
@@ -103,8 +111,43 @@ function Publish-ScapeFault {
             }
         }
     }
-    catch {
-        # Fallback silencioso: se o EventBus falhar, não entra em loop infinito
-        Write-Verbose "FAULT [$Context]: $($ErrorRecord.Exception.Message)"
+    catch { Write-Verbose "FAULT [$Context]: $($ErrorRecord.Exception.Message)" }
+}
+
+function Register-ScapeEventListener {
+    [CmdletBinding()]
+    param([string]$EventMatch, [scriptblock]$Action)
+    $sub = @{ Match = $EventMatch; Action = $Action }
+    $Script:EventSubscribers.Add($sub)
+}
+
+function Invoke-ScapeIdlePump {
+    [CmdletBinding()]
+    param()
+
+    $eventFrame = $null
+    while ($Script:EventQueue.TryDequeue([ref]$eventFrame)) {
+        foreach ($sub in $Script:EventSubscribers) {
+            $isMatch = $false
+            if ($sub.Match -eq '*') { $isMatch = $true }
+            elseif ($sub.Match -like '*') {
+                try { $isMatch = $eventFrame.Type -like $sub.Match } catch { $isMatch = $false }
+            }
+            else {
+                try { $isMatch = $eventFrame.Type -match $sub.Match } catch { $isMatch = $false }
+            }
+
+            if ($isMatch) {
+                try { & $sub.Action $eventFrame }
+                catch {
+                    if ($_.Exception.Message -eq "SCAPE_HANDOVER") { throw $_ }
+                    Publish-ScapeEvent -Type "LISTENER_FAULT" -Severity "ERROR" -Payload @{
+                        ListenerMatch = $sub.Match
+                        EventType     = $eventFrame.Type
+                        Error         = $_.Exception.Message
+                    }
+                }
+            }
+        }
     }
 }

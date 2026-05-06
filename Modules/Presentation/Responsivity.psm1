@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Responsivity
     Module: Scape.Presentation.Responsivity
@@ -18,29 +18,6 @@ function Initialize-ScapeViewportState {
             LastWidth  = $current.Width
             LastHeight = $current.Height
             HasResized = $false
-        }
-    }
-}
-
-function Get-ScapeConsoleDimension {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param([Parameter(Mandatory = $false)][switch]$WithMargins)
-    process {
-        try {
-            $raw = $Host.UI.RawUI
-            $w = $raw.WindowSize.Width
-            $h = $raw.WindowSize.Height
-            $margin = if ($WithMargins) { 4 } else { 0 }
-
-            return @{
-                Width  = [Math]::Max(60, [Math]::Min($w - $margin, 140))
-                Height = [Math]::Max(15, $h - 5)
-            }
-        }
-        catch {
-            $null = $_ # PSScriptAnalyzer Fix
-            return @{ Width = 80; Height = 25 }
         }
     }
 }
@@ -78,5 +55,36 @@ function Get-ScapeSafeCoordinate {
             Left = [Math]::Max(0, [Math]::Min($Left, $dims.Width - 1))
             Top  = [Math]::Max(0, [Math]::Min($Top, $dims.Height - 1))
         }
+    }
+}
+
+function Set-ScapeViewportLocks {
+    [CmdletBinding()]
+    [OutputType([void])]
+    param()
+    process {
+        try {
+            $layout = Get-ScapeConstant -Path "ui::Layout"
+            $minWidth = $layout.MinWidth
+            $minHeight = $layout.MinHeight
+
+            $raw = $Host.UI.RawUI
+            $curW = $raw.WindowSize.Width
+            $curH = $raw.WindowSize.Height
+
+            $needsFix = $false
+            $newW = $curW
+            $newH = $curH
+
+            if ($curW -lt $minWidth) { $newW = $minWidth; $needsFix = $true }
+            if ($curH -lt $minHeight) { $newH = $minHeight; $needsFix = $true }
+
+            if ($needsFix) {
+                $size = New-Object System.Management.Automation.Host.Size($newW, $newH)
+                $raw.WindowSize = $size
+                $raw.BufferSize = New-Object System.Management.Automation.Host.Size($newW, 9000)
+            }
+        }
+        catch { }
     }
 }

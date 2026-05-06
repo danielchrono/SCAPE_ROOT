@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.F2FS
@@ -10,8 +10,8 @@ $Script:C = $null
 
 function Initialize-ScapeF2FSParser {
     $Script:C = @{
-        FS = Get-ScapeConstant -Path "fs::FS" -Fallback @{}
-        DB = Get-ScapeConstant -Path "db::DB" -Fallback @{}
+        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
+        DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
         Action   = "LogLine"

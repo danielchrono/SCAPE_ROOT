@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.I18N
     Architecture: Strictly Functional | Bucket-Aware Resolution | Encapsulated Decoupling
@@ -13,8 +13,8 @@ function _GetRawI18NEntry {
         $state = Get-ScapeColdState
         if ($null -eq $state -or $null -eq $state.Assets -or -not $state.Assets.ContainsKey("I18N")) { return $null }
 
-        $lang = if ($state.ContainsKey("Config") -and $state["Config"].ContainsKey("CFG_LANG")) {
-            $state["Config"]["CFG_LANG"]
+        $lang = if ($state.ContainsKey("CurrentLanguage")) {
+            $state["CurrentLanguage"]
         } else { "en-US" }
 
         $i18nBucket = $state.Assets["I18N"]

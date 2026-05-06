@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.Network
     Architecture: SMB/CIFS Network Discovery and Mounting
@@ -15,8 +15,8 @@ function Find-ScapeNetworkNode {
         $SubnetRoot = $gw -replace '\.\d+$', ''
     }
 
-    $port = Get-ScapeConstant -Path "net::PROTOCOLS::SMB_PORT" -Fallback 445
-    $timeout = Get-ScapeConstant -Path "net::PROTOCOLS::TIMEOUT_MS" -Fallback 80
+    $port = Get-ScapeConstant -Path "network::PROTOCOLS::SMB_PORT" -Fallback 445
+    $timeout = Get-ScapeConstant -Path "network::PROTOCOLS::TIMEOUT_MS" -Fallback 80
 
     $results = [System.Collections.Generic.List[string]]::new()
     $tasks = 1..254 | ForEach-Object {
@@ -42,7 +42,7 @@ function New-ScapeNetworkMount {
         [Parameter(Mandatory = $true)][string]$DriveLetter
     )
 
-    $netExe = Get-ScapeConstant -Path "core::TOOLS::NET_USE" -Fallback "net.exe"
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" -Fallback "net.exe"
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
                 FileName = $netExe; Arguments = "use $DriveLetter $RemoteVault /persistent:yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
@@ -60,7 +60,7 @@ function Remove-ScapeNetworkMount {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$DriveLetter)
 
-    $netExe = Get-ScapeConstant -Path "core::TOOLS::NET_USE" -Fallback "net.exe"
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" -Fallback "net.exe"
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
                 FileName = $netExe; Arguments = "use $DriveLetter /delete /yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
@@ -78,7 +78,7 @@ function Clear-ScapeNetworkMounts {
     [CmdletBinding()]
     param()
 
-    $netExe = Get-ScapeConstant -Path "core::TOOLS::NET_USE" -Fallback "net.exe"
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" -Fallback "net.exe"
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
                 FileName = $netExe; Arguments = "use * /delete /yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true

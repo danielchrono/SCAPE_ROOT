@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.CloudSync
     Architecture: Robocopy Cloud Engine integration and pre-flight space checks.
@@ -47,7 +47,7 @@ function Invoke-ScapeRobocopy {
     $out = $proc.StandardOutput.ReadToEnd()
     $proc.WaitForExit()
 
-    $limit = Get-ScapeConstant -Path "behavior::LIMITS::SUCCESS_EXIT_CODE_MAX" -Fallback 8
+    $limit = Get-ScapeConstant -Path "system::LIMITS::SUCCESS_EXIT_CODE_MAX" -Fallback 8
     $success = ($proc.ExitCode -lt $limit)
 
     return @{ Success = $success; ExitCode = $proc.ExitCode; Output = $out }

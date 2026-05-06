@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Foundation
     Module: Scape.Core.Security
@@ -7,7 +7,7 @@
 #>
 
 function Enable-ScapePrivilege {
-    param([Parameter(Mandatory=$true)][string]$PrivilegeKey)
+    param([Parameter(Mandatory = $true)][string]$PrivilegeKey)
 
     $privilegeName = Get-ScapeConstant -Path "core::SECURITY::$PrivilegeKey"
     if (-not $privilegeName) {
@@ -40,9 +40,9 @@ function Enable-ScapePrivilege {
 
     if ($res) {
         Publish-ScapeEvent -Type "SECURITY_ELEVATED" -Severity "LOG_INFO" -Payload $privilegeName
-    } else {
+    }
+    else {
         Publish-ScapeEvent -Type "SECURITY_FAULT" -Severity "LOG_ERR" -Payload "AdjustTokenPrivileges failed for $privilegeName"
     }
     return $res
 }
-

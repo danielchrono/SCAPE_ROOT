@@ -8,7 +8,7 @@ $Script:C = $null
 
 function Initialize-ScapeResilience {
     $Script:C = @{
-        FLOW = Get-ScapeConstant -Path "io::FLOW" -Fallback @{}
+        FLOW = Get-ScapeConstant -Path "storage::FLOW" -Fallback @{}
     }
 }
 

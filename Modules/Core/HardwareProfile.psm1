@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core
     Module: Scape.Core.HardwareProfile
@@ -10,17 +10,17 @@ $Script:C = $null
 $Script:ActiveProfile = $null
 function Initialize-ScapeHardwareProfile {
     $Script:C = @{
-        HW = Get-ScapeConstant -Path "hardware" -Fallback @{}
-        BEHAVIOR = Get-ScapeConstant -Path "behavior::LIMITS" -Fallback @{}
+        HW       = Get-ScapeConstant -Path "hardware" -Fallback @{}
+        BEHAVIOR = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
     }
 
     # Detect hardware at runtime (safe fallbacks)
     $detected = @{
-        RAM_GB = 8
-        CPU_CORES = 4
+        RAM_GB       = 8
+        CPU_CORES    = 4
         STORAGE_TYPE = "STATE_UNKNOWN"
-        IS_ADMIN = $false
-        PS_EDITION = $PSVersionTable.PSEdition
+        IS_ADMIN     = $false
+        PS_EDITION   = $PSVersionTable.PSEdition
     }
 
     try {
@@ -35,12 +35,13 @@ function Initialize-ScapeHardwareProfile {
 
         # Storage type
         try {
-            $disk = Get-PhysicalDisk -ErrorAction Stop | Where-Object {$_.DeviceId -eq 0}
+            $disk = Get-PhysicalDisk -ErrorAction Stop | Where-Object { $_.DeviceId -eq 0 }
             if ($disk.BusType -eq 'NVMe') { $detected.STORAGE_TYPE = "NVME" }
             elseif ($disk.MediaType -eq 'SSD') { $detected.STORAGE_TYPE = "SSD" }
             elseif ($disk.MediaType -eq 'HDD') { $detected.STORAGE_TYPE = "HDD" }
             else { $detected.STORAGE_TYPE = "USB" }
-        } catch { $detected.STORAGE_TYPE = "STATE_UNKNOWN" }
+        }
+        catch { $detected.STORAGE_TYPE = "STATE_UNKNOWN" }
 
         # Admin check
         try {
@@ -50,10 +51,12 @@ function Initialize-ScapeHardwareProfile {
             $detected.IS_ADMIN = $principal.IsInRole(
                 [Security.Principal.WindowsBuiltInRole]::Administrator
             )
-        } catch { $detected.IS_ADMIN = $false }
-    } catch {
+        }
+        catch { $detected.IS_ADMIN = $false }
+    }
+    catch {
         Publish-ScapeEvent -Type "LOG_WARN" -Payload @{
-            Action="LogLine"; Key="HW_DETECT_FALLBACK"; Args=@($_.Exception.Message)
+            Action = "LogLine"; Key = "HW_DETECT_FALLBACK"; Args = @($_.Exception.Message)
         }
     }
 
@@ -65,9 +68,9 @@ function Initialize-ScapeHardwareProfile {
 
     # Publish for other modules
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
-        Action = "LogLine"
-        Key = "HW_PROFILE_SELECTED"
-        Args = @($Script:ActiveProfile)
+        Action   = "LogLine"
+        Key      = "HW_PROFILE_SELECTED"
+        Args     = @($Script:ActiveProfile)
         Severity = "LOG_INFO"
     }
 
@@ -78,7 +81,7 @@ function Select-ScapeHardwareProfile {
     param([hashtable]$Detected)
 
     # Pega os perfis e salvaguardas DEFINIDOS (agora USADOS)
-    $profiles   = $Script:C.HW.PROFILES
+    $profiles = $Script:C.HW.PROFILES
     $safeguards = $Script:C.HW.SAFEGUARDS
 
     # Se não existir estrutura válida, usa fallback duro
@@ -110,8 +113,8 @@ function Select-ScapeHardwareProfile {
     if ($candidate -eq "SERVER" -and $ramMinServer -and $Detected.RAM_GB -lt $ramMinServer) {
         $candidate = "WORKSTATION"
         Publish-ScapeEvent -Type "LOG_INFO" -Payload @{
-            Action="LogLine"; Key="HW_PROFILE_DOWNGRADED"
-            Args=@("SERVER->WORKSTATION", "RAM $($Detected.RAM_GB)GB < $ramMinServer GB")
+            Action = "LogLine"; Key = "HW_PROFILE_DOWNGRADED"
+            Args = @("SERVER->WORKSTATION", "RAM $($Detected.RAM_GB)GB < $ramMinServer GB")
         }
     }
 
@@ -119,8 +122,8 @@ function Select-ScapeHardwareProfile {
     if ($candidate -eq "WORKSTATION" -and $ramMinWorkstation -and $Detected.RAM_GB -lt $ramMinWorkstation) {
         $candidate = "STANDARD"
         Publish-ScapeEvent -Type "LOG_INFO" -Payload @{
-            Action="LogLine"; Key="HW_PROFILE_DOWNGRADED"
-            Args=@("WORKSTATION->STANDARD", "RAM $($Detected.RAM_GB)GB < $ramMinWorkstation GB")
+            Action = "LogLine"; Key = "HW_PROFILE_DOWNGRADED"
+            Args = @("WORKSTATION->STANDARD", "RAM $($Detected.RAM_GB)GB < $ramMinWorkstation GB")
         }
     }
 
@@ -128,8 +131,8 @@ function Select-ScapeHardwareProfile {
     if ($candidate -eq "SERVER" -and $cpuMinServer -and $Detected.CPU_CORES -lt $cpuMinServer) {
         $candidate = "WORKSTATION"
         Publish-ScapeEvent -Type "LOG_INFO" -Payload @{
-            Action="LogLine"; Key="HW_PROFILE_DOWNGRADED"
-            Args=@("SERVER->WORKSTATION", "CPU cores $($Detected.CPU_CORES) < $cpuMinServer")
+            Action = "LogLine"; Key = "HW_PROFILE_DOWNGRADED"
+            Args = @("SERVER->WORKSTATION", "CPU cores $($Detected.CPU_CORES) < $cpuMinServer")
         }
     }
 
@@ -137,8 +140,8 @@ function Select-ScapeHardwareProfile {
     if (-not $profiles.ContainsKey($candidate)) {
         $candidate = "MINIMUM"
         Publish-ScapeEvent -Type "LOG_WARN" -Payload @{
-            Action="LogLine"; Key="HW_PROFILE_MISSING"
-            Args=@("$candidate não encontrado, usando MINIMUM")
+            Action = "LogLine"; Key = "HW_PROFILE_MISSING"
+            Args = @("$candidate não encontrado, usando MINIMUM")
         }
     }
 
@@ -154,7 +157,12 @@ function Get-ScapeActiveProfile {
 function Get-ScapeStorageTuning {
     param([string]$StorageType)
     if (-not $StorageType) { $StorageType = $Script:C.HW.DETECTED.STORAGE_TYPE }
-    return $Script:C.HW.STORAGE[$StorageType] ?? $Script:C.HW.STORAGE["HDD"]
+    if ($null -ne $Script:C.HW.STORAGE[$StorageType]) {
+        return $Script:C.HW.STORAGE[$StorageType]
+    }
+    else {
+        return $Script:C.HW.STORAGE["HDD"]
+    }
 }
 
 function Test-ScapeResourcePressure {
@@ -165,7 +173,7 @@ function Test-ScapeResourcePressure {
                 $mem = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
                 $usedPct = ($mem.TotalVisibleMemorySize - $mem.FreeVisibleMemorySize) / $mem.TotalVisibleMemorySize
                 # Safeguards sendo USADOS corretamente (já estavam)
-                $warningPct  = 1 - $Script:C.HW.SAFEGUARDS.RAM_WARNING_PCT
+                $warningPct = 1 - $Script:C.HW.SAFEGUARDS.RAM_WARNING_PCT
                 $criticalPct = 1 - $Script:C.HW.SAFEGUARDS.RAM_CRITICAL_PCT
                 return @{
                     Pressure = $usedPct
@@ -175,9 +183,8 @@ function Test-ScapeResourcePressure {
             }
             default { return @{ Pressure = 0; Warning = $false; Critical = $false } }
         }
-    } catch {
+    }
+    catch {
         return @{ Pressure = 0; Warning = $false; Critical = $false }
     }
 }
-
-

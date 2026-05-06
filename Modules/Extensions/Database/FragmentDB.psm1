@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions
     Module: Scape.Extensions.Database.FragmentDB
@@ -13,8 +13,8 @@ function Write-ScapeFragmentMap {
         [Parameter(Mandatory = $true)][hashtable]$FragMap
     )
 
-    $table = Get-ScapeConstant -Path "db::DB::TABLE_FRAG" -Fallback "FragmentMap"
-    $query = (Get-ScapeConstant -Path "db::DB::QUERY_INS_FRAG" -Fallback "") -f $table
+    $table = Get-ScapeConstant -Path "network::network::TABLE_FRAG" -Fallback "FragmentMap"
+    $query = (Get-ScapeConstant -Path "network::network::QUERY_INS_FRAG" -Fallback "") -f $table
 
     $cmd = $Connection.CreateCommand()
     $cmd.Transaction = $Transaction

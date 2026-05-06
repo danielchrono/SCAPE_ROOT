@@ -8,8 +8,8 @@ $Script:C = $null
 
 function Initialize-ScapeReader {
     $Script:C = @{
-        IO = Get-ScapeConstant -Path "io::BUFFER" -Fallback @{}
-        FS = Get-ScapeConstant -Path "fs::FS" -Fallback @{}
+        IO = Get-ScapeConstant -Path "storage::BUFFER" -Fallback @{}
+        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
     }
 }
 

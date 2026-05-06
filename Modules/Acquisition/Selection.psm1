@@ -1,4 +1,4 @@
-﻿<#.SYNOPSIS
+<#.SYNOPSIS
     Domain: Acquisition
     Module: Scape.Acquisition.Selection
     Description: Discovers and maps physical drives and logical volumes using WMI/CIM.

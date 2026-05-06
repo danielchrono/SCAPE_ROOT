@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.Abstraction
@@ -12,10 +12,10 @@ $Script:DetectionCache = @{}
 
 function Initialize-ScapeAbstraction {
     $Script:C = @{
-        FS      = Get-ScapeConstant -Path "fs::FS" -Fallback @{}
-        CARVING = Get-ScapeConstant -Path "carving::SIGNATURES" -Fallback @{}
-        HW      = Get-ScapeConstant -Path "hardware::PROFILES" -Fallback @{}
-        LIMITS  = Get-ScapeConstant -Path "behavior::LIMITS" -Fallback @{}
+        FS      = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
+        CARVING = Get-ScapeConstant -Path "storage::SIGNATURES" -Fallback @{}
+        HW      = Get-ScapeConstant -Path "system::PROFILES" -Fallback @{}
+        LIMITS  = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
     }
 
     $Script:C.FS_SIGS = @{
@@ -402,6 +402,7 @@ function Invoke-ScapeBatchFSAnalysis {
 
         if ($i % 100 -eq 0) {
             Publish-ScapeEvent -Type "PROGRESS" -Payload @{ Action = "ProgressBar"; TaskID = 1; Current = $i; Total = $SectorBatch.Count; Label = "Analyzing structures..." }
+            if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
         }
     }
 
@@ -460,5 +461,3 @@ function Invoke-ScapeContainerParser {
 
     if ($innerResults.Count -gt 0) { return $innerResults.ToArray() } else { return $null }
 }
-
-

@@ -1,7 +1,7 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Watchdog
-    Architecture: Out-of-band execution integrity monitor (Runspace).
+    Description: Out-of-band execution integrity monitor (Runspace).
 #>
 
 $Script:ScapeHeartbeat = [DateTime]::UtcNow
@@ -9,53 +9,105 @@ $Script:WatchdogRunspace = $null
 $Script:WatchdogPowerShell = $null
 
 function Initialize-ScapeWatchdog {
-    if ($null -ne $Script:WatchdogRunspace) { return }
+    [CmdletBinding()]
+    param()
 
-    $Script:WatchdogRunspace = [runspacefactory]::CreateRunspace()
-    $Script:WatchdogRunspace.ApartmentState = "STA"
-    $Script:WatchdogRunspace.ThreadOptions = "ReuseThread"
-    $Script:WatchdogRunspace.Open()
+    # --- 1. CLÁUSULA DE GUARDA (SINGLETON) ---
+    if ($Script:WatchdogRunspace) { return $true }
 
-    $Script:WatchdogRunspace.SessionStateProxy.SetVariable("ScapeHeartbeat", $Script:ScapeHeartbeat)
+    try {
+        # --- 2. CONFIGURAÇÃO E PARÂMETROS (SAFE 5.1) ---
 
-    $eventQueue = if (Get-Command Get-ScapeEventQueue -ErrorAction SilentlyContinue) { Get-ScapeEventQueue } else { $null }
-    $Script:WatchdogRunspace.SessionStateProxy.SetVariable("EventQueue", $eventQueue)
+        # Fallback para Intervalo
+        $intervalMs = Get-ScapeConstant -Path "system::system::WATCHDOG_INTERVAL_MS"
+        if ($null -eq $intervalMs) {
+            $intervalMs = 2000
+        }
 
-    $Script:WatchdogPowerShell = [powershell]::Create()
-    $Script:WatchdogPowerShell.Runspace = $Script:WatchdogRunspace
+        $timeoutSec = 15 # Timeout fixo de segurança (Hard Deadline)
 
-    [void]$Script:WatchdogPowerShell.AddScript({
+        # Fallback para EventQueue (Tratamento explícito)
+        $eventQueue = $null
+        if (Get-Command Get-ScapeEventQueue -ErrorAction SilentlyContinue) {
+            $eventQueue = Get-ScapeEventQueue
+        }
+
+        # --- 3. INFRAESTRUTURA DE RUNSPACE (ISOLAMENTO) ---
+        $Script:WatchdogRunspace = [RunspaceFactory]::CreateRunspace()
+        $Script:WatchdogRunspace.ApartmentState = "STA"
+        $Script:WatchdogRunspace.ThreadOptions = "ReuseThread"
+        $Script:WatchdogRunspace.Open()
+
+        # Injeção de dependências no estado do Runspace
+        $proxy = $Script:WatchdogRunspace.SessionStateProxy
+        $proxy.SetVariable("ScapeHeartbeat", $Script:ScapeHeartbeat)
+        $proxy.SetVariable("EventQueue", $eventQueue)
+
+        # --- 4. SCRIPTBLOCK DO SENTINELA (LÓGICA AUTÔNOMA) ---
+        $sentinelBlock = {
+            param($interval, $timeout, $queue)
+
+            # Proxy interno para i18n
+            $getMsgCmd = Get-Command Get-ScapeLogMsg -ErrorAction SilentlyContinue
+
             while ($true) {
-                Start-Sleep -Seconds 2
-                $diff = ([DateTime]::UtcNow - $ScapeHeartbeat).TotalSeconds
+                Start-Sleep -Milliseconds $interval
 
-                if ($diff -gt 15) {
-                    $EventFrame = [PSCustomObject]@{
+                $idleTime = ([DateTime]::UtcNow - $ScapeHeartbeat).TotalSeconds
+
+                if ($idleTime -gt $timeout) {
+                    $errorMsg = if ($getMsgCmd) {
+                        & $getMsgCmd -Key "ROUTER_FATAL" -MsgArgs @("SYSTEM DEADLOCK: Core unresponsive for $idleTime seconds.")
+                    }
+                    else {
+                        "SYSTEM DEADLOCK: Core unresponsive for $idleTime seconds."
+                    }
+
+                    $crashFrame = [PSCustomObject]@{
                         Timestamp = [datetime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
                         Type      = "SYSTEM_CRASH"
                         Severity  = "LOG_FATAL"
-                        Payload   = [PSCustomObject]@{ Context = "WATCHDOG"; Message = "SYSTEM DEADLOCK DETECTED. Core thread unresponsive for $diff seconds." }
+                        Payload   = @{ Context = "WATCHDOG"; Message = $errorMsg }
                     }
-                    if ($null -ne $EventQueue) { $EventQueue.Enqueue($EventFrame) }
-                    break
+
+                    # Disparo de emergência
+                    if ($queue) { $queue.Enqueue($crashFrame) }
+                    break # Watchdog morre com o sistema
                 }
             }
-        })
+        }
 
-    [void]$Script:WatchdogPowerShell.BeginInvoke()
+        # --- 5. INVOCAÇÃO ASSÍNCRONA ---
+        $Script:WatchdogPowerShell = [powershell]::Create()
+        $Script:WatchdogPowerShell.Runspace = $Script:WatchdogRunspace
 
-    if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
-        Publish-ScapeEvent -Type "SYS_CORE" -Payload @{ Action = "LogLine"; Key = "WATCHDOG_ONLINE"; Severity = "LOG_INFO" }
+        $null = $Script:WatchdogPowerShell.AddScript($sentinelBlock).AddArgument($intervalMs).AddArgument($timeoutSec).AddArgument($eventQueue)
+        $null = $Script:WatchdogPowerShell.BeginInvoke()
+
+        # --- 6. NOTIFICAÇÃO DE ATIVAÇÃO ---
+        Publish-ScapeEvent -Type "SYS_CORE" -Severity "LOG_INFO" -Payload @{
+            Action  = "LogLine"
+            Key     = "CORE_KERNEL_SHIELD_ACTIVE"
+            Message = Get-ScapeLogMsg -Key "CORE_KERNEL_SHIELD_ACTIVE"
+        }
+
+        return $true
+    }
+    catch {
+        # Em caso de falha crítica no Watchdog, o sistema não deve subir sem proteção
+        if (Get-Command Publish-ScapeFault -ErrorAction SilentlyContinue) {
+            Publish-ScapeFault -ErrorRecord $_ -Context "Watchdog_Init"
+        }
+        return $false
     }
 }
 
 function Update-ScapeHeartbeat {
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([void])]
     param()
     if ($PSCmdlet.ShouldProcess("Watchdog", "Heartbeat")) {
         $Script:ScapeHeartbeat = [DateTime]::UtcNow
-        if ($null -ne $Script:WatchdogRunspace) {
+        if ($Script:WatchdogRunspace) {
             $Script:WatchdogRunspace.SessionStateProxy.SetVariable("ScapeHeartbeat", $Script:ScapeHeartbeat)
         }
     }

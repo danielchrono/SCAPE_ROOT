@@ -1,10 +1,33 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Geometry
     Module: Scape.Presentation.Geometry
-    Architecture: Pure Math Functions | Immutable Bounds | Zero Hardcode
+    Architecture: Pure Math | Immutable Bounds | String Clipping | Zero Hardcode (Reads ui.psd1)
 #>
 [CmdletBinding()] param()
+
+function Get-ScapeConsoleDimension {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param([switch]$WithMargins)
+    process {
+        $layout = Get-ScapeConstant -Path "ui::Layout"
+        try {
+            $raw = $Host.UI.RawUI
+            $w = $raw.WindowSize.Width
+            $h = $raw.WindowSize.Height
+            $margin = if ($WithMargins) { $layout.Margin * 2 } else { 0 }
+
+            return @{
+                Width  = [Math]::Max($layout.MinWidth, [Math]::Min($w - $margin, $layout.MaxWidth))
+                Height = [Math]::Max($layout.MinHeight, $h - $layout.HeaderHeight)
+            }
+        }
+        catch {
+            throw "Unable to obtain console dimensions"
+        }
+    }
+}
 
 function Get-ScapeMenuLayout {
     [CmdletBinding()]
@@ -14,119 +37,96 @@ function Get-ScapeMenuLayout {
         [Parameter(Mandatory = $true)][int]$ItemCount,
         [Parameter(Mandatory = $true)][int]$ConsoleWidth,
         [Parameter(Mandatory = $true)][int]$ConsoleHeight,
-        [int]$HeaderHeight = 0,
-        [int]$MinWidth = 40
+        [int]$HeaderHeight = 0
     )
     process {
-        $boxW = [Math]::Min($ConsoleWidth - 4, [Math]::Max($MinWidth, $MaxContentWidth + 6))
-        $boxH = $ItemCount + 4
+        $layout = Get-ScapeConstant -Path "ui::Layout"
 
-        $x = [Math]::Floor(($ConsoleWidth - $boxW) / 2)
-        $y = [Math]::Max($HeaderHeight + 1, [Math]::Floor(($ConsoleHeight - $boxH) / 2))
+        $boxW = [Math]::Min($ConsoleWidth - ($layout.Margin * 2), [Math]::Max($layout.MinWidth, $MaxContentWidth + 6))
+        $boxH = $ItemCount
+
+        $x = [Math]::Max(0, [Math]::Floor(($ConsoleWidth - $boxW) / 2))
+        $y = [Math]::Max($HeaderHeight + $layout.Padding, [Math]::Floor(($ConsoleHeight - ($boxH + ($layout.Padding * 2))) / 2))
 
         return [PSCustomObject]@{
             X = [int]$x; Y = [int]$y
             Width = [int]$boxW; Height = [int]$boxH
-            UsableWidth = [int]($boxW - 4)
+            UsableWidth = [int]($boxW - ($layout.Margin * 2))
         }
     }
 }
 
-function Get-ScapeScrollViewport {
+function Get-ScapeFrameCoordinates {
     [CmdletBinding()]
-    [OutputType([psobject])]
+    [OutputType([hashtable])]
+    param([Parameter(Mandatory = $true)][psobject]$BoxLayout)
+    process {
+        $layout = Get-ScapeConstant -Path "ui::Layout"
+        return @{
+            TitleX     = $BoxLayout.X + $layout.TitlePadding
+            TitleY     = $BoxLayout.Y
+            LeftWallX  = $BoxLayout.X
+            RightWallX = $BoxLayout.X + $BoxLayout.Width - 1
+            BottomY    = $BoxLayout.Y + $BoxLayout.Height + 1
+            ContentX   = $BoxLayout.X + $layout.TitlePadding
+            ContentY   = $BoxLayout.Y + 1
+        }
+    }
+}
+
+function Get-ScapeGridCoordinates {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
     param(
-        [Parameter(Mandatory = $true)][int]$TotalItems,
-        [Parameter(Mandatory = $true)][int]$MaxVisibleItems,
-        [Parameter(Mandatory = $true)][int]$CursorIndex
+        [Parameter(Mandatory = $true)][psobject]$BoxLayout,
+        [Parameter(Mandatory = $false)][string]$ActiveIcon = '',
+        [Parameter(Mandatory = $false)][int]$Index = 0
     )
     process {
-        if ($TotalItems -le $MaxVisibleItems) { return [PSCustomObject]@{ StartIndex = 0; EndIndex = $TotalItems - 1; NeedsScroll = $false } }
+        $layout = Get-ScapeConstant -Path "ui::Layout"
+        $baseX = $BoxLayout.X
+        $iconX = $baseX + 1 + $layout.Padding
 
-        $halfView = [Math]::Floor($MaxVisibleItems / 2)
-        $start = [Math]::Max(0, $CursorIndex - $halfView)
-        $end = $start + $MaxVisibleItems - 1
-
-        if ($end -ge $TotalItems) {
-            $end = $TotalItems - 1
-            $start = [Math]::Max(0, $end - $MaxVisibleItems + 1)
+        if (-not [string]::IsNullOrWhiteSpace($ActiveIcon)) {
+            $plainIconLen = Get-ScapePlainTextLength -Text $ActiveIcon
+            $textX = $iconX + [Math]::Max($plainIconLen + 1, 4)
+        }
+        else {
+            $textX = $iconX + 2
         }
 
-        return [PSCustomObject]@{
-            StartIndex = $start; EndIndex = $end; NeedsScroll = $true
-            ScrollPercent = [Math]::Round(($CursorIndex / ($TotalItems - 1)) * 100, 2)
-        }
-    }
-}
-
-function Get-ScapeDialogLayout {
-    [CmdletBinding()]
-    [OutputType([psobject])]
-    param(
-        [Parameter(Mandatory = $true)][int]$ConsoleWidth,
-        [Parameter(Mandatory = $true)][int]$ConsoleHeight,
-        [Parameter(Mandatory = $true)][int]$DialogWidth,
-        [Parameter(Mandatory = $true)][int]$DialogHeight
-    )
-    process {
-        $w = [Math]::Min($ConsoleWidth - 4, $DialogWidth)
-        $h = [Math]::Min($ConsoleHeight - 4, $DialogHeight)
-
-        $x = [Math]::Floor(($ConsoleWidth - $w) / 2)
-        $y = [Math]::Floor(($ConsoleHeight - $h) / 2)
-
-        return [PSCustomObject]@{
-            X = [int]$x; Y = [int]$y
-            Width = [int]$w; Height = [int]$h
-            UsableWidth = [int]($w - 4); IsClipped = ($DialogWidth -gt $w -or $DialogHeight -gt $h)
+        return @{
+            SelectorX = $baseX + 1
+            IconX     = $iconX
+            TextX     = $textX
+            RightEdge = $baseX + $BoxLayout.Width - 1 - $layout.Padding
+            Y         = $BoxLayout.Y + 1 + $Index
         }
     }
 }
 
-function Get-ScapeJustifiedPadding {
+function Invoke-ScapeStringClip {
     [CmdletBinding()]
     [OutputType([string])]
-    param([string]$LeftText, [string]$RightText, [int]$TotalWidth)
+    param(
+        [Parameter(Mandatory = $true)][string]$Text,
+        [Parameter(Mandatory = $true)][int]$MaxWidth,
+        [switch]$CenterClip
+    )
     process {
-        $needed = [Math]::Max(0, $TotalWidth - ($LeftText.Length + $RightText.Length))
-        return (' ' * $needed)
-    }
-}
+        $plain = $Text -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
+        $len = $plain.Length
 
-function Get-ScapeFrameCoordinate {
-    [CmdletBinding()]
-    [OutputType([psobject])]
-    param([int]$X, [int]$Y, [int]$Width, [int]$Height)
-    process {
-        return [PSCustomObject]@{
-            TopLeft     = @{ X = $X; Y = $Y }
-            Inner       = @{ X = $X + 1; Y = $Y + 1; W = $Width - 2; H = $Height - 2 }
-            BottomRight = @{ X = $X + $Width - 1; Y = $Y + $Height - 1 }
+        if ($len -le $MaxWidth) { return $Text }
+
+        if ($CenterClip) {
+            $cut = [Math]::Floor(($len - $MaxWidth) / 2)
+            return $Text.Substring($cut, $MaxWidth)
+        }
+        else {
+            if ($MaxWidth -le 5) { return "..." }
+            $overflow = $len - $MaxWidth
+            return "..." + $Text.Substring($overflow + 3)
         }
     }
-}
-
-function Get-ScapeProgressMath {
-    [CmdletBinding()]
-    [OutputType([psobject])]
-    param([double]$Current, [double]$Total, [int]$AvailableWidth)
-    process {
-        if ($Total -le 0) { return [PSCustomObject]@{ Filled = 0; Empty = $AvailableWidth; Percent = 0 } }
-
-        $percent = [Math]::Min(100, [Math]::Max(0, ($Current / $Total) * 100))
-        $filledChars = [Math]::Floor(($percent / 100) * $AvailableWidth)
-
-        return [PSCustomObject]@{
-            Filled  = [int]$filledChars
-            Empty   = [int]($AvailableWidth - $filledChars)
-            Percent = [Math]::Round($percent, 1)
-        }
-    }
-}
-
-function Get-ScapeClampedValue {
-    [CmdletBinding()]
-    [OutputType([int])]
-    param([int]$Value, [int]$Minimum, [int]$Maximum)
-    process { return [Math]::Max($Minimum, [Math]::Min($Maximum, $Value)) }
 }

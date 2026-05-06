@@ -1,21 +1,26 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Telemetry
-    Architecture: Real-time hardware health monitoring and WMI polling.
+    Description: Real-time hardware health monitoring and WMI polling.
 #>
 
 $Script:Metrics = @{
     RAM     = @{ Current = 0; Peak = 0; Warning = $false; Critical = $false }
     CPU     = @{ Current = 0; Peak = 0; Warning = $false; Critical = $false }
     Thermal = @{ Current = 0; Peak = 0; Warning = $false; Critical = $false }
-    IO      = @{ ReadBps = 0; WriteBps = 0; QueueDepth = 0; Warning = $false; Critical = $false }
+    IO      = @{ QueueDepth = 0; Warning = $false; Critical = $false }
 }
 $Script:MonitorActive = $false
 
 function Initialize-ScapeTelemetry {
     $Script:MonitorActive = $true
-    if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
-        Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{ Action = "LogLine"; Key = "TELEMETRY_ACTIVE"; Severity = "LOG_INFO" }
+    $msgActivate = Get-ScapeLogMsg -Key "CORE_ENGINE_START" -MsgArgs @()
+    Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
+        Action   = "LogLine"
+        Key      = "CORE_ENGINE_START"
+        Args     = @()
+        Severity = "LOG_INFO"
+        Message  = $msgActivate
     }
     return $true
 }
@@ -27,7 +32,7 @@ function Get-ScapeTelemetryCpu {
             return [Math]::Round($cpu, 1)
         }
     }
-    catch { if (Get-Command Publish-ScapeFault -ErrorAction SilentlyContinue) { Publish-ScapeFault -ErrorRecord $_ -Context "Telemetry_CPU" } }
+    catch { Publish-ScapeFault -ErrorRecord $_ -Context "Telemetry_CPU" -ErrorAction SilentlyContinue }
     return 0
 }
 
@@ -36,11 +41,10 @@ function Get-ScapeTelemetryRam {
         if ($IsWindows) {
             $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
             $used = $os.TotalVisibleMemorySize - $os.FreeVisibleMemorySize
-            $pct = ($used / $os.TotalVisibleMemorySize) * 100
-            return [Math]::Round($pct, 1)
+            return [Math]::Round(($used / $os.TotalVisibleMemorySize) * 100, 1)
         }
     }
-    catch { if (Get-Command Publish-ScapeFault -ErrorAction SilentlyContinue) { Publish-ScapeFault -ErrorRecord $_ -Context "Telemetry_RAM" } }
+    catch { Publish-ScapeFault -ErrorRecord $_ -Context "Telemetry_RAM" -ErrorAction SilentlyContinue }
     return 0
 }
 
@@ -48,15 +52,13 @@ function Get-ScapeTelemetryThermal {
     try {
         if ($IsWindows) {
             $thermal = Get-CimInstance -Class MSAcpi_ThermalZoneTemperature -Namespace "root/wmi" -ErrorAction Stop
-            if ($null -ne $thermal) {
+            if ($thermal) {
                 $kelvin = $thermal.CurrentTemperature / 10
                 return [Math]::Round($kelvin - 273.15, 1)
             }
         }
     }
-    catch {
-        # Falha térmica é comum em VMs, ignora falha para evitar flood
-    }
+    catch { }
     return -1
 }
 
@@ -67,7 +69,7 @@ function Get-ScapeTelemetryIo {
             return [Math]::Round($queue, 1)
         }
     }
-    catch { if (Get-Command Publish-ScapeFault -ErrorAction SilentlyContinue) { Publish-ScapeFault -ErrorRecord $_ -Context "Telemetry_IO" } }
+    catch { Publish-ScapeFault -ErrorRecord $_ -Context "Telemetry_IO" -ErrorAction SilentlyContinue }
     return 0
 }
 

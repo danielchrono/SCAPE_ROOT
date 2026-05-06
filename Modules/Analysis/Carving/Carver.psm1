@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Carving.Carver
@@ -15,9 +15,9 @@ function Initialize-ScapeCarver {
     param()
 
     $Script:C = @{
-        ENGINE = Get-ScapeConstant -Path "carving::ENGINE" -Fallback @{}
+        ENGINE = Get-ScapeConstant -Path "storage::ENGINE" -Fallback @{}
         HW     = Get-ScapeConstant -Path "hardware" -Fallback @{}
-        LIMITS = Get-ScapeConstant -Path "behavior::LIMITS" -Fallback @{}
+        LIMITS = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
     }
 
     $hwProfile = Get-ScapeActiveProfile

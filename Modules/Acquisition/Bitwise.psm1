@@ -1,56 +1,52 @@
 <#
 .SYNOPSIS
-    Domain: Acquisition | Module: Scape.Acquisition.HighVolume
+    Domain: Acquisition | Module: Scape.Acquisition.Bitwise
     Architecture: Native P/Invoke com suporte a Long Paths (\\?\) e Resiliência em Lote.
     Capacity: Otimizado para datasets de 20TB+
+    Delegates to: Scape.Core.Native.Win32Bitwise (Single Source of Truth)
 #>
 
 $Script:BitwiseReady = $false
 
 function Initialize-ScapeBitwise {
-    if ($Script:BitwiseReady) { return }
-    if (-not ("Scape.Core.Native.Win32Bitwise" -as [type])) {
-        $csharpInterop = @"
-using System;
-using System.Runtime.InteropServices;
-using System.Collections.Generic;
+    [CmdletBinding()]
+    [OutputType([bool])]
+    param()
+    process {
+        if ($Script:BitwiseReady) { return $true }
 
-namespace Scape.Core.Native {
-    public static class Win32Bitwise {
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern bool SetFileAttributesW(string lpFileName, uint dwFileAttributes);
+        # Garante que Interop esteja carregado
+        if (-not ("Scape.Core.Native.Win32Bitwise" -as [type])) {
+            if (Get-Command Initialize-ScapeInterop -ErrorAction SilentlyContinue) {
+                $result = Initialize-ScapeInterop
+                if (-not $result.Success) { return $false }
+            }
+            else {
+                Publish-ScapeEvent -Type "BITWISE_INIT_FAIL" -Severity "FATAL" -Payload "Core.Interop not available"
+                return $false
+            }
+        }
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        public static extern uint GetFileAttributesW(string lpFileName);
-
-        public const uint FILE_ATTRIBUTE_ARCHIVE = 0x20;
-        public const uint INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF;
+        $Script:BitwiseReady = $true
+        return $true
     }
-}
-"@
-        Add-Type -TypeDefinition $csharpInterop -Language CSharp -ErrorAction Stop
-    }
-    $Script:BitwiseReady = $true
 }
 
 function Invoke-ScapeBulkBitwise {
     [CmdletBinding()]
+    [OutputType([hashtable])]
     param(
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string[]]$Paths,
-        [Parameter(Mandatory = $true)]
-        [bool]$EnableArchiveBit
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string[]]$Paths,
+        [Parameter(Mandatory = $true)][bool]$EnableArchiveBit
     )
-
     begin {
-        Initialize-ScapeBitwise
+        Initialize-ScapeBitwise | Out-Null
         $report = @{ Success = 0; Failed = 0; Errors = @() }
     }
-
     process {
         foreach ($path in $Paths) {
             try {
-                # Normalização para Long Paths (\\?\) para evitar erros de 260 caracteres
+                # Normalização para Long Paths (\\?\)
                 $normalizedPath = if ($path.StartsWith("\\")) { $path } else { "\\?\$path" }
 
                 $currentAttr = [Scape.Core.Native.Win32Bitwise]::GetFileAttributesW($normalizedPath)
@@ -76,14 +72,10 @@ function Invoke-ScapeBulkBitwise {
             catch {
                 $report.Failed++
                 $report.Errors += @{ Path = $path; Message = $_.Exception.Message }
-
-                if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
-                    Publish-ScapeEvent -Type "IO_BIT_ERROR" -Severity "LOG_ERROR" -Payload @{ Path = $path; Error = $_.Exception.Message }
-                }
+                Publish-ScapeEvent -Type "IO_BIT_ERROR" -Severity "LOG_ERROR" -Payload @{ Path = $path; Error = $_.Exception.Message }
             }
         }
     }
-
     end {
         return $report
     }

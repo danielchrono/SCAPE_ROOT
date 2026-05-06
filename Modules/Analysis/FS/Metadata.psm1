@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.FS.Metadata
     Description: High-performance filesystem metadata parser, timestamp normalizer, and forensic record mapper.
@@ -12,42 +12,47 @@ $Script:Limits = $null
 function Initialize-ScapeFSMetadataEngine {
     [CmdletBinding()]
     param()
-    $Script:FSConstants = Get-ScapeConstant -Path "fs::FS" -Fallback @{}
-    $Script:DBConstants = Get-ScapeConstant -Path "db::DB" -Fallback @{}
-    $Script:Limits = Get-ScapeConstant -Path "behavior::LIMITS" -Fallback @{}
-    Publish-ScapeEvent -Type "SYSTEM_READY" -Severity "LOG_INFO" -Payload @{
-        Action = "LogLine"; Message = "FS Metadata Engine initialized"
+    $Script:FSConstants = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
+    $Script:DBConstants = Get-ScapeConstant -Path "network::DB" -Fallback @{}
+    $Script:Limits = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
+
+    # Emissão segura usando o padrão EventBus
+    if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
+        Publish-ScapeEvent -Type "SYSTEM_READY" -Severity "LOG_INFO" -Payload @{
+            Action = "LogLine"
+            Key = "DOMAIN_PARSING"
+        }
     }
 }
 
 # Helper functions com parâmetros tipados para evitar PSReviewUnusedParameter
 function Read-ScapeUInt16LE {
     [CmdletBinding()][OutputType([uint16])]
-    param([Parameter(Mandatory)][byte[]]$Buf, [Parameter(Mandatory)][int]$Off)
-    [BitConverter]::ToUInt16($Buf, $Off)
+    param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
+    return [BitConverter]::ToUInt16($Buf, $Off)
 }
 function Read-ScapeUInt32LE {
     [CmdletBinding()][OutputType([uint32])]
-    param([Parameter(Mandatory)][byte[]]$Buf, [Parameter(Mandatory)][int]$Off)
-    [BitConverter]::ToUInt32($Buf, $Off)
+    param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
+    return [BitConverter]::ToUInt32($Buf, $Off)
 }
 function Read-ScapeUInt64LE {
     [CmdletBinding()][OutputType([uint64])]
-    param([Parameter(Mandatory)][byte[]]$Buf, [Parameter(Mandatory)][int]$Off)
-    [BitConverter]::ToUInt64($Buf, $Off)
+    param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
+    return [BitConverter]::ToUInt64($Buf, $Off)
 }
 function Read-ScapeInt64LE {
     [CmdletBinding()][OutputType([int64])]
-    param([Parameter(Mandatory)][byte[]]$Buf, [Parameter(Mandatory)][int]$Off)
-    [BitConverter]::ToInt64($Buf, $Off)
+    param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
+    return [BitConverter]::ToInt64($Buf, $Off)
 }
 
 function Read-ScapeAsciiString {
     [CmdletBinding()][OutputType([string])]
     param(
-        [Parameter(Mandatory)][byte[]]$Buf,
-        [Parameter(Mandatory)][int]$Off,
-        [Parameter(Mandatory)][int]$Len
+        [Parameter(Mandatory=$true)][byte[]]$Buf,
+        [Parameter(Mandatory=$true)][int]$Off,
+        [Parameter(Mandatory=$true)][int]$Len
     )
     if ($Len -le 0 -or ($Off + $Len) -gt $Buf.Length) { return "" }
     $bytes = $Buf[$Off..($Off + $Len - 1)]
@@ -58,9 +63,9 @@ function Read-ScapeAsciiString {
 function Read-ScapeUTF16LEString {
     [CmdletBinding()][OutputType([string])]
     param(
-        [Parameter(Mandatory)][byte[]]$Buf,
-        [Parameter(Mandatory)][int]$Off,
-        [Parameter(Mandatory)][int]$Len
+        [Parameter(Mandatory=$true)][byte[]]$Buf,
+        [Parameter(Mandatory=$true)][int]$Off,
+        [Parameter(Mandatory=$true)][int]$Len
     )
     if ($Len -le 0 -or ($Off + $Len) -gt $Buf.Length) { return "" }
     $text = [System.Text.Encoding]::Unicode.GetString($Buf, $Off, $Len).Trim()
@@ -69,8 +74,8 @@ function Read-ScapeUTF16LEString {
 
 function Convert-ScapeNTFSTime {
     [CmdletBinding()][OutputType([DateTime])]
-    param([Parameter(Mandatory)][long]$Raw100ns)
-    if ($Raw100ns -eq 0 -or $Raw100ns -lt 0) { return $null }
+    param([Parameter(Mandatory=$true)][long]$Raw100ns)
+    if ($Raw100ns -le 0) { return $null }
     try {
         $base = [DateTime]::new(1601, 1, 1, 0, 0, 0, [System.DateTimeKind]::Utc)
         return $base.AddTicks($Raw100ns)
@@ -80,7 +85,7 @@ function Convert-ScapeNTFSTime {
 
 function Convert-ScapeFATTime {
     [CmdletBinding()][OutputType([DateTime])]
-    param([Parameter(Mandatory)][uint16]$Time, [Parameter(Mandatory)][uint16]$Date)
+    param([Parameter(Mandatory=$true)][uint16]$Time, [Parameter(Mandatory=$true)][uint16]$Date)
     if ($Date -eq 0 -or $Time -eq 0) { return $null }
     $year = (($Date -shr 9) -band 0x7F) + 1980
     $month = ($Date -shr 5) -band 0x0F; $day = $Date -band 0x1F
@@ -91,20 +96,21 @@ function Convert-ScapeFATTime {
 
 function Convert-ScapeUnixTime {
     [CmdletBinding()][OutputType([DateTime])]
-    param([Parameter(Mandatory)][uint32]$Epoch)
+    param([Parameter(Mandatory=$true)][uint32]$Epoch)
     if ($Epoch -eq 0) { return $null }
     try { return [DateTimeOffset]::FromUnixTimeSeconds($Epoch).UtcDateTime }
     catch { return $null }
 }
 
-# CORREÇÃO: Set- → Get-/Parse- (não modificam estado, apenas leem)
 function Get-ScapeNTFSMFT {
     [CmdletBinding()][OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory)][byte[]]$Buffer,
-        [Parameter(Mandatory)][int]$Offset
+        [Parameter(Mandatory=$true)][byte[]]$Buffer,
+        [Parameter(Mandatory=$true)][int]$Offset
     )
-    $recSize = [int]$Script:FSConstants.NTFS.MFT_REC_SIZE
+    if (-not $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
+
+    $recSize = [int]($Script:FSConstants.NTFS.MFT_REC_SIZE)
     if (($Offset + $recSize) -gt $Buffer.Length) { return $null }
 
     $sig = Read-ScapeUInt32LE -Buf $Buffer -Off $Offset
@@ -119,9 +125,13 @@ function Get-ScapeNTFSMFT {
     $sizeOnDisk = 0; $realSize = 0
 
     while ($true) {
+        if ($curr -ge ($Offset + $recSize - 4)) { break } # Previne buffer overrun
         $type = Read-ScapeUInt32LE -Buf $Buffer -Off $curr
         if ($type -eq 0xFFFFFFFF -or $type -eq 0) { break }
+
         $len = Read-ScapeUInt32LE -Buf $Buffer -Off ($curr + $Script:FSConstants.NTFS.ATTR_LEN_OFF)
+        if ($len -le 0) { break } # Previne loop infinito
+
         $res = [System.BitConverter]::ToBoolean($Buffer, $curr + $Script:FSConstants.NTFS.ATTR_NONRES_OFF)
         $nameLen = if ($res) { 0 } else { [int](Read-ScapeUInt16LE -Buf $Buffer -Off ($curr + $Script:FSConstants.NTFS.ATTR_NAMELEN_OFF)) }
         $nameOff = if ($res) { 0 } else { [int](Read-ScapeUInt16LE -Buf $Buffer -Off ($curr + $Script:FSConstants.NTFS.ATTR_NAMEOFF_OFF)) }
@@ -142,12 +152,14 @@ function Get-ScapeNTFSMFT {
         $curr += $len
     }
     $flags = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:FSConstants.NTFS.MFT_FLAGS_OFF)
+    $fallbackUnknown = Get-ScapeConstant -Path "ui::STATUS_UNKNOWN" -Fallback "STATUS_UNKNOWN"
+
     return [PSCustomObject]@{
         FRN = $frn -band $Script:FSConstants.NTFS.FRN_MASK; SeqNumber = $seqNum
-        FileName = if ($name) { $name } else { "<UNKNOWN>" }
+        FileName = if ($name) { $name } else { $fallbackUnknown }
         RealSize = $realSize; AllocatedSize = $sizeOnDisk
         Created = $created; Modified = $modified; Accessed = $accessed; MFTChanged = $mftChanged
-        IsDirectory = [System.IO.FileAttributes]::Directory -band $flags
+        IsDirectory = ([System.IO.FileAttributes]::Directory -band $flags) -ne 0
         IsDeleted = ($seqNum -band 0x8000) -ne 0
     }
 }
@@ -155,11 +167,14 @@ function Get-ScapeNTFSMFT {
 function Get-ScapeFATEntry {
     [CmdletBinding()][OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory)][byte[]]$Buffer,
-        [Parameter(Mandatory)][int]$Offset
+        [Parameter(Mandatory=$true)][byte[]]$Buffer,
+        [Parameter(Mandatory=$true)][int]$Offset
     )
-    $dirSize = [int]$Script:FSConstants.FAT.DIR_SIZE
+    if (-not $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
+
+    $dirSize = [int]($Script:FSConstants.FAT.DIR_SIZE)
     if (($Offset + $dirSize) -gt $Buffer.Length) { return $null }
+
     $delSig = $Buffer[$Offset]
     if ($delSig -eq 0x00 -or $delSig -eq $Script:FSConstants.FAT.DEL_SIG) { return $null }
 
@@ -185,10 +200,12 @@ function Get-ScapeFATEntry {
 function Get-ScapeEXTInode {
     [CmdletBinding()][OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory)][byte[]]$Buffer,
-        [Parameter(Mandatory)][int]$Offset
+        [Parameter(Mandatory=$true)][byte[]]$Buffer,
+        [Parameter(Mandatory=$true)][int]$Offset
     )
-    $inodeSize = [int]$Script:FSConstants.EXT.INODE_SIZE
+    if (-not $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
+
+    $inodeSize = [int]($Script:FSConstants.EXT.INODE_SIZE)
     if (($Offset + $inodeSize) -gt $Buffer.Length) { return $null }
 
     $mode = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + $Script:FSConstants.EXT.INODE_MODE_OFF)
@@ -217,14 +234,13 @@ function Get-ScapeEXTInode {
 function Get-ScapeFSMeta {
     [CmdletBinding()][OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory)][byte[]]$Buffer,
-        [Parameter(Mandatory)][int]$Offset,
-        [Parameter(Mandatory)][ValidateSet("NTFS", "FAT32", "EXT4", "RAW")][string]$FSType,
+        [Parameter(Mandatory=$true)][byte[]]$Buffer,
+        [Parameter(Mandatory=$true)][int]$Offset,
+        [Parameter(Mandatory=$true)][ValidateSet("NTFS", "FAT32", "EXT4", "RAW")][string]$FSType,
         [string]$VolumeSerial = ""
     )
-    if ($null -eq $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
+    if (-not $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
 
-    # CORREÇÃO: Chamadas para Get-*, não Set-*
     $result = switch ($FSType) {
         "NTFS" { Get-ScapeNTFSMFT -Buffer $Buffer -Offset $Offset }
         "FAT32" { Get-ScapeFATEntry -Buffer $Buffer -Offset $Offset }
@@ -233,37 +249,58 @@ function Get-ScapeFSMeta {
     }
 
     if ($null -eq $result) {
-        Publish-ScapeEvent -Type "LOG_WARN" -Payload @{ Action = "LogLine"; Message = "FS metadata parse failed at offset $Offset ($FSType)" }
+        Publish-ScapeEvent -Type "LOG_WARN" -Payload @{
+            Action = "LogLine"
+            Key = "ERR_CORRUPTED_RECORD"
+            Offset = $Offset
+            FSType = $FSType
+        }
         return $null
     }
+
+    $status = if ($Script:DBConstants.ContainsKey("STATUS_DISC")) { $Script:DBConstants["STATUS_DISC"] } else { "DISCOVERED" }
 
     $result | Add-Member -NotePropertyName "VolumeSerial" -NotePropertyValue $VolumeSerial -Force
     $result | Add-Member -NotePropertyName "ParsedAtOffset" -NotePropertyValue $Offset -Force
     $result | Add-Member -NotePropertyName "FSType" -NotePropertyValue $FSType -Force
-    $result | Add-Member -NotePropertyName "Status" -NotePropertyValue $Script:DBConstants["STATUS_DISC"] -Force
+    $result | Add-Member -NotePropertyName "Status" -NotePropertyValue $status -Force
     return $result
 }
 
 function Convert-ScapeMetadataToDBRecord {
     [CmdletBinding()][OutputType([PSCustomObject])]
-    param([Parameter(Mandatory)][PSCustomObject]$Meta)
+    param([Parameter(Mandatory=$true)][PSCustomObject]$Meta)
+
     if ($null -eq $Meta) { return $null }
-    $table = if ($Meta.FSType -eq "NTFS") { $Script:DBConstants["TABLE_MFT"] } else { $Script:DBConstants["TABLE_UNIV"] }
+    if (-not $Script:DBConstants) { Initialize-ScapeFSMetadataEngine }
+
+    $table = $Script:DBConstants["TABLE_UNIV"]
+    if ($Meta.FSType -eq "NTFS") { $table = $Script:DBConstants["TABLE_MFT"] }
+
+    $parent = 0
+    if ($Meta.FRN) { $parent = $Meta.FRN } elseif ($Meta.InodeNumber) { $parent = $Meta.InodeNumber }
+
+    $jsonRaw = try { $Meta | ConvertTo-Json -Compress -Depth 1 -WarningAction SilentlyContinue } catch { "{}" }
 
     return [PSCustomObject]@{
-        TableName = $table; ParentID = if ($Meta.FRN) { $Meta.FRN } elseif ($Meta.InodeNumber) { $Meta.InodeNumber } else { 0 }
+        TableName = $table; ParentID = $parent
         ObjectID = [Guid]::NewGuid().ToString(); FileName = $Meta.FileName; RealSize = $Meta.RealSize
         Status = $Meta.Status; VolumeSerial = $Meta.VolumeSerial
         Created = $Meta.Created; Modified = $Meta.Modified; Accessed = $Meta.Accessed; MFTChanged = $Meta.MFTChanged
-        MetadataRaw = $Meta | ConvertTo-Json -Compress -Depth 1; ExtractionDate = [DateTime]::UtcNow
+        MetadataRaw = $jsonRaw; ExtractionDate = [DateTime]::UtcNow
     }
 }
 
 function Test-ScapeMetadataIntegrity {
     [CmdletBinding()][OutputType([bool])]
-    param([Parameter(Mandatory)][PSCustomObject]$Record)
+    param([Parameter(Mandatory=$true)][PSCustomObject]$Record)
+
     if ($null -eq $Record) { return $false }
-    $maxDepth = [int]$Script:Limits['MAX_DIR_DEPTH']
+    if (-not $Script:Limits) { Initialize-ScapeFSMetadataEngine }
+
+    $maxDepth = 256
+    if ($Script:Limits.ContainsKey('MAX_DIR_DEPTH')) { $maxDepth = [int]$Script:Limits['MAX_DIR_DEPTH'] }
+
     $currentDepth = ($Record.FileName.ToCharArray() | Where-Object { $_ -eq '\' -or $_ -eq '/' }).Count
     if ($currentDepth -gt $maxDepth) { return $false }
     if ($Record.FileName -match '[\\/]{2,}' -or $Record.FileName.Length -gt 255) { return $false }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.BinWrappers
     Architecture: Immutable execution of native forensic utilities with pure parsers.
@@ -48,7 +48,7 @@ function Invoke-ScapeBinWrapper {
         default { @{ Raw = $stdOut } }
     }
 
-    $limit = Get-ScapeConstant -Path "behavior::LIMITS::SUCCESS_EXIT_CODE_MAX" -Fallback 8
+    $limit = Get-ScapeConstant -Path "system::LIMITS::SUCCESS_EXIT_CODE_MAX" -Fallback 8
     return @{
         Success    = ($exitCode -lt $limit)
         StdOut     = $stdOut

@@ -1,8 +1,8 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Dispatcher
     Module: Scape.Presentation.Dispatcher
-    Architecture: Pure Event Handler Composition | Zero Rendering | SoC Compliant
+    Architecture: Pure Event Handler Composition | Semantic Abstraction | Zero Console Touch
 #>
 [CmdletBinding()] param()
 
@@ -11,14 +11,39 @@ function Test-ScapeUiEventCategory {
     [OutputType([hashtable])]
     param([Parameter(Mandatory = $true)]$IncomingEventData)
     process {
-        $sev = Get-ScapeProperty -Object $IncomingEventData -PropertyName 'Severity' -Fallback 'INFO'
-        $typ = Get-ScapeProperty -Object $IncomingEventData -PropertyName 'Type' -Fallback 'UNKNOWN'
-        $pay = Get-ScapeProperty -Object $IncomingEventData -PropertyName 'Payload' -Fallback @{}
+        $sev = $IncomingEventData.Severity
+        $typ = $IncomingEventData.Type
+        $pay = $IncomingEventData.Payload
 
-        $out = @{ Severity = $sev; Type = $typ; Payload = $pay; ShouldRender = $false; RenderTarget = $null; Priority = 3 }
-        if ($sev -eq 'FATAL' -or $typ -eq 'SYSTEM_CRASH') { $out.ShouldRender = $true; $out.RenderTarget = 'ModalOverlay'; $out.Priority = 1 }
-        elseif ($typ -eq 'PROGRESS') { $out.ShouldRender = $true; $out.RenderTarget = 'StatusBar'; $out.Priority = 2 }
-        elseif ($typ -match 'HINT|WARN|DEBUG|ROUTER') { $out.ShouldRender = $true; $out.RenderTarget = 'TransientLog'; $out.Priority = 3 }
+        $out = @{
+            Severity     = $sev
+            Type         = $typ
+            Payload      = $pay
+            ShouldRender = $false
+            RenderTarget = $null
+            Priority     = 3
+        }
+
+        if ($sev -eq 'FATAL' -or $typ -eq 'SYSTEM_CRASH') {
+            $out.ShouldRender = $true
+            $out.RenderTarget = 'ModalOverlay'
+            $out.Priority = 1
+        }
+        elseif ($typ -eq 'PROGRESS') {
+            $out.ShouldRender = $true
+            $out.RenderTarget = 'StatusBar'
+            $out.Priority = 2
+        }
+        elseif ($typ -eq 'UI' -and $pay['Action'] -eq 'REDRAW_REQUEST') {
+            $out.ShouldRender = $true
+            $out.RenderTarget = 'MasterRedraw'
+            $out.Priority = 0
+        }
+        elseif ($typ -match 'HINT|WARN|DEBUG|ROUTER|SYSTEM|INFO|ERROR|LAZY_WAKEUP') {
+            $out.ShouldRender = $true
+            $out.RenderTarget = 'TransientLog'
+            $out.Priority = 3
+        }
         return $out
     }
 }
@@ -26,21 +51,34 @@ function Test-ScapeUiEventCategory {
 function Format-ScapeProgressBar {
     [CmdletBinding()]
     [OutputType([string])]
-    param([hashtable]$Payload, [int]$BarWidth = 20)
+    param([hashtable]$Payload, [int]$BarWidth = 30)
     process {
-        $stage = Get-ScapeProperty -Object $Payload -PropertyName 'Stage' -Fallback 'Processing'
-        $cur = [double](Get-ScapeProperty -Object $Payload -PropertyName 'Current' -Fallback 0)
-        $tot = [double](Get-ScapeProperty -Object $Payload -PropertyName 'Total' -Fallback 0)
-        $pct = if ($tot -gt 0) { [Math]::Min(100, ($cur / $tot) * 100) } else { 0 }
+        $stage = $Payload['Stage']
+        $cur = [double]($Payload['Current'] -replace ',', '.')
+        $tot = [double]($Payload['Total'] -replace ',', '.')
 
-        $bar = Get-ScapeConstant -Path "ui::Progress::Default" -Fallback @{}
-        $fc = Get-ScapeProperty -Object $bar -PropertyName 'FullChar' -Fallback '█'
-        $ec = Get-ScapeProperty -Object $bar -PropertyName 'EmptyChar' -Fallback '░'
-        $show = Get-ScapeProperty -Object $bar -PropertyName 'ShowPercent' -Fallback $true
+        $pct = 0
+        if ($tot -gt 0) { $pct = [Math]::Min(100, ($cur / $tot) * 100) }
+
+        $state = Get-ScapeColdState
+        $styleName = $state['ProgressStyle']
+        $barConfig = Get-ScapeConstant -Path "ui::Progress::$styleName"
+
+        if ($barConfig.Frames) {
+            $frameIndex = [Math]::Floor(($cur / $tot) * $barConfig.Frames.Count) % $barConfig.Frames.Count
+            $frame = $barConfig.Frames[$frameIndex]
+            return "$stage $frame"
+        }
+
+        $fc = $barConfig['FullChar']
+        $ec = $barConfig['EmptyChar']
+        $show = $barConfig['ShowPercent']
 
         $filled = [Math]::Floor(($pct / 100) * $BarWidth)
         $empty = [Math]::Max(0, $BarWidth - $filled)
-        $pctTxt = if ($show) { " $([Math]::Round($pct))%" } else { '' }
+
+        $pctTxt = if ($show) { " $([Math]::Round($pct))%" } else { "" }
+
         return "${stage} [$($fc * $filled)$($ec * $empty)]${pctTxt}"
     }
 }
@@ -48,39 +86,47 @@ function Format-ScapeProgressBar {
 function Format-ScapeTransientMessage {
     [CmdletBinding()]
     [OutputType([hashtable])]
-    param([Parameter(Mandatory = $true)]$IncomingEventData, [string]$Severity = 'INFO')
+    param([Parameter(Mandatory = $true)]$IncomingEventData, [string]$Severity)
     process {
-        $pay = Get-ScapeProperty -Object $IncomingEventData -PropertyName 'Payload' -Fallback @{}
-        $typ = Get-ScapeProperty -Object $IncomingEventData -PropertyName 'Type' -Fallback 'UNKNOWN'
-        $msg = Get-ScapeProperty -Object $pay -PropertyName 'Message' -Fallback ''
+        $pay = $IncomingEventData.Payload
+        $typ = $IncomingEventData.Type
+
+        $msg = $pay['Message']
         if ([string]::IsNullOrWhiteSpace($msg)) {
-            $k = Get-ScapeProperty -Object $pay -PropertyName 'Key' -Fallback ''
-            if (-not [string]::IsNullOrWhiteSpace($k)) {
-                $resolved = Get-ScapeLogMsg -Key $k
-                if (-not [string]::IsNullOrWhiteSpace($resolved)) { $msg = $resolved } else { $msg = $k }
+            $k = $pay['Key']
+            if ($k) {
+                $i18n = Get-ScapeConstant -Path "i18n::$k"
+                $msg = if ($i18n -and $i18n.T) { $i18n.T } else { $k }
+            }
+            else {
+                $tgt = $pay['Target']
+                $msg = if ($tgt) { "Target: $tgt" } else { $typ }
             }
         }
-        if ([string]::IsNullOrWhiteSpace($msg)) { $msg = $typ }
 
-        $iconKey = switch ($typ) {
-            'ROUTER_FAULT' { 'Bug' }
+        $iconKey = 'Info'
+        switch ($typ) {
+            'ROUTER_FATAL' { $iconKey = 'Failure' }
+            'SYSTEM' { $iconKey = 'Info' }
+            'LAZY_WAKEUP' { $iconKey = 'Loading' }
+            'PROGRESS' { $iconKey = 'Processing' }
             default {
                 switch ($Severity) {
-                    'ERROR' { 'Failure' }
-                    'WARNING' { 'Warning' }
-                    'DEBUG' { 'Bug' }
-                    default { 'Info' }
+                    'FATAL' { $iconKey = 'Failure' }
+                    'ERROR' { $iconKey = 'Failure' }
+                    'WARN' { $iconKey = 'Warning' }
+                    'DEBUG' { $iconKey = 'Bug' }
                 }
             }
         }
-        $icon = Get-ScapeConstant -Path "icon::$iconKey" -Fallback '•'
 
         $flag = 'STATUS'
         if ($Severity -in @('ERROR', 'FATAL') -or $typ -match 'ERR|FATAL|FAULT') { $flag = 'FATAL' }
-        elseif ($Severity -eq 'WARNING' -or $typ -match 'WARN') { $flag = 'WARN' }
+        elseif ($Severity -eq 'WARN' -or $typ -match 'WARN') { $flag = 'WARN' }
         elseif ($Severity -in @('DEBUG', 'TRACE') -or $typ -match 'DEBUG|TRACE') { $flag = 'DEBUG' }
-        elseif ($typ -match 'HINT|SYSTEM') { $flag = 'HINT' }
-        return @{ Text = "${icon} ${msg}"; Flag = $flag }
+        elseif ($typ -match 'HINT|SYSTEM|INFO|LAZY_WAKEUP') { $flag = 'HINT' }
+
+        return @{ Text = $msg; Flag = $flag; SemanticIcon = $iconKey }
     }
 }
 
@@ -93,10 +139,75 @@ function Convert-ScapeEventDataToRender {
         if (-not $cls.ShouldRender) { return @{ ShouldRender = $false } }
 
         switch ($cls.RenderTarget) {
-            'ModalOverlay' { return @{ Type = 'Modal'; Severity = $cls.Severity; Message = Get-ScapeProperty -Object $cls.Payload -PropertyName 'Message' -Fallback 'System error'; Priority = 1 } }
-            'StatusBar' { $txt = Format-ScapeProgressBar -Payload $cls.Payload; return @{ Type = 'StatusBar'; Text = $txt; Flag = 'HINT'; Priority = 2 } }
-            'TransientLog' { $m = Format-ScapeTransientMessage -IncomingEventData $IncomingEventData -Severity $cls.Severity; return @{ Type = 'Transient'; Text = $m.Text; Flag = $m.Flag; Priority = 3 } }
+            'TreeViewPanel' {
+                $treeCfg = Convert-ScapeTreeToRender -IncomingEventData $IncomingEventData
+                return @{ Type = 'TreeView'; Config = $treeCfg; ShouldRender = $true; Priority = 2 }
+            }
+            'MasterRedraw' {
+                return @{ Type = 'Redraw'; ShouldRender = $true; Priority = 0 }
+            }
+            'ModalOverlay' {
+                $msg = $cls.Payload['Message']
+                return @{ Type = 'Modal'; Severity = $cls.Severity; Message = $msg; Priority = 1; ShouldRender = $true }
+            }
+            'StatusBar' {
+                $txt = Format-ScapeProgressBar -Payload $cls.Payload
+                return @{ Type = 'StatusBar'; Text = $txt; Flag = 'HINT'; Priority = 2; ShouldRender = $true }
+            }
+            'TransientLog' {
+                $m = Format-ScapeTransientMessage -IncomingEventData $IncomingEventData -Severity $cls.Severity
+                return @{ Type = 'Transient'; Text = $m.Text; Flag = $m.Flag; SemanticIcon = $m.SemanticIcon; Priority = 3; ShouldRender = $true }
+            }
             default { return @{ ShouldRender = $false } }
+        }
+    }
+}
+
+function Convert-ScapeTreeToRender {
+    [CmdletBinding()]
+    param([Parameter(Mandatory = $true)]$IncomingEventData)
+    process {
+        $pay = $IncomingEventData.Payload
+        $nodes = $pay['Nodes']
+        $treeId = $pay['TreeId']
+        $titleKey = $pay['TitleKey']
+
+        $flatRenderList = @()
+        if ($nodes) {
+            foreach ($node in $nodes) {
+                $path = $node['Path']
+                $depth = if ($path) { ($path -split '[/\\]').Count - 1 } else { 0 }
+                $name = ($path -split '[/\\]')[-1]
+
+                $iconKey = $node['Icon']
+                $status = $node['Status']
+
+                $statusFlag = switch ($status) {
+                    'Ready' { 'Success' }
+                    'Loading' { 'Loading' }
+                    'Error' { 'Failure' }
+                    'Vital' { 'Warning' }
+                    default { 'Info' }
+                }
+
+                $flatRenderList += @{
+                    Text         = $name
+                    SemanticIcon = $iconKey
+                    Depth        = $depth
+                    Status       = $status
+                    StatusFlag   = $statusFlag
+                    RawPath      = $path
+                }
+            }
+        }
+
+        return @{
+            Type         = 'TreeView'
+            TreeId       = $treeId
+            TitleKey     = $titleKey
+            Items        = $flatRenderList
+            ShouldRender = $true
+            Priority     = 2
         }
     }
 }

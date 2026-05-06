@@ -1,81 +1,96 @@
-﻿@{
-    "Core"           = @(
-        @{ Name = "Scape.Core.State"; LoadOrder = 1; DependsOn = @(); IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.EventBus"; LoadOrder = 2; DependsOn = @("Scape.Core.State"); IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.Constants"; LoadOrder = 3; DependsOn = @("Scape.Core.State"); IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.Settings"; LoadOrder = 4; DependsOn = @("Scape.Core.EventBus"); IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.AssetManager"; LoadOrder = 5; DependsOn = @("Scape.Core.Settings", "Scape.Core.Constants"); IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.Utils"; LoadOrder = 6; DependsOn = @("Scape.Core.Constants"); IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.I18N"; LoadOrder = 7; DependsOn = @("Scape.Core.Settings", "Scape.Core.Constants"); IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.Interop"; LoadOrder = 8; DependsOn = @("Scape.Core.Constants"); IsVital = $true; Domain = "Core"; CompileOnce = $true }
-        @{ Name = "Scape.Core.Security"; LoadOrder = 9; DependsOn = @("Scape.Core.Interop"); IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.Resolver"; LoadOrder = 10; DependsOn = @("Scape.Core.State"); IsVital = $true; Domain = "Core" }
+@{
+    __Meta__       = @{
+        Name    = "Topology"
+        Version = "1.0"
+        Author  = "Scape.Core"
+        Purpose = "System topology manifest. Load order defines sequence; no circular dependencies."
+    }
+
+    # Root           = @(
+    #     @{ Name = "Scape.Deploy"; LoadOrder = 1; IsVital = $false; IsDeployEssential = $true; Domain = "Root"; BuildTimeOnly = $true }
+    # )
+
+    Core           = @(
+        @{ Name = "Scape.Core.State"; LoadOrder = 10; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.EventBus"; LoadOrder = 11; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.AssetManager"; LoadOrder = 12; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.Constants"; LoadOrder = 13; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.Utils"; LoadOrder = 14; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.Settings"; LoadOrder = 15; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.I18N"; LoadOrder = 16; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.Interop"; LoadOrder = 17; IsVital = $true; Domain = "Core"; CompileOnce = $true }
+        @{ Name = "Scape.Core.Security"; LoadOrder = 18; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.Resolver"; LoadOrder = 19; IsVital = $true; Domain = "Core" }
     )
 
-    "Acquisition"    = @(
-        @{ Name = "Scape.Acquisition.Bridge"; LoadOrder = 10; DependsOn = @("Scape.Core.Interop"); IsVital = $true; Domain = "Acquisition" }
-        @{ Name = "Scape.Acquisition.Reader"; LoadOrder = 11; DependsOn = @("Scape.Acquisition.Bridge"); IsVital = $true; Domain = "Acquisition" }
-        @{ Name = "Scape.Acquisition.Resilience"; LoadOrder = 12; DependsOn = @("Scape.Acquisition.Reader"); IsVital = $true; Domain = "Acquisition" }
-        @{ Name = "Scape.Acquisition.Selection"; LoadOrder = 13; DependsOn = @("Scape.Acquisition.Reader"); IsVital = $false; Domain = "Acquisition" }
-        @{ Name = "Scape.Acquisition.Bitwise"; LoadOrder = 14; DependsOn = @("Scape.Acquisition.Reader"); IsVital = $false; Domain = "Acquisition" }
+    Acquisition    = @(
+        @{ Name = "Scape.Acquisition.Bridge"; LoadOrder = 20; IsVital = $true; Domain = "Acquisition" }
+        @{ Name = "Scape.Acquisition.Reader"; LoadOrder = 21; IsVital = $true; Domain = "Acquisition" }
+        @{ Name = "Scape.Acquisition.Resilience"; LoadOrder = 22; IsVital = $true; Domain = "Acquisition" }
+        @{ Name = "Scape.Acquisition.Selection"; LoadOrder = 23; IsVital = $false; Domain = "Acquisition" }
+        @{ Name = "Scape.Acquisition.Bitwise"; LoadOrder = 24; IsVital = $false; Domain = "Acquisition" }
     )
 
-    "Analysis"       = @(
-        @{ Name = "Scape.Analysis.FS.Abstraction"; LoadOrder = 20; DependsOn = @("Scape.Acquisition.Reader"); IsVital = $true; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.Carving.Signature"; LoadOrder = 21; DependsOn = @("Scape.Core.Constants"); IsVital = $true; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.Carving.Carver"; LoadOrder = 22; DependsOn = @("Scape.Analysis.Carving.Signature", "Scape.Acquisition.Reader"); IsVital = $true; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.Carving.Healer"; LoadOrder = 23; DependsOn = @("Scape.Analysis.Carving.Signature"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.NTFS"; LoadOrder = 30; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.FAT"; LoadOrder = 31; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.EXT"; LoadOrder = 32; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.BTRFS"; LoadOrder = 33; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.XFS"; LoadOrder = 34; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.ZFS"; LoadOrder = 35; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.APFS"; LoadOrder = 36; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.REFS"; LoadOrder = 37; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.HFS"; LoadOrder = 38; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.F2FS"; LoadOrder = 39; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.JFS"; LoadOrder = 40; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.UDF"; LoadOrder = 41; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.ISO9660"; LoadOrder = 42; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.DiskImage"; LoadOrder = 43; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
-        @{ Name = "Scape.Analysis.FS.PartitionTable"; LoadOrder = 44; DependsOn = @("Scape.Analysis.FS.Abstraction"); IsVital = $false; Domain = "Analysis" }
+    Analysis       = @(
+        @{ Name = "Scape.Analysis.FS.Abstraction"; LoadOrder = 30; IsVital = $true; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.Carving.Signature"; LoadOrder = 31; IsVital = $true; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.Carving.Carver"; LoadOrder = 32; IsVital = $true; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.Carving.Healer"; LoadOrder = 33; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.Parser.Core"; LoadOrder = 34; IsVital = $true; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.NTFS"; LoadOrder = 40; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.FAT"; LoadOrder = 41; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.EXT"; LoadOrder = 42; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.BTRFS"; LoadOrder = 43; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.XFS"; LoadOrder = 44; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.ZFS"; LoadOrder = 45; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.APFS"; LoadOrder = 46; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.REFS"; LoadOrder = 47; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.HFS"; LoadOrder = 48; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.F2FS"; LoadOrder = 49; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.JFS"; LoadOrder = 50; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.UDF"; LoadOrder = 51; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.ISO9660"; LoadOrder = 52; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.DiskImage"; LoadOrder = 53; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.PartitionTable"; LoadOrder = 54; IsVital = $false; Domain = "Analysis" }
     )
 
-    "Infrastructure" = @(
-        @{ Name = "Scape.Infrastructure.Audit"; LoadOrder = 50; DependsOn = @("Scape.Core.EventBus"); IsVital = $true; Domain = "Infrastructure" }
-        @{ Name = "Scape.Infrastructure.Compliance"; LoadOrder = 51; DependsOn = @("Scape.Infrastructure.Audit"); IsVital = $true; Domain = "Infrastructure" }
-        @{ Name = "Scape.Infrastructure.Telemetry"; LoadOrder = 52; DependsOn = @("Scape.Core.Interop"); IsVital = $false; Domain = "Infrastructure" }
-        @{ Name = "Scape.Infrastructure.Pipeline"; LoadOrder = 53; DependsOn = @("Scape.Infrastructure.Audit", "Scape.Analysis.Carving.Carver"); IsVital = $true; Domain = "Infrastructure" }
-        @{ Name = "Scape.Infrastructure.Watchdog"; LoadOrder = 54; DependsOn = @("Scape.Core.EventBus"); IsVital = $true; Domain = "Infrastructure"; ThreadSafe = $true }
-        @{ Name = "Scape.Infrastructure.Logger"; LoadOrder = 55; DependsOn = @("Scape.Core.EventBus", "Scape.Core.Constants", "Scape.Core.Utils"); IsVital = $true; Domain = "Infrastructure"; ThreadSafe = $true }
+    Infrastructure = @(
+        @{ Name = "Scape.Infrastructure.Logger"; LoadOrder = 60; IsVital = $true; Domain = "Infrastructure"; ThreadSafe = $true }
+        @{ Name = "Scape.Infrastructure.Audit"; LoadOrder = 61; IsVital = $true; Domain = "Infrastructure" }
+        @{ Name = "Scape.Infrastructure.Compliance"; LoadOrder = 62; IsVital = $true; Domain = "Infrastructure" }
+        @{ Name = "Scape.Infrastructure.Telemetry"; LoadOrder = 63; IsVital = $false; Domain = "Infrastructure" }
+        @{ Name = "Scape.Infrastructure.Pipeline"; LoadOrder = 64; IsVital = $true; Domain = "Infrastructure" }
+        @{ Name = "Scape.Infrastructure.Watchdog"; LoadOrder = 65; IsVital = $true; Domain = "Infrastructure"; ThreadSafe = $true }
     )
 
-    "Presentation"   = @(
-        @{ Name = "Scape.Presentation.Theme"; LoadOrder = 60; DependsOn = @("Scape.Core.Constants", "Scape.Core.Utils"); IsVital = $true; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.Geometry"; LoadOrder = 61; DependsOn = @("Scape.Core.Utils", "Scape.Presentation.Config"); IsVital = $true; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.TUI"; LoadOrder = 62; DependsOn = @("Scape.Presentation.Geometry", "Scape.Presentation.Theme", "Scape.Presentation.Config"); IsVital = $true; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.Renderer"; LoadOrder = 63; DependsOn = @("Scape.Presentation.TUI", "Scape.Presentation.Theme", "Scape.Presentation.Config"); IsVital = $true; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.Controller"; LoadOrder = 64; DependsOn = @("Scape.Core.State", "Scape.Presentation.Theme"); IsVital = $true; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.Responsivity"; LoadOrder = 65; DependsOn = @("Scape.Presentation.TUI", "Scape.Core.EventBus"); IsVital = $true; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.Router"; LoadOrder = 66; DependsOn = @("Scape.Presentation.Controller", "Scape.Presentation.Responsivity", "Scape.Presentation.Renderer"); IsVital = $true; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.Dispatcher"; LoadOrder = 67; DependsOn = @("Scape.Core.EventBus", "Scape.Presentation.Renderer"); IsVital = $true; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.StateObserver"; LoadOrder = 68; DependsOn = @("Scape.Presentation.Dispatcher", "Scape.Core.State"); IsVital = $true; Domain = "Presentation" }
+    Presentation   = @(
+        @{ Name = "Scape.Presentation.Theme"; LoadOrder = 70; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.Geometry"; LoadOrder = 71; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.TUI"; LoadOrder = 72; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.Dispatcher"; LoadOrder = 73; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.Renderer"; LoadOrder = 74; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.FilePicker"; LoadOrder = 75; IsVital = $false; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.Controller"; LoadOrder = 76; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.Responsivity"; LoadOrder = 77; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.Router"; LoadOrder = 78; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.StateObserver"; LoadOrder = 79; IsVital = $true; Domain = "Presentation" }
     )
 
-    "Extensions"     = @(
-        @{ Name = "Scape.Extensions.Database.Core"; LoadOrder = 70; DependsOn = @("Scape.Core.Interop"); IsVital = $true; Domain = "Extensions" }
-        @{ Name = "Scape.Extensions.Database.FragmentDB"; LoadOrder = 71; DependsOn = @("Scape.Extensions.Database.Core"); IsVital = $false; Domain = "Extensions" }
-        @{ Name = "Scape.Extensions.Database.MetaDB"; LoadOrder = 72; DependsOn = @("Scape.Extensions.Database.Core"); IsVital = $false; Domain = "Extensions" }
-        @{ Name = "Scape.Extensions.Network"; LoadOrder = 73; DependsOn = @("Scape.Core.Interop"); IsVital = $false; Domain = "Extensions" }
-        @{ Name = "Scape.Extensions.CloudSync"; LoadOrder = 74; DependsOn = @("Scape.Core.Utils"); IsVital = $false; Domain = "Extensions" }
+    Extensions     = @(
+        @{ Name = "Scape.Extensions.Database.Core"; LoadOrder = 80; IsVital = $true; Domain = "Extensions" }
+        @{ Name = "Scape.Extensions.Database.FragmentDB"; LoadOrder = 81; IsVital = $false; Domain = "Extensions" }
+        @{ Name = "Scape.Extensions.Database.MetaDB"; LoadOrder = 82; IsVital = $false; Domain = "Extensions" }
+        @{ Name = "Scape.Extensions.Network"; LoadOrder = 83; IsVital = $false; Domain = "Extensions" }
+        @{ Name = "Scape.Extensions.CloudSync"; LoadOrder = 84; IsVital = $false; Domain = "Extensions" }
     )
 
-    "Forge"          = @(
-        @{ Name = "Scape.Forge.Compiler"; LoadOrder = 80; DependsOn = @("Scape.Core.Constants"); IsVital = $false; Domain = "Forge" }
-        @{ Name = "Scape.Forge.Packager"; LoadOrder = 81; DependsOn = @("Scape.Forge.Compiler"); IsVital = $false; Domain = "Forge" }
-        @{ Name = "Scape.Forge.Deployer"; LoadOrder = 82; DependsOn = @(); IsVital = $true; Domain = "Forge" }
+    Forge          = @(
+        @{ Name = "Scape.Forge.Ignite"; LoadOrder = 88; IsVital = $false; IsDeployEssential = $true; Domain = "Forge"; BuildTimeOnly = $true }
+        @{ Name = "Scape.Forge.Build"; LoadOrder = 89; IsVital = $false; IsDeployEssential = $true; Domain = "Forge"; BuildTimeOnly = $true }
+        @{ Name = "Scape.Forge.Compiler"; LoadOrder = 90; IsVital = $false; IsDeployEssential = $true; Domain = "Forge" }
+        @{ Name = "Scape.Forge.Packager"; LoadOrder = 91; IsVital = $false; IsDeployEssential = $true; Domain = "Forge" }
+        @{ Name = "Scape.Forge.Deployer"; LoadOrder = 92; IsVital = $true; IsDeployEssential = $true; Domain = "Forge" }
     )
 
-    "Orphans"        = @()
+    Orphans        = @()
 }

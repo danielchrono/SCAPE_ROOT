@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.State
     Description: Thread-safe Hybrid State Manager.
@@ -25,7 +25,7 @@ namespace Scape.Core.Memory
 }
 "@
 
-$Script:ColdState = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new()
+$Script:ColdState = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new([System.StringComparer]::OrdinalIgnoreCase)
 $Script:HotState = $null
 
 function Initialize-ScapeState {
@@ -102,7 +102,11 @@ function Get-ScapeRoot {
     param()
     process {
         $root = $Script:ColdState["ROOT"]
-        return if ($null -ne $root) { [string]$root } else { [string]::Empty }
+        if ($null -ne $root) {
+            return [string]$root
+        } else {
+            return [string]::Empty
+        }
     }
 }
 
@@ -112,7 +116,8 @@ function Test-ScapeDevMode {
     param()
     process {
         $devMode = $Script:ColdState["DEV_MODE"]
-        return if ($null -ne $devMode) { [bool]$devMode } else { $false }
+        # Retorna o valor direto: se for null/false, retorna $false
+        return [bool]$devMode
     }
 }
 

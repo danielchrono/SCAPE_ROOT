@@ -1,11 +1,13 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Foundation
     Module: Scape.Core.Interop
-    Architecture: Bare-metal P/Invoke signatures
+    Architecture: Bare-metal P/Invoke signatures | Single Source of Truth
 #>
 
-# O bloco abaixo deve começar exatamente na linha seguinte ao @", sem espaços.
+# =============================================================================
+# DEFINIÇÕES C# CENTRALIZADAS (AppDomain-wide, compiladas uma vez)
+# =============================================================================
 $Script:InteropSignature = @"
 using System;
 using System.Runtime.InteropServices;
@@ -13,8 +15,33 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Scape.Core.Native
 {
+    // --- VT100 / Console ---
+    public static class VT100Enabler {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GetStdHandle(int nStdHandle);
+        [DllImport("kernel32.dll")]
+        public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+        [DllImport("kernel32.dll")]
+        public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+        public static void Enable() {
+            IntPtr handle = GetStdHandle(-11);
+            uint mode;
+            if (GetConsoleMode(handle, out mode)) {
+                SetConsoleMode(handle, mode | 0x0004); // ENABLE_VIRTUAL_TERMINAL_PROCESSING
+            }
+        }
+    }
+
+    // --- Disk Bridge (Acquisition) ---
     public static class Win32DiskBridge
     {
+        public const uint GENERIC_READ = 0x80000000;
+        public const uint FILE_SHARE_READ = 0x00000001;
+        public const uint FILE_SHARE_WRITE = 0x00000002;
+        public const uint OPEN_EXISTING = 3;
+        public const uint FILE_ATTRIBUTE_NORMAL = 0x80;
+        public const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+
         [DllImport("kernel32.dll", SetLastError=true, CharSet=CharSet.Unicode)]
         public static extern SafeFileHandle CreateFile(
             string lpFileName,
@@ -44,6 +71,37 @@ namespace Scape.Core.Native
             out long lpNewFilePointer,
             uint dwMoveMethod
         );
+    }
+
+    // --- Bitwise / File Attributes (Acquisition) ---
+    public static class Win32Bitwise {
+        public const uint FILE_ATTRIBUTE_ARCHIVE = 0x20;
+        public const uint INVALID_FILE_ATTRIBUTES = 0xFFFFFFFF;
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern bool SetFileAttributesW(string lpFileName, uint dwFileAttributes);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern uint GetFileAttributesW(string lpFileName);
+    }
+
+    // --- Security / Privileges (Core.Security) ---
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LUID { public uint LowPart; public int HighPart; }
+
+    [StructLayout(LayoutKind.Sequential, Pack=1)]
+    public struct TOKEN_PRIVILEGES
+    {
+        public uint PrivilegeCount;
+        public LUID Luid;
+        public uint Attributes;
+    }
+
+    public static class Win32Security
+    {
+        public const uint TOKEN_ADJUST_PRIVILEGES = 0x0020;
+        public const uint TOKEN_QUERY = 0x0008;
+        public const uint SE_PRIVILEGE_ENABLED = 0x00000002;
 
         [DllImport("advapi32.dll", SetLastError=true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -74,29 +132,32 @@ namespace Scape.Core.Native
 
         [DllImport("kernel32.dll")]
         public static extern IntPtr GetCurrentProcess();
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct LUID { public uint LowPart; public int HighPart; }
-
-        [StructLayout(LayoutKind.Sequential, Pack=1)]
-        public struct TOKEN_PRIVILEGES
-        {
-            public uint PrivilegeCount;
-            public LUID Luid;
-            public uint Attributes;
-        }
     }
 }
 "@
 
+# =============================================================================
+# INICIALIZAÇÃO (Compila UMA vez no AppDomain)
+# =============================================================================
 function Initialize-ScapeInterop {
-    if (-not ("Scape.Core.Native.Win32DiskBridge" -as [type])) {
-        try {
-            Add-Type -TypeDefinition $Script:InteropSignature -Language CSharp -ErrorAction Stop
-        } catch {
-            Write-Error "Failed to load Win32 Interop: $_"
-            return @{ Success = $false; Data = $null; Error = $_ }
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param()
+    process {
+        # Compila apenas se ainda não estiver no AppDomain
+        if (-not ("Scape.Core.Native.Win32DiskBridge" -as [type])) {
+            try {
+                Add-Type -TypeDefinition $Script:InteropSignature -Language CSharp -ErrorAction Stop
+            }
+            catch {
+                Publish-ScapeFault -ErrorRecord $_ -Context "Interop_Init" -Message "Failed to load Win32 Interop definitions"
+                return @{ Success = $false; Data = $null; Error = $_ }
+            }
         }
+
+        # Habilita VT100 (console moderno)
+        try { [Scape.Core.Native.VT100Enabler]::Enable() } catch { }
+
+        return @{ Success = $true; Data = "Interop.Ready"; Error = $null }
     }
-    return @{ Success = $true; Data = "Interop.Ready"; Error = $null }
 }

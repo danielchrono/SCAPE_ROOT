@@ -1,191 +1,283 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Renderer
     Module: Scape.Presentation.Renderer
-    Architecture: Delta Render | MVVM View | Zero Flicker | Pure Styling
+    Architecture: Stateless Rendering | Absolute Grid Positioning | Zero Publishing | Receives Pre-Resolved Icons
 #>
 [CmdletBinding()] param()
 
-$Script:R = [PSCustomObject]@{ Cache = $null; LastMenuId = [string]::Empty; LastCursor = -1; BoxCache = $null }
+# Cache de ícones resolvidos: "RouteId:IconLevel" => ícone
+$Script:IconResolveCache = @{}
+# Cache de linhas de menu pré-formatadas
+$Script:MenuLineCache = @{}
+# Cache de dimensões (já definido no TUI, mas reforçado aqui)
+$Script:RenderCache = @{
+    LastMenuHash = ""
+    LastOptions  = @()
+    LastCursor   = -1
+}
 
 function Initialize-ScapeRenderer {
     [CmdletBinding()]
     [OutputType([void])]
     param()
     process {
-        $Script:R.Cache = [PSCustomObject]@{ UI = Get-ScapeConstant -Path "ui" -Fallback @{}; THEME = Get-ScapeConstant -Path "theme" -Fallback @{} }
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        [Console]::CursorVisible = $false
+
+        # VT100 já foi habilitado em Initialize-ScapeInterop (Core)
+        # Apenas valida se está disponível para fail-fast explícito
+        if (-not ("Scape.Core.Native.VT100Enabler" -as [type])) {
+            if (Get-Command Initialize-ScapeInterop -ErrorAction SilentlyContinue) {
+                Initialize-ScapeInterop | Out-Null
+            }
+            else {
+                Publish-ScapeEvent -Type "RENDERER_INIT_WARN" -Severity "WARN" -Payload "VT100Enabler not available. Console may lack ANSI support."
+            }
+        }
     }
 }
 
-function Get-ScapeResolvedIcon {
-    [CmdletBinding()]
-    [OutputType([string])]
-    param([Parameter(Mandatory = $true)][string]$RouteId)
-    process {
-        $semanticMap = Get-ScapeConstant -Path "ui::SemanticMap" -Fallback @{}
-        $semanticKey = if ($semanticMap.ContainsKey($RouteId)) { $semanticMap[$RouteId] } else { "DEFAULT" }
-
-        $iconsMap = Get-ScapeConstant -Path "ui::Icons" -Fallback @{}
-        $iconNode = if ($iconsMap.ContainsKey($semanticKey)) { $iconsMap[$semanticKey] } else { $iconsMap["Unknown"] }
-
-        if ($null -eq $iconNode) { return "•" }
-
-        $list = if ($iconNode -is [array]) { $iconNode } else { @($iconNode) }
-        $idx = 0
-        if ($null -ne $Script:IconLevel) { $idx = [Math]::Min($Script:IconLevel, $list.Count - 1) }
-        return $list[$idx]
-    }
-}
-
-function Format-ScapeFrame {
+function Close-ScapeRenderer {
     [CmdletBinding()]
     [OutputType([void])]
-    param(
-        [Parameter(Mandatory = $true)][int]$X,
-        [Parameter(Mandatory = $true)][int]$Y,
-        [Parameter(Mandatory = $true)][int]$Width,
-        [Parameter(Mandatory = $true)][int]$Height,
-        [Parameter(Mandatory = $true)][string]$StyleKey
-    )
+    param()
     process {
-        $frames = Get-ScapeConstant -Path "ui::Frames" -Fallback @{}
-        $f = if ($frames.ContainsKey($StyleKey)) { $frames[$StyleKey] } else { $frames["Classic"] }
+        [Console]::CursorVisible = $true
+        [Console]::Clear()
+        # Limpa caches ao fechar
+        $Script:IconResolveCache.Clear()
+        $Script:MenuLineCache.Clear()
+        $Script:RenderCache.LastMenuHash = ""
+    }
+}
 
-        $top = $f.TL + ($f.HL * ($Width - 2)) + $f.TR
-        $mid = $f.VL + (" " * ($Width - 2)) + $f.VL
-        $bot = $f.BL + ($f.HL * ($Width - 2)) + $f.BR
+# Memoization: Resolve ícone uma vez por RouteId+IconLevel
+function _GetCachedResolvedIcon {
+    param([string]$RouteId)
+    process {
+        $state = Get-ScapeColdState
+        $level = if ($state.ContainsKey('IconLevel')) { [int]$state['IconLevel'] } else { 0 }
+        $cacheKey = "${RouteId}:${level}"
 
-        Set-ScapeCursorPosition -Left $X -Top $Y; Write-Output (Format-ScapeANSIMessage -Text $top -Flag "MENU") -NoNewline
-        for ($i = 1; $i -lt ($Height - 1); $i++) {
-            Set-ScapeCursorPosition -Left $X -Top ($Y + $i)
-            Write-Output (Format-ScapeANSIMessage -Text $mid -Flag "MENU") -NoNewline
+        if ($Script:IconResolveCache.ContainsKey($cacheKey)) {
+            return $Script:IconResolveCache[$cacheKey]
         }
-        Set-ScapeCursorPosition -Left $X -Top ($Y + $Height - 1)
-        Write-Output (Format-ScapeANSIMessage -Text $bot -Flag "MENU") -NoNewline
+
+        $icon = Get-ScapeResolvedIcon -RouteId $RouteId
+        $Script:IconResolveCache[$cacheKey] = $icon
+        return $icon
     }
 }
 
 function Format-ScapeArtBlock {
     [CmdletBinding()]
-    [OutputType([System.Object[]])]
-    param(
-        [Parameter(Mandatory = $true)][string]$VariantKey,
-        [Parameter(Mandatory = $true)][int]$ConsoleWidth,
-        [Parameter()][string]$ColorFlag = 'BANNER'
-    )
+    [OutputType([array])]
+    param([string]$VariantKey, [int]$ConsoleWidth, [string]$ColorFlag = 'BANNER')
     process {
-        $artMap = Get-ScapeConstant -Path "ui::Art::Variants" -Fallback @{}
-        $artKey = if ($artMap.ContainsKey($VariantKey)) { $artMap[$VariantKey] } else { "SmallLogo" }
-        $raw = Get-ScapeConstant -Path "ui::Art::$artKey" -Fallback ''
-
+        $artMap = Get-ScapeConstant -Path "ui::Art::Variants"
+        $artKey = 'SmallLogo'
+        if ($artMap.ContainsKey($VariantKey)) { $artKey = $artMap[$VariantKey] }
+        $raw = Get-ScapeConstant -Path "ui::Art::$artKey"
         if ([string]::IsNullOrWhiteSpace($raw)) { return @() }
-
         $lines = ($raw -split "`n" | Where-Object { $_.Trim() })
-        $out = New-Object System.Collections.Generic.List[string]
-        foreach ($l in $lines) {
-            $pad = [Math]::Max(0, [Math]::Floor(($ConsoleWidth - $l.Length) / 2))
-            $out.Add((Format-ScapeANSIMessage -Text (" " * $pad + $l) -Flag $ColorFlag))
-        }
-        return $out.ToArray()
+        return @($lines | ForEach-Object {
+                $clipped = Invoke-ScapeStringClip -Text $_ -MaxWidth $ConsoleWidth -CenterClip
+                $pad = [Math]::Max(0, [Math]::Floor(($ConsoleWidth - $clipped.Length) / 2))
+                Format-ScapeANSIMessage -Text (" " * $pad + $clipped) -Flag $ColorFlag
+            })
     }
 }
 
-function Invoke-ScapeMasterRedraw {
+function Write-ScapeMenuBuffer {
+    param($Options, $CursorIndex, $LastCursorIndex = -1, $TitleKey, $FullRedraw)
+
+    # Memoization: pula render se nada mudou
+    $menuHash = "${TitleKey}:${CursorIndex}:${($Options | ForEach-Object `{ $_.Id } | Sort-Object) -join ','}"
+    if (-not $FullRedraw -and $Script:RenderCache.LastMenuHash -eq $menuHash) {
+        return
+    }
+    $Script:RenderCache.LastMenuHash = $menuHash
+
+    $dims = Get-ScapeConsoleDimension -WithMargins
+    $itemCount = @($Options).Count
+
+    $layout = Get-ScapeConstant -Path "ui::Layout"
+    $bannerThreshold = $layout.HeaderHeight
+    $bannerMode = 'Standard'
+    if (($itemCount + $bannerThreshold) -gt $dims.Height) { $bannerMode = 'Compact' }
+
+    if ($FullRedraw) {
+        [Console]::Clear()
+        $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $dims.Width
+        $y = 1
+        foreach ($line in $banner) { Set-ScapeCursorPosition -Left 0 -Top $y; [Console]::Write($line); $y++ }
+
+        $titleNode = Get-ScapeI18NNode -Key $TitleKey
+        $cleanTitle = $titleNode.Text -replace '^\[\s*|\s*\]$', ''
+
+        $box = Get-ScapeMenuLayout -MaxContentWidth 45 -ItemCount $itemCount -ConsoleWidth $dims.Width -ConsoleHeight $dims.Height -HeaderHeight $y
+        $Script:R_BoxCache = $box
+
+        $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
+
+        $state = Get-ScapeColdState
+        $frameStyle = if ($state.ContainsKey('FrameStyle')) { $state['FrameStyle'] } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
+        $frame = Get-ScapeConstant -Path "ui::Frames::$frameStyle"
+
+        $roofWidth = [Math]::Max(1, $box.Width - 2)
+
+        Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top $frameCoords.TitleY
+        [Console]::Write((Format-ScapeANSIMessage -Text ($frame.TL + ($frame.HL * $roofWidth) + $frame.TR) -Flag "MENU"))
+
+        Set-ScapeCursorPosition -Left $frameCoords.TitleX -Top $frameCoords.TitleY
+        [Console]::Write((Format-ScapeANSIMessage -Text "$cleanTitle" -Flag 'BANNER'))
+
+        for ($h = 1; $h -le $box.Height; $h++) {
+            Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top ($frameCoords.TitleY + $h)
+            [Console]::Write((Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU"))
+            Set-ScapeCursorPosition -Left $frameCoords.RightWallX -Top ($frameCoords.TitleY + $h)
+            [Console]::Write((Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU"))
+        }
+
+        Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top $frameCoords.BottomY
+        [Console]::Write((Format-ScapeANSIMessage -Text ($frame.BL + ($frame.HL * $roofWidth) + $frame.BR) -Flag "MENU"))
+    }
+
+    $box = $Script:R_BoxCache
+    $rawSelIcon = Get-ScapeConstant -Path "ui::Icons::Submenu"
+    $selIcon = if ($rawSelIcon -is [array]) { $rawSelIcon[0] } else { $rawSelIcon }
+
+    for ($i = 0; $i -lt $itemCount; $i++) {
+        $isCurrent = ($i -eq $CursorIndex)
+        if ($FullRedraw -or $isCurrent -or ($i -eq $LastCursorIndex)) {
+            $opt = $Options[$i]
+
+            $i18nNode = Get-ScapeI18NNode -Key $opt.TitleKey
+            $i18nStr = $i18nNode.Text
+            $hintStr = $opt.Hint
+
+            # Usa cache de ícone
+            $icon = _GetCachedResolvedIcon -RouteId $opt.Id
+
+            $flag = if ($opt.Type -eq 'UI') { 'MENU' } else { $opt.Type }
+            $coords = Get-ScapeGridCoordinates -BoxLayout $box -ActiveIcon $icon -Index $i
+
+            Set-ScapeCursorPosition -Left $coords.SelectorX -Top $coords.Y
+            [Console]::Write(" " * $box.UsableWidth)
+
+            if ($isCurrent) {
+                Set-ScapeCursorPosition -Left $coords.SelectorX -Top $coords.Y
+                [Console]::Write((Format-ScapeANSIMessage -Text $selIcon -Flag $flag -Bold))
+            }
+
+            Set-ScapeCursorPosition -Left $coords.IconX -Top $coords.Y
+            [Console]::Write((Format-ScapeANSIMessage -Text $icon -Flag $flag))
+
+            Set-ScapeCursorPosition -Left $coords.TextX -Top $coords.Y
+            $displayText = $i18nStr
+            if ($opt.DynamicText) { $displayText += $opt.DynamicText }
+            $msg = Format-ScapeANSIMessage -Text $displayText -Flag $flag -Bold:$isCurrent -IncludeBackground:$isCurrent
+            [Console]::Write($msg)
+
+            if ($isCurrent -and $hintStr) {
+                $hintY = $frameCoords.BottomY + 2
+                Set-ScapeCursorPosition -Left $box.X -Top $hintY
+                [Console]::Write(" " * $dims.Width)
+                Set-ScapeCursorPosition -Left $box.X -Top $hintY
+                [Console]::Write((Format-ScapeANSIMessage -Text $hintStr -Flag "HINT"))
+            }
+        }
+    }
+}
+
+function Write-ScapeTransientView {
     [CmdletBinding()]
     [OutputType([void])]
-    param(
-        [Parameter()][string]$MenuId,
-        [Parameter()][array]$Options,
-        [Parameter()][int]$CursorIndex,
-        [Parameter()][string]$TitleKey,
-        [switch]$ForceFullRedraw
-    )
-    process {
-        if ($null -eq $Script:R.Cache) { Initialize-ScapeRenderer }
-        $dims = Get-ScapeConsoleDimension -WithMargins
-        $needsRedraw = $ForceFullRedraw -or ($Script:R.LastMenuId -ne $MenuId)
+    param([Parameter(Mandatory = $true)][hashtable]$RenderConfig)
 
-        if ($needsRedraw) {
-            [Console]::Clear()
-            $boxH = if ($null -ne $Options) { $Options.Count + 4 } else { 4 }
-            $banner = Format-ScapeArtBlock -VariantKey "Standard" -ConsoleWidth $dims.Width
-            if (($banner.Count + $boxH) -gt $dims.Height) {
-                $banner = Format-ScapeArtBlock -VariantKey "Compact" -ConsoleWidth $dims.Width
-            }
+    if (-not $RenderConfig.ShouldRender) { return }
 
-            $y = 1
-            foreach ($line in $banner) { Set-ScapeCursorPosition -Left 0 -Top $y; Write-Output $line -NoNewline; $y++ }
-
-            $safeTitleKey = if ([string]::IsNullOrWhiteSpace($TitleKey)) { "MENU_DEFAULT" } else { $TitleKey }
-            $titleNode = Get-ScapeI18NNode -Key $safeTitleKey
-            $titleIconNode = Get-ScapeConstant -Path "ui::Icons::Menu" -Fallback @("≡")
-            $titleIcon = if ($titleIconNode -is [array]) { $titleIconNode[0] } else { $titleIconNode }
-            $titleText = " $titleIcon $($titleNode.Text) "
-
-            $maxTextW = Get-ScapePlainTextLength -Text $titleText
-            if ($null -ne $Options) {
-                foreach ($o in $Options) {
-                    $i18nNode = Get-ScapeI18NNode -Key $o.TitleKey
-                    $len = (Get-ScapePlainTextLength -Text $i18nNode.Text) + (Get-ScapePlainTextLength -Text $o.DynamicText) + 8
-                    if ($len -gt $maxTextW) { $maxTextW = $len }
-                }
-            }
-
-            $minW = Get-ScapeConstant -Path "ui::Layout::MinWidth" -Fallback 40
-            $Script:R.BoxCache = Get-ScapeMenuLayout -MaxContentWidth $maxTextW -ItemCount ($Options?.Count ?? 0) -ConsoleWidth $dims.Width -ConsoleHeight $dims.Height -HeaderHeight $y -MinWidth $minW
-
-            $box = $Script:R.BoxCache
-            $defStyle = Get-ScapeConstant -Path "ui::Defaults::FrameStyle" -Fallback "Classic"
-
-            Format-ScapeFrame -X $box.X -Y $box.Y -Width $box.Width -Height $box.Height -StyleKey $defStyle
-
-            $tLen = Get-ScapePlainTextLength -Text $titleText
-            $tX = $box.X + [Math]::Floor(($box.Width - $tLen) / 2)
-            Set-ScapeCursorPosition -Left $tX -Top $box.Y
-            Write-Output (Format-ScapeANSIMessage -Text $titleText -Flag "BANNER" -Bold) -NoNewline
-
-            $Script:R.LastMenuId = $MenuId
-            $Script:R.LastCursor = -1
+    if ($RenderConfig.Type -eq 'TreeView') {
+        Write-ScapeTreeView -RenderConfig $RenderConfig
+        # Memoization: pula render se nada mudou
+        $menuHash = "${TitleKey}:${CursorIndex}:${($Options | ForEach-Object `{ $_.Id } | Sort-Object) -join ','}"
+        if (-not $FullRedraw -and $Script:RenderCache.LastMenuHash -eq $menuHash) {
+            return
         }
+        $Script:RenderCache.LastMenuHash = $menuHash
+        return
+    }
+    $dims = Get-ScapeConsoleDimension -WithMargins
+    $clippedText = Invoke-ScapeStringClip -Text $RenderConfig.Text -MaxWidth ($dims.Width - 2)
+    $plainText = ($clippedText -replace '\x1B\[[0-9;]*[a-zA-Z]', '')
+    $x = [Math]::Max(0, [Math]::Floor(($dims.Width - $plainText.Length) / 2))
+    $safeWidth = $dims.Width - 2
 
-        $box = $Script:R.BoxCache
-        if ($null -eq $box -or $null -eq $Options) { return }
+    if ($RenderConfig.Type -eq 'StatusBar') {
+        $y = $dims.Height - 2
+        Set-ScapeCursorPosition -Left 1 -Top $y
+        [Console]::Write((Format-ScapeANSIMessage -Text (" " * $safeWidth) -Flag "MENU"))
+        Set-ScapeCursorPosition -Left $x -Top $y
+        [Console]::Write((Format-ScapeANSIMessage -Text $clippedText -Flag $RenderConfig.Flag))
+    }
+    elseif ($RenderConfig.Type -eq 'Transient') {
+        $y = $dims.Height - 1
+        Set-ScapeCursorPosition -Left 1 -Top $y
+        [Console]::Write((Format-ScapeANSIMessage -Text (" " * $safeWidth) -Flag "MENU"))
+        Set-ScapeCursorPosition -Left $x -Top $y
+        [Console]::Write((Format-ScapeANSIMessage -Text $clippedText -Flag $RenderConfig.Flag))
+    }
+}
 
-        $usableW = $box.UsableWidth
+function Write-ScapeTreeView {
+    [CmdletBinding()]
+    param([hashtable]$RenderConfig)
+    if (-not $RenderConfig.ShouldRender) { return }
 
-        $selIconNode = Get-ScapeConstant -Path "ui::Icons::Submenu" -Fallback "▶"
-        $selIcon = if ($selIconNode -is [array]) { $selIconNode[0] } else { $selIconNode }
+    $dims = Get-ScapeConsoleDimension -WithMargins
+    $title = Get-ScapeI18NNode -Key $RenderConfig.Config.TitleKey
+    $cleanTitle = $title.Text -replace '^\[\s*|\s*\]$', ''
 
-        for ($i = 0; $i -lt $Options.Count; $i++) {
-            if ($needsRedraw -or $i -eq $CursorIndex -or $i -eq $Script:R.LastCursor) {
-                $opt = $Options[$i]
-                if ($null -eq $opt) { continue }
+    $bannerMode = 'SmallLogo'
+    $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $dims.Width
+    $y = 1
+    foreach ($line in $banner) { Set-ScapeCursorPosition -Left 0 -Top $y; [Console]::Write($line); $y++ }
 
-                Set-ScapeCursorPosition -Left ($box.X + 2) -Top ($box.Y + 2 + $i)
+    $box = Get-ScapeMenuLayout -MaxContentWidth 80 -ItemCount $RenderConfig.Config.Items.Count -ConsoleWidth $dims.Width -ConsoleHeight $dims.Height -HeaderHeight $y
 
-                $safeOptKey = if ([string]::IsNullOrWhiteSpace($opt.TitleKey)) { "ITEM_DEFAULT" } else { $opt.TitleKey }
-                $i18nNode = Get-ScapeI18NNode -Key $safeOptKey
-                $icon = Get-ScapeResolvedIcon -RouteId $opt.Id
+    $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
+    $state = Get-ScapeColdState
+    $frameStyle = if ($state.ContainsKey('FrameStyle')) { $state['FrameStyle'] } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
+    $frame = Get-ScapeConstant -Path "ui::Frames::$frameStyle"
+    $roofWidth = [Math]::Max(1, $box.Width - 2)
 
-                $flag = if ($opt.Type -eq 'UI') { 'MENU' } else { $opt.Type }
+    Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top $frameCoords.TitleY
+    [Console]::Write((Format-ScapeANSIMessage -Text ($frame.TL + ($frame.HL * $roofWidth) + $frame.TR) -Flag "MENU"))
+    Set-ScapeCursorPosition -Left $frameCoords.TitleX -Top $frameCoords.TitleY
+    [Console]::Write((Format-ScapeANSIMessage -Text "$cleanTitle" -Flag 'BANNER'))
 
-                $baseText = "$icon $($i18nNode.Text)"
-                if ($i -eq $CursorIndex) { $baseText = "$selIcon $baseText" } else { $baseText = "  $baseText" }
+    for ($h = 1; $h -le $box.Height; $h++) {
+        Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top ($frameCoords.TitleY + $h)
+        [Console]::Write((Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU"))
+        Set-ScapeCursorPosition -Left $frameCoords.RightWallX -Top ($frameCoords.TitleY + $h)
+        [Console]::Write((Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU"))
+    }
+    Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top $frameCoords.BottomY
+    [Console]::Write((Format-ScapeANSIMessage -Text ($frame.BL + ($frame.HL * $roofWidth) + $frame.BR) -Flag "MENU"))
 
-                $padSpaces = Get-ScapeJustifiedPadding -LeftText $baseText -RightText $opt.DynamicText -TotalWidth $usableW
+    $yOffset = $frameCoords.ContentY
+    foreach ($item in $RenderConfig.Config.Items) {
+        if ($yOffset -ge ($frameCoords.BottomY)) { break }
 
-                if ($i -eq $CursorIndex) {
-                    $leftAnsi = Format-ScapeANSIMessage -Text "$baseText$padSpaces" -Flag $flag -IncludeBackground -Bold
-                    $rightAnsi = Format-ScapeANSIMessage -Text $opt.DynamicText -Flag $flag -IncludeBackground -Bold
-                    Write-Output "$leftAnsi$rightAnsi" -NoNewline
-                }
-                else {
-                    $leftAnsi = Format-ScapeANSIMessage -Text "$baseText$padSpaces" -Flag "MENU"
-                    $rightAnsi = Format-ScapeANSIMessage -Text $opt.DynamicText -Flag "DEBUG"
-                    Write-Output "$leftAnsi$rightAnsi" -NoNewline
-                }
-            }
-        }
-        $Script:R.LastCursor = $CursorIndex
+        $indent = "  " * $item.Depth
+        $rawLine = "$indent$($item.Text)"
+
+        $clippedLine = Invoke-ScapeStringClip -Text $rawLine -MaxWidth ($box.Width - 4)
+        $padding = Get-ScapeJustifiedPadding -LeftText $clippedLine -RightText "" -TotalWidth ($box.Width - 4)
+
+        Set-ScapeCursorPosition -Left $frameCoords.ContentX -Top $yOffset
+        [Console]::Write((Format-ScapeANSIMessage -Text ($clippedLine + $padding) -Flag $item.StatusFlag))
+        $yOffset++
     }
 }

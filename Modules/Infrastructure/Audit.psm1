@@ -1,7 +1,9 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Audit
-    Description: Ledger forense imutável. Compatível com PowerShell 5.1.
+    Description: Immutable forensic ledger for extracted artifacts – chain-of-custody with hash chaining.
+    Zero hardcode – configs via infrastructure::Audit and system::LIMITS.
+    Thread-safe with backpressure, PowerShell 5.1 compatible.
 #>
 [CmdletBinding()] param()
 
@@ -10,121 +12,180 @@ $Script:Ledger = [System.Collections.Generic.List[PSCustomObject]]::new()
 $Script:LastHash = $null
 $Script:SequenceId = 0
 $Script:LogStream = $null
-$Script:BackpressureSemaphore = $null
+$Script:Semaphore = $null
+$Script:Initialized = $false
 
 function Initialize-ScapeAudit {
-    [CmdletBinding(SupportsShouldProcess=$true)] [OutputType([bool])]
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    [OutputType([bool])]
     param()
 
-    if ($PSCmdlet.ShouldProcess("Audit Module", "Initialize Ledger")) {
-        $Script:C = @{
-            AUDIT  = Get-ScapeConstant -Path "compliance::AUDIT" -Fallback @{}
-            LIMITS = Get-ScapeConstant -Path "behavior::LIMITS" -Fallback @{}
-        }
-
-        $genesis = "SCAPE_GENESIS_v1.0"
-        if ($null -ne $Script:C.AUDIT["GENESIS_BLOCK"]) { $genesis = $Script:C.AUDIT["GENESIS_BLOCK"] }
-
-        $hashAlgo = "SHA256"
-        if ($null -ne $Script:C.AUDIT["HASH_ALGO"]) { $hashAlgo = $Script:C.AUDIT["HASH_ALGO"] }
-
-        $Script:LastHash = _ComputeHash -RawData $genesis -Algo $hashAlgo
-
-        $logDir = Join-Path -Path $BootRoot -ChildPath "Logs"
-        if (-not (Test-Path -Path $logDir)) { $null = New-Item -ItemType Directory -Path $logDir -Force }
-
-        $logFile = Join-Path -Path $logDir -ChildPath ("SCAPE_Audit_{0}.log" -f (Get-Date -Format "yyyyMMdd"))
-        try {
-            $Script:LogStream = [System.IO.StreamWriter]::new($logFile, $true, [System.Text.Encoding]::UTF8)
-            $Script:LogStream.AutoFlush = ($Script:C.AUDIT["LOG_IMMEDIATE_FLUSH"] -eq $true)
-        } catch {
-            Write-Error "[AUDIT] Erro ao abrir log: $($_.Exception.Message)"
-            return $false
-        }
-
-        $maxConcurrent = 16
-        if ($null -ne $Script:C.LIMITS["MAX_CONCURRENT_OPS"]) { $maxConcurrent = $Script:C.LIMITS["MAX_CONCURRENT_OPS"] }
-        $Script:BackpressureSemaphore = [System.Threading.SemaphoreSlim]::new($maxConcurrent, $maxConcurrent)
-
-        if (Get-Command "Register-ScapeEventListener" -ErrorAction SilentlyContinue) {
-            Register-ScapeEventListener -EventMatch "*" -Action {
-                param($IncomingEvt)
-                if ($IncomingEvt.Type -match "AUDIT|EVENT_BUS") { return }
-                _ProcessAuditEvent -IncomingEvt $IncomingEvt
-            }
-        }
-        return $true
-    }
-    return $false
-}
-
-function _ProcessAuditEvent {
-    [CmdletBinding()] [OutputType([void])]
-    param([PSCustomObject]$IncomingEvt)
-
-    if (-not $Script:BackpressureSemaphore.Wait(0)) {
-        if ($IncomingEvt.Severity -notin @("LOG_ERR", "LOG_FATAL", "COMPLIANCE")) { return }
-        $timeout = 5000
-        if ($null -ne $Script:C.LIMITS["AUDIT_TIMEOUT_MS"]) { $timeout = $Script:C.LIMITS["AUDIT_TIMEOUT_MS"] }
-        if (-not $Script:BackpressureSemaphore.Wait([int]$timeout)) { return }
-    }
+    if ($Script:Initialized) { return $true }
+    if (-not $PSCmdlet.ShouldProcess("Audit Module", "Initialize Forensic Ledger")) { return $false }
 
     try {
-        $auditTypes = @("*")
-        if ($null -ne $Script:C.AUDIT["AUDIT_EVENT_TYPES"]) { $auditTypes = $Script:C.AUDIT["AUDIT_EVENT_TYPES"] }
-
-        if ($auditTypes -notcontains "*" -and $auditTypes -notcontains $IncomingEvt.Type) { return }
-
-        $record = New-ScapeAuditRecord -EventFrame $IncomingEvt
-        if ($null -ne $record) {
-            $Script:Ledger.Add($record)
-            $logLine = _FormatLogLine -Record $record
-            if ($null -ne $Script:LogStream) {
-                $Script:LogStream.WriteLine($logLine)
-            }
+        # --- 2. CONFIGURAÇÃO DECLARATIVA ---
+        $Script:C = @{
+            Audit  = Get-ScapeConstant -Path "infrastructure::Audit" -Fallback @{}
+            Limits = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
         }
-    } catch {
-        Write-Verbose "Audit write suppressed to avoid recursion: $($_.Exception.Message)" -ErrorAction SilentlyContinue
-    } finally {
-        $null = $Script:BackpressureSemaphore.Release()
+
+        # --- 3. LÓGICA DE GÊNESIS ---
+        $genesis = $Script:C.Audit["GENESIS_BLOCK"]
+        if ($null -eq $genesis) { $genesis = "SCAPE_AUDIT_GENESIS_v1.0" }
+
+        $hashAlgo = $Script:C.Audit["HASH_ALGO"]
+        if ($null -eq $hashAlgo) { $hashAlgo = "SHA256" }
+
+        $Script:LastHash = _ComputeHash -RawData $genesis -Algo $hashAlgo
+        $Script:SequenceId = 0
+
+        # --- 4. INFRAESTRUTURA DE LOGS ---
+        $subDir = $Script:C.Audit["LOG_DIR"]
+        if ($null -eq $subDir) { $subDir = "Logs" }
+
+        $logDir = Join-Path ((Get-ScapeColdState)["ROOT"]) $subDir
+        if (-not (Test-Path $logDir)) { $null = New-Item -ItemType Directory -Path $logDir -Force }
+
+        $logFile = Join-Path $logDir ("SCAPE_Audit_{0}.log" -f (Get-Date -Format "yyyyMMdd"))
+
+        $Script:LogStream = [System.IO.StreamWriter]::new($logFile, $true, [System.Text.Encoding]::UTF8)
+        $Script:LogStream.AutoFlush = ($Script:C.Audit["LOG_IMMEDIATE_FLUSH"] -eq $true)
+
+        # --- 5. CONTROLE DE CARGA (BACKPRESSURE PRESERVADO) ---
+        $maxOps = $Script:C.Limits["MAX_CONCURRENT_OPS"]
+        if ($null -eq $maxOps) { $maxOps = 16 }
+        $Script:Semaphore = [System.Threading.SemaphoreSlim]::new($maxOps, $maxOps)
+
+        # --- 6. EVENT LISTENER ---
+        if (Get-Command "Register-ScapeEventListener" -ErrorAction SilentlyContinue) {
+            $script:AuditAction = {
+                param($IncomingEvt)
+
+                if ($IncomingEvt.Type -match "^(AUDIT_|EVENT_BUS)") { return }
+
+                $types = $Script:C.Audit["AUDIT_EVENT_TYPES"]
+                if ($null -eq $types) { $types = @("*") }
+
+                if ($types -notcontains "*" -and $types -notcontains $IncomingEvt.Type) { return }
+
+                # Gerenciamento de Backpressure com TIMEOUT PRESERVADO
+                if (-not $Script:Semaphore.Wait(0)) {
+                    if ($IncomingEvt.Severity -notin @("LOG_ERR", "LOG_FATAL", "COMPLIANCE")) { return }
+
+                    $timeout = $Script:C.Audit["BACKPRESSURE_TIMEOUT_MS"]
+                    if ($null -eq $timeout) { $timeout = 5000 } # <<< PRESERVADO
+
+                    if (-not $Script:Semaphore.Wait([int]$timeout)) { return }
+                }
+                try {
+                    $record = New-ScapeAuditRecord -EventFrame $IncomingEvt
+                    if ($record) {
+                        $null = $Script:Ledger.Add($record)
+                        $Script:LogStream?.WriteLine((_FormatLogLine -Record $record))
+                    }
+                }
+                finally {
+                    $null = $Script:Semaphore.Release()
+                }
+            }
+
+            Register-ScapeEventListener -EventMatch "*" -Action $script:AuditAction
+        }
+
+        # --- 7. FINALIZAÇÃO ---
+        $Script:Initialized = $true
+
+        Publish-ScapeEvent -Type "AUDIT_INITIALIZED" -Severity "LOG_INFO" -Payload @{
+            HashAlgorithm = $hashAlgo
+            GenesisHash   = $Script:LastHash
+            LedgerPath    = $logFile
+            Message       = Get-ScapeLogMsg -Key "AUDIT_INIT_OK" -MsgArgs @($logFile)
+        }
+
+        return $true
+    }
+    catch {
+        Publish-ScapeFault -ErrorRecord $_ -Context "Audit_Init" -Message (
+            Get-ScapeLogMsg -Key "ROUTER_FATAL" -MsgArgs @($_.Exception.Message)
+        )
+        return $false
+    }
+}
+
+function Register-ScapeExtraction {
+    [CmdletBinding(SupportsShouldProcess = $true)] [OutputType([PSCustomObject])]
+    param(
+        [Parameter(Mandatory = $true)][string]$SourceIdentifier,
+        [Parameter(Mandatory = $true)][string]$DestinationPath,
+        [Parameter(Mandatory = $true)][string]$HashSHA256,
+        [Parameter(Mandatory = $true)][long]$SizeBytes,
+        [Parameter(Mandatory = $true)][string]$ToolName,
+        [string]$OperatorId = "SYS_CORE",
+        [string]$ChainOfCustodyNote
+    )
+
+    if ($PSCmdlet.ShouldProcess("Ledger", "Register Extraction")) {
+        $payload = [PSCustomObject]@{
+            Source      = $SourceIdentifier
+            Destination = $DestinationPath
+            HashSHA256  = $HashSHA256
+            SizeBytes   = $SizeBytes
+            Tool        = $ToolName
+            CustodyNote = $ChainOfCustodyNote
+        }
+
+        $eventFrame = [PSCustomObject]@{
+            Type       = "ARTIFACT_EXTRACTED"
+            Severity   = "LOG_INFO"
+            OperatorId = $OperatorId
+            Payload    = $payload
+            Timestamp  = [DateTime]::UtcNow
+        }
+
+        return New-ScapeAuditRecord -EventFrame $eventFrame
     }
 }
 
 function New-ScapeAuditRecord {
-    [CmdletBinding(SupportsShouldProcess=$true)] [OutputType([psobject])]
+    [CmdletBinding(SupportsShouldProcess = $true)] [OutputType([psobject])]
     param([PSCustomObject]$EventFrame)
 
     if ($PSCmdlet.ShouldProcess("Ledger", "Append Record")) {
-        if ($null -eq $EventFrame) { return $null }
+        if (-not $EventFrame) { return $null }
 
-        $operator = "SYS_CORE"
-        if ($null -ne $EventFrame.OperatorId) { $operator = $EventFrame.OperatorId }
-
-        $timeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ"
-        if ($null -ne $Script:C.AUDIT["TIME_FORMAT"]) { $timeFormat = $Script:C.AUDIT["TIME_FORMAT"] }
-        $timestamp = [DateTime]::UtcNow.ToString($timeFormat)
-
-        $jsonPayload = ''
-        if ($null -ne $EventFrame.Payload) {
-            try { $jsonPayload = $EventFrame.Payload | ConvertTo-Json -Depth 10 -Compress -ErrorAction Stop }
-            catch { $jsonPayload = '{"error":"serialization_failed"}' }
+        $operator = $EventFrame.OperatorId
+        if ($null -eq $operator) {
+            $defaultOp = $Script:C.Audit["DEFAULT_OPERATOR"]
+            if ($null -eq $defaultOp) { $defaultOp = "SYS_CORE" }
+            $operator = $defaultOp
         }
+        $timeFormat = $Script:C.Audit["TIME_FORMAT"]
+        if ($null -eq $timeFormat) { $timeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ" }
+        $timestamp = [DateTime]::UtcNow.ToString($timeFormat)
+        $hashAlgo = $Script:C.Audit["HASH_ALGO"]
+        if ($null -eq $hashAlgo) { $hashAlgo = "SHA256" }
 
-        $algo = "SHA256"
-        if ($null -ne $Script:C.AUDIT["HASH_ALGO"]) { $algo = $Script:C.AUDIT["HASH_ALGO"] }
+        $jsonPayload = if ($EventFrame.Payload) {
+            try { $EventFrame.Payload | ConvertTo-Json -Depth 10 -Compress -ErrorAction Stop }
+            catch { '{"Error":"JSON_SERIALIZE_FAILED"}' }
+        }
+        else { "{}" }
 
-        $chainInput = '' -f $Script:LastHash, $timestamp, $EventFrame.Type, $operator, $jsonPayload
-        $currentHash = _ComputeHash -RawData $chainInput -Algo $algo
+        $chainInput = "{0}|{1}|{2}|{3}|{4}" -f $Script:LastHash, $timestamp, $EventFrame.Type, $operator, $jsonPayload
+        $currentHash = _ComputeHash -RawData $chainInput -Algo $hashAlgo
 
         $Script:SequenceId++
+        $severity = $EventFrame.Severity
+        if ($null -eq $severity) { $severity = "LOG_INFO" }
         $record = [PSCustomObject]@{
-            SequenceId   = '' -f $Script:SequenceId
+            SequenceId   = $Script:SequenceId.ToString("D10")
             Timestamp    = $timestamp
             EventType    = $EventFrame.Type
-            Severity     = if ($null -ne $EventFrame.Severity) { $EventFrame.Severity } else { "LOG_INFO" }
+            Severity     = $severity
             Operator     = $operator
             PreviousHash = $Script:LastHash
-            Integrity    = '' -f $algo, $currentHash
+            Integrity    = "{0}:{1}" -f $hashAlgo, $currentHash
             Details      = $jsonPayload
         }
 
@@ -134,17 +195,93 @@ function New-ScapeAuditRecord {
     return $null
 }
 
+function Export-ScapeAuditLedger {
+    [CmdletBinding(SupportsShouldProcess = $true)] [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)][string]$OutputPath,
+        [ValidateSet("JSON", "CSV")][string]$Format = "JSON",
+        [switch]$IncludeChainVerification
+    )
+
+    if ($PSCmdlet.ShouldProcess($OutputPath, "Export Audit Ledger")) {
+        try {
+            if ($Script:LogStream) { $Script:LogStream.Flush() }
+
+            $state = Get-ScapeColdState
+            $sessionId = $state["DATA_SESSION_ID"]
+            if ($null -eq $sessionId) { $sessionId = [guid]::NewGuid().ToString() }
+            $engineVersion = Get-ScapeConstant -Path "system::META::VERSION" -Fallback "1.0.0"
+            $report = [PSCustomObject]@{
+                ExportTime    = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
+                SessionId     = $sessionId
+                EngineVersion = $engineVersion
+                TotalRecords  = $Script:Ledger.Count
+                ClosingHash   = $Script:LastHash
+                ChainVerified = $false
+                Records       = $Script:Ledger.ToArray()
+            }
+
+            if ($IncludeChainVerification) {
+                $report.ChainVerified = _VerifyLedgerChain
+            }
+
+            if ($Format -eq "CSV") {
+                $csv = $report.Records | ConvertTo-Csv -NoTypeInformation
+                [System.IO.File]::WriteAllLines($OutputPath, $csv)
+            }
+            else {
+                $json = $report | ConvertTo-Json -Depth 10
+                [System.IO.File]::WriteAllText($OutputPath, $json, [System.Text.Encoding]::UTF8)
+            }
+
+            $msgExport = Get-ScapeLogMsg -Key "AUDIT_REPORT_GEN" -MsgArgs @($OutputPath)
+            Publish-ScapeEvent -Type "AUDIT_EXPORT_SUCCESS" -Severity "LOG_INFO" -Payload @{
+                Path     = $OutputPath
+                Count    = $report.TotalRecords
+                Verified = $report.ChainVerified
+                Message  = $msgExport
+            }
+            return @{ Success = $true; Path = $OutputPath; Records = $report.TotalRecords }
+        }
+        catch {
+            $errMsg = Get-ScapeLogMsg -Key "ROUTER_FATAL" -MsgArgs @($_.Exception.Message)
+            Publish-ScapeFault -ErrorRecord $_ -Context "Audit_Export" -Message $errMsg
+            return @{ Success = $false; Error = $_.Exception.Message }
+        }
+    }
+}
+
+function _VerifyLedgerChain {
+    [CmdletBinding()] [OutputType([bool])]
+    param()
+    $hashAlgo = $Script:C.Audit["HASH_ALGO"]
+    if ($null -eq $hashAlgo) { $hashAlgo = "SHA256" }
+    $expectedNext = $Script:C.Audit["GENESIS_BLOCK"]
+    if ($null -eq $expectedNext) { $expectedNext = "SCAPE_AUDIT_GENESIS_v1.0" }
+    $expectedNext = _ComputeHash -RawData $expectedNext -Algo $hashAlgo
+
+    foreach ($rec in $Script:Ledger) {
+        if ($rec.PreviousHash -ne $expectedNext) { return $false }
+        $chainInput = "{0}|{1}|{2}|{3}|{4}" -f $rec.PreviousHash, $rec.Timestamp, $rec.EventType, $rec.Operator, $rec.Details
+        $expectedNext = _ComputeHash -RawData $chainInput -Algo $hashAlgo
+        $storedHash = $rec.Integrity -replace "^${hashAlgo}:", ""
+        if ($storedHash -ne $expectedNext) { return $false }
+    }
+    return $true
+}
+
 function _ComputeHash {
     [CmdletBinding()] [OutputType([string])]
-    param([Parameter(Mandatory=$true)][string]$RawData, [string]$Algo = "SHA256")
+    param([Parameter(Mandatory = $true)][string]$RawData, [string]$Algo = "SHA256")
     try {
         $hasher = [System.Security.Cryptography.HashAlgorithm]::Create($Algo)
-        if ($null -eq $hasher) { $hasher = [System.Security.Cryptography.SHA256]::Create() }
+        if (-not $hasher) { $hasher = [System.Security.Cryptography.SHA256]::Create() }
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($RawData)
         $hashBytes = $hasher.ComputeHash($bytes)
         $hasher.Dispose()
         return [System.BitConverter]::ToString($hashBytes) -replace '-'
-    } catch {
+    }
+    catch {
         return $RawData.GetHashCode().ToString("X8")
     }
 }
@@ -152,5 +289,16 @@ function _ComputeHash {
 function _FormatLogLine {
     [CmdletBinding()] [OutputType([string])]
     param([PSCustomObject]$Record)
-    return "[{0}] [{1}] {2} | {3} | {4} | {5}" -f $Record.Timestamp, $Record.Severity, $Record.SequenceId, $Record.EventType, $Record.Operator, $Record.Integrity
+    return "[{0}] [{1}] SEQ:{2} | {3} | {4} | {5}" -f `
+        $Record.Timestamp, $Record.Severity, $Record.SequenceId, `
+        $Record.EventType, $Record.Operator, $Record.Integrity
+}
+
+Register-EngineEvent -SourceIdentifier PowerShell.OnExit -Action {
+    if ($Script:LogStream) {
+        $Script:LogStream.Flush()
+        $Script:LogStream.Close()
+        $Script:LogStream.Dispose()
+    }
+    if ($Script:Semaphore) { $Script:Semaphore.Dispose() }
 }

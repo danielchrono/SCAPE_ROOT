@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions
     Module: Scape.Extensions.Database.Core
@@ -16,11 +16,11 @@ function Initialize-ScapeDatabaseEngine {
     param()
 
     $Script:C = @{
-        DB      = Get-ScapeConstant -Path "db::DB" -Fallback @{}
-        DDL     = Get-ScapeConstant -Path "db::DDL" -Fallback @{}
-        LIMIT   = Get-ScapeConstant -Path "behavior::LIMITS" -Fallback @{}
-        FS      = Get-ScapeConstant -Path "fs::FS" -Fallback @{}
-        Carving = Get-ScapeConstant -Path "carving::SIGNATURES" -Fallback @{}
+        DB      = Get-ScapeConstant -Path "network::DB" -Fallback @{}
+        DDL     = Get-ScapeConstant -Path "network::DDL" -Fallback @{}
+        LIMIT   = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
+        FS      = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
+        Carving = Get-ScapeConstant -Path "storage::SIGNATURES" -Fallback @{}
     }
 
     $TypeName = "System.Data.SQLite.SQLiteConnection"

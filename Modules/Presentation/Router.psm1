@@ -1,169 +1,186 @@
-﻿<#
+
+<#
 .SYNOPSIS
     Domain: Presentation\Router
     Module: Scape.Presentation.Router
-    Architecture: State Machine Governor | Single Path Routing | Non-Blocking Main Loop
+    Architecture: State Machine Governor | Pure Event Publisher | Lazy-Ready | Zero Hardcode
 #>
 [CmdletBinding()] param()
 
-$Script:RouteStack = [System.Collections.Generic.List[string]]::new()
-$Script:CursorMemory = @{}
-
-function Add-ScapeRouteToStack {
-    [CmdletBinding(SupportsShouldProcess = $true)] [OutputType([array])]
-    param([Parameter(Mandatory = $true)][array]$Stack, [Parameter(Mandatory = $true)][string]$Route)
-    process {
-        if ($PSCmdlet.ShouldProcess("RouteStack", "Add $Route")) { return $Stack + @($Route) }
-        return $Stack
-    }
-}
-
-function Remove-ScapeRouteFromStack {
-    [CmdletBinding(SupportsShouldProcess = $true)] [OutputType([array])]
-    param([Parameter(Mandatory = $true)][array]$Stack)
-    process {
-        if ($PSCmdlet.ShouldProcess("RouteStack", "Remove Last")) {
-            if ($Stack.Count -le 1) { return $Stack }
-            return $Stack[0..($Stack.Count - 2)]
-        }
-        return $Stack
-    }
-}
-
 function Get-ScapeMenuData {
-    [CmdletBinding()] [OutputType([array])]
-    param([Parameter(Mandatory = $true)][string]$MenuId, [Parameter(Mandatory = $false)]$Fallback = @())
-    process {
-        $data = Get-ScapeConstant -Path "menu::$MenuId" -Fallback $null
-        if ($null -eq $data) { $data = Get-ScapeConstant -Path "ui::$MenuId" -Fallback $null }
-        if ($null -eq $data) { $data = Get-ScapeConstant -Path "ui::Menus::$MenuId" -Fallback $null }
-
-        if ($data -is [array]) { return $data }
-
-        [Console]::Clear()
-        Write-Output "`n [ROUTER FATAL ERROR] Inanição de Dados no Menu: $MenuId" -ForegroundColor Red -BackgroundColor Black
-        Write-Output " O Router tentou renderizar a tela, mas o Get-ScapeConstant retornou vazio." -ForegroundColor Yellow
-        Read-Host "`n Pressione ENTER para forçar o encerramento..."
-        return $Fallback
-    }
-}
-
-function Resolve-ScapeMenuTitleKey {
-    [CmdletBinding()] [OutputType([string])]
+    [CmdletBinding()]
+    [OutputType([array])]
     param([Parameter(Mandatory = $true)][string]$MenuId)
     process {
-        $cleanId = ($MenuId -replace 'Menu$', '').ToUpper()
-        $candidate = "MENU_$($cleanId)_TITLE"
-        if (Get-Command Get-ScapeI18NNode -ErrorAction SilentlyContinue) {
-            $resolved = Get-ScapeI18NNode -Key $candidate
-            if ($resolved.Text -ne $candidate) { return $candidate }
+        $data = Get-ScapeConstant -Path "navigation::$MenuId"
+        if ($null -eq $data) { return $null }
+
+        if ($data -is [hashtable] -and $data.ContainsKey('Items')) {
+            return $data
         }
-        return $MenuId
+
+        if ($data -is [array]) {
+            return @{ TitleKey = "MENU_$(($MenuId -replace 'Menu$', '').ToUpper())_TITLE"; Items = $data }
+        }
+        return $null
     }
 }
 
-function Invoke-ScapeMenuStateTransition {
-    [CmdletBinding()] [OutputType([hashtable])]
-    param(
-        [Parameter(Mandatory = $true)][string]$CurrentState,
-        [Parameter(Mandatory = $true)][string]$UserInput,
-        [Parameter(Mandatory = $true)][int]$CursorIndex,
-        [Parameter(Mandatory = $true)][int]$OptionCount,
-        [Parameter(Mandatory = $false)][bool]$WrapNavigation = $true
-    )
+function Invoke-ScapeRouterReducer {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param([hashtable]$State, [string]$Intent)
     process {
-        $combos = Get-ScapeConstant -Path "ui::Input::PSCombos" -Fallback @{ Accept = 'Enter'; Cancel = 'Escape'; HistoryPrev = 'UpArrow'; HistoryNext = 'DownArrow' }
-        $normKey = $UserInput -replace 'Arrow', ''
+        $opts = @()
+        if ($null -ne $State.RawOptions) { $opts = @($State.RawOptions) }
+        $max = $opts.Count
 
-        $newCursor = $CursorIndex
-        $shouldRender = $false
-        $action = $null
+        $State.LastCursor = $State.Cursor
+        $selAction = $null; $selId = $null; $selTarget = $null; $selPayload = $null; $selWake = $null
 
-        $acceptKey = Get-ScapeProperty -Object $combos -PropertyName 'Accept' -Fallback 'Enter'
-        $cancelKey = Get-ScapeProperty -Object $combos -PropertyName 'Cancel' -Fallback 'Escape'
-        $prevKey = Get-ScapeProperty -Object $combos -PropertyName 'HistoryPrev' -Fallback 'Up'
-        $nextKey = Get-ScapeProperty -Object $combos -PropertyName 'HistoryNext' -Fallback 'Down'
+        switch ($Intent) {
+            'UP' {
+                if ($State.Cursor -gt 0) { $State.Cursor-- } else { $State.Cursor = [Math]::Max(0, $max - 1) }
+                $State.NeedsCursorUpdate = $true
+                return $State
+            }
+            'DOWN' {
+                if ($max -gt 0 -and $State.Cursor -lt ($max - 1)) { $State.Cursor++ } else { $State.Cursor = 0 }
+                $State.NeedsCursorUpdate = $true
+                return $State
+            }
+            'BACK' {
+                $selAction = 'BACK'
+                $selId = 'CANCEL'
+            }
+            'SELECT' {
+                if ($max -eq 0) { return $State }
+                $sel = $opts[$State.Cursor]
 
-        if ($normKey -eq $acceptKey -or $normKey -eq 'Enter') { $action = 'Select' }
-        elseif ($normKey -eq $cancelKey -or $normKey -eq 'Escape' -or $normKey -eq 'Backspace') { $action = 'Back' }
-        elseif ($normKey -eq $prevKey -or $normKey -eq 'Up') {
-            $newCursor = if ($CursorIndex -gt 0) { $CursorIndex - 1 } elseif ($WrapNavigation) { $OptionCount - 1 } else { $CursorIndex }
-            $shouldRender = $true
+                $selAction = if ($sel -is [hashtable]) { $sel['Action'] } else { $sel.Action }
+                $selId = if ($sel -is [hashtable]) { $sel['Id'] } else { $sel.Id }
+                $selTarget = if ($sel -is [hashtable]) { $sel['Target'] } else { $sel.Target }
+                $selPayload = if ($sel -is [hashtable]) { $sel['Payload'] } else { $sel.Payload }
+                $selWake = if ($sel -is [hashtable]) { $sel['Layer'] } else { $sel.Layer }
+            }
+            default { return $State }
         }
-        elseif ($normKey -eq $nextKey -or $normKey -eq 'Down') {
-            $newCursor = if ($CursorIndex -lt ($OptionCount - 1)) { $CursorIndex + 1 } elseif ($WrapNavigation) { 0 } else { $CursorIndex }
-            $shouldRender = $true
+
+        if ($selId -eq 'EXIT' -or $selAction -eq 'TERMINATE') {
+            $State.IsRunning = $false
+            return $State
         }
 
-        return @{ State = $CurrentState; Cursor = $newCursor; ShouldRender = $shouldRender; Action = $action }
+        if ($selAction -or $selId) {
+            $payload = @{
+                MenuId = $State.CurrentMenu; SelectionId = $selId; Action = $selAction;
+                Target = $selTarget; ActionPayload = $selPayload; Layer = $selWake
+            }
+            Publish-ScapeEvent -Type "UI_SELECTION" -Severity "INFO" -Payload $payload
+        }
+
+        if ($selAction -eq 'BACK' -or $selId -in @('RETURN', 'CANCEL')) {
+            if ($State.RouteStack.Count -gt 1) {
+                $State.RouteStack.RemoveAt($State.RouteStack.Count - 1)
+                $State.CurrentMenu = $State.RouteStack[-1]
+                $State.NeedsFullRedraw = $true
+            }
+            return $State
+        }
+
+        if ($selAction -eq 'NAVIGATE' -and $selTarget) {
+            $State.RouteStack.Add($selTarget)
+            $State.CurrentMenu = $selTarget
+            $State.NeedsFullRedraw = $true
+            Publish-ScapeEvent -Type "ROUTER_NAVIGATE" -Severity "INFO" -Payload @{ From = $State.RouteStack[-2]; To = $selTarget }
+        }
+
+        return $State
     }
 }
 
 function Start-ScapeRouter {
-    [CmdletBinding(SupportsShouldProcess = $true)] [OutputType([void])]
-    param([Parameter(Mandatory = $false)][string]$InitialMenu = 'MainMenu')
+    param([string]$InitialMenu = 'MainMenu')
     process {
-        if ($PSCmdlet.ShouldProcess("Presentation Layer", "Start View Router")) {
-            if (Get-Command Initialize-ScapeRenderer -ErrorAction SilentlyContinue) { Initialize-ScapeRenderer }
-            if (Get-Command Initialize-ScapeTheme -ErrorAction SilentlyContinue) { Initialize-ScapeTheme }
+        Initialize-ScapeRenderer
+        Initialize-ScapeStateObserver -AutoRegister | Out-Null
 
-            $menu = $InitialMenu
-            $stack = @($InitialMenu)
-            [Console]::CursorVisible = $false
+        $State = @{
+            IsRunning         = $true
+            CurrentMenu       = $InitialMenu
+            RouteStack        = New-Object 'System.Collections.Generic.List[string]'
+            Cursor            = 0
+            NeedsFullRedraw   = $true
+            NeedsCursorUpdate = $false
+            RawOptions        = @()
+            LastCursor        = -1
+            TitleKey          = ""
+        }
+        $State.RouteStack.Add($InitialMenu)
 
-            try {
-                while ($true) {
-                    $rawOpts = Get-ScapeMenuData -MenuId $menu
-                    if ($null -eq $rawOpts -or $rawOpts.Count -eq 0) { break }
+        $viewportState = Initialize-ScapeViewportState
 
-                    $titleKey = Resolve-ScapeMenuTitleKey -MenuId $menu
-                    $initCursor = if ($Script:CursorMemory.Contains($menu)) { $Script:CursorMemory[$menu] } else { 0 }
+        # Limpa buffer antes de começar (segurança)
+        if (Get-Command Clear-ScapeInputBuffer -ErrorAction SilentlyContinue) {
+            Clear-ScapeInputBuffer
+        }
 
-                    $hydratedOpts = Update-ScapeMenuViewModel -MenuId $menu -RawOptions $rawOpts
+        try {
+            while ($State.IsRunning) {
+                # --------------------------------------------------------------
+                # DRENA FILA DE EVENTOS (obrigatório!)
+                Invoke-ScapeIdlePump | Out-Null
+                # --------------------------------------------------------------
 
-                    $engineResult = Invoke-ScapeMenuEngine -MenuId $menu -RawOptions $hydratedOpts -TitleKey $titleKey -InitialCursor $initCursor
-
-                    if ($null -eq $engineResult -or $null -eq $engineResult.Selection) {
-                        if (Get-Command Receive-ScapeEvent -ErrorAction SilentlyContinue) {
-                            $null = Receive-ScapeEvent -MaxBatchSize 20
-                        }
-                        continue
-                    }
-
-                    $Script:CursorMemory[$menu] = $engineResult.Cursor
-                    $selection = $engineResult.Selection
-                    $selAction = Get-ScapeProperty -Object $selection -PropertyName 'Action' -Fallback ''
-                    $selId = Get-ScapeProperty -Object $selection -PropertyName 'Id' -Fallback ''
-
-                    if ($selAction -eq 'ESC' -or $selId -in @('RETURN', 'CANCEL')) {
-                        if ($stack.Count -gt 1) {
-                            $stack = Remove-ScapeRouteFromStack -Stack $stack
-                            $menu = $stack[-1]
-                            [Console]::Clear()
-                            continue
-                        }
-                        else { break }
-                    }
-
-                    if ($selId -eq 'EXIT') { break }
-
-                    $eff = Resolve-ScapeSelectionEffect -SelectedOption $selection -CurrentMenu $menu -RouteStack $stack
-
-                    $effAction = Get-ScapeProperty -Object $eff -PropertyName 'Action' -Fallback ''
-                    if ($effAction -eq 'TERMINATE') { break }
-                    if ($effAction -eq 'MUTATE') { [Console]::Clear(); continue }
-
-                    $menu = Get-ScapeProperty -Object $eff -PropertyName 'NextMenu' -Fallback $menu
-                    $stack = Get-ScapeProperty -Object $eff -PropertyName 'RouteStack' -Fallback $stack
-
-                    [Console]::Clear()
+                if (Test-ScapeViewportChanged -ViewportState $viewportState) {
+                    $State.NeedsFullRedraw = $true
                 }
+
+                if ($State.NeedsFullRedraw -or $State.NeedsCursorUpdate) {
+                    if ($State.NeedsFullRedraw -or -not $State.RawOptions) {
+                        $menuData = Get-ScapeMenuData -MenuId $State.CurrentMenu
+                        if ($null -eq $menuData -or $null -eq $menuData.Items) {
+                            $fatalMsg = "ROUTER_FATAL: Menu starvation. '$($State.CurrentMenu)' not found."
+                            Publish-ScapeEvent -Type "ROUTER_FATAL" -Severity "FATAL" -Payload $fatalMsg
+                            throw $fatalMsg
+                        }
+                        $State.RawOptions = $menuData.Items
+                        $State.TitleKey = $menuData.TitleKey
+                        if ($State.NeedsFullRedraw) {
+                            $State.Cursor = 0
+                            $State.LastCursor = -1
+                        }
+                    }
+
+                    $evtType = if ($State.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' }
+
+                    # =================================================================
+                    # CORREÇÃO: usa a função pública do StateObserver
+                    if (Get-Command Request-ScapeRedraw -ErrorAction SilentlyContinue) {
+                        Request-ScapeRedraw -MenuId $State.CurrentMenu -Type $evtType -RouterState $State -TitleKey $State.TitleKey
+                    }
+                    else {
+                        Write-Host "[Router] ERRO: Request-ScapeRedraw não disponível" -ForegroundColor Red
+                    }
+                    # =================================================================
+
+                    Invoke-ScapeIdlePump | Out-Null
+
+                    $State.NeedsFullRedraw = $false
+                    $State.NeedsCursorUpdate = $false
+                }
+
+                $intent = Get-ScapeInputIntent -CurrentMenuState $State
+                if ($intent -ne 'IDLE') {
+                    $State = Invoke-ScapeRouterReducer -State $State -Intent $intent
+                }
+
+                Start-Sleep -Milliseconds 15
             }
-            finally {
-                [Console]::CursorVisible = $true
-                [Console]::Clear()
-                Write-Output "SCAPE RECOVERY ENGINE SHUTDOWN." -ForegroundColor DarkGray
-            }
+        }
+        finally {
+            Close-ScapeRenderer
+            Publish-ScapeEvent -Type "ROUTER_STOP" -Severity "INFO" -Payload @{ Menu = $State.CurrentMenu }
         }
     }
 }
