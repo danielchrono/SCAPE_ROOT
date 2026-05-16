@@ -208,6 +208,7 @@ catch {
         }
         Write-Host (Resolve-ScapeMsg -Key "DEPLOYER_LAUNCH_SCAPE") -ForegroundColor Cyan
         Start-Sleep -Seconds 1
+        # DO NOT CLOSE LOGGER - let child session continue with same log file via SCAPE_LOG_PARENT_FILE env var
         exit 0
     }
 
@@ -221,9 +222,10 @@ catch {
         }
         if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
     }
+    # Close logger only on fatal error, not on successful handover
+    if (Get-Command Close-ScapeLogStream -ErrorAction SilentlyContinue) { Close-ScapeLogStream }
 }
 finally {
-    if (Get-Command Close-ScapeLogStream -ErrorAction SilentlyContinue) { Close-ScapeLogStream }
     [System.GC]::Collect()
 }
 

@@ -205,7 +205,7 @@
         ASCII      = @{ TL = "+"; TR = "+"; BL = "+"; BR = "+"; HL = "-"; VL = "|"; ML = "+"; MR = "+"; Cross = "+"; TeeUp = "+"; TeeDown = "+"; TeeLeft = "+"; TeeRight = "+"; Name = "ASCII Fallback" }
         Block      = @{ TL = "█"; TR = "█"; BL = "█"; BR = "█"; HL = "█"; VL = "█"; ML = "█"; MR = "█"; Cross = "█"; TeeUp = "█"; TeeDown = "█"; TeeLeft = "█"; TeeRight = "█"; Name = "Block Heavy" }
         Retro      = @{ TL = "┌"; TR = "┐"; BL = "└"; BR = "┘"; HL = "─"; VL = "│"; ML = "├"; MR = "┤"; Cross = "┼"; TeeUp = "┴"; TeeDown = "┬"; TeeLeft = "┤"; TeeRight = "├"; Name = "Retro Terminal" }
-        Cyber      = @{ TL = "█"; TR = "█"; BL = "█"; BR = "█"; HL = "─"; VL = "█"; ML = "█"; MR = "█"; Cross = "█"; TeeUp = "─"; TeeDown = "─"; TeeLeft = "█"; TeeRight = "█"; Name = "Cyberpunk" }
+        Cyber      = @{ TL = "┏"; TR = "┓"; BL = "┗"; BR = "┛"; HL = "━"; VL = "┃"; ML = "┣"; MR = "┫"; Cross = "╋"; TeeUp = "┻"; TeeDown = "┳"; TeeLeft = "┫"; TeeRight = "┣"; Name = "Cyberpunk" }
         Heavy      = @{ TL = "┏"; TR = "┓"; BL = "┗"; BR = "┛"; HL = "━"; VL = "┃"; ML = "┣"; MR = "┫"; Cross = "╋"; TeeUp = "┻"; TeeDown = "┳"; TeeLeft = "┫"; TeeRight = "┣"; Name = "Heavy Box" }
         Dotted     = @{ TL = "."; TR = "."; BL = "."; BR = "."; HL = "·"; VL = ":"; ML = ":"; MR = ":"; Cross = "+"; TeeUp = "+"; TeeDown = "+"; TeeLeft = "+"; TeeRight = "+"; Name = "Dotted" }
         Borderless = @{ TL = " "; TR = " "; BL = " "; BR = " "; HL = " "; VL = " "; ML = " "; MR = " "; Cross = " "; TeeUp = " "; TeeDown = " "; TeeLeft = " "; TeeRight = " "; Name = "Borderless" }

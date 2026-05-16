@@ -385,10 +385,13 @@ function Invoke-ScapeSelectionTriggerAction {
         'Scape.Presentation.Theme' {
             if ($Task -eq 'PROCEDURAL' -and (Get-Command Invoke-ScapeProceduralTheme -ErrorAction SilentlyContinue)) {
                 Invoke-ScapeProceduralTheme
+                # Preserve current cursor position instead of resetting to 0
+                $cursorIdx = if ($p -is [hashtable]) { $p['Cursor'] } elseif ($null -ne $p.PSObject) { $p.Cursor } else { 0 }
+                if ($null -eq $cursorIdx) { $cursorIdx = 0 }
                 $menuOpts = Get-ScapeConstant -Path "navigation::$MenuId"
                 $menuTitle = if ($menuOpts -and $menuOpts.Items) { $menuOpts.TitleKey } else { $MenuId }
                 $menuItems = if ($menuOpts -and $menuOpts.Items) { @($menuOpts.Items) } else { @() }
-                Request-ScapeRedraw -MenuId $MenuId -Type 'FULL' -RouterState @{ Cursor = 0; LastCursor = -1; RawOptions = $menuItems } -TitleKey $menuTitle
+                Request-ScapeRedraw -MenuId $MenuId -Type 'FULL' -RouterState @{ Cursor = [int]$cursorIdx; LastCursor = -1; RawOptions = $menuItems } -TitleKey $menuTitle
                 return $true
             }
             break
@@ -475,7 +478,7 @@ function Invoke-ScapeSelectionEvent {
         $target = Get-ScapePayloadField -Payload $payloadDef -Key 'Target'
         $task = Get-ScapePayloadField -Payload $payloadDef -Key 'Task'
         if (-not [string]::IsNullOrWhiteSpace($target)) {
-            Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "DEBUG" -Payload @{
+            Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{
                 TriggerTarget = $target
                 TriggerTask   = $task
                 SelectionId   = $selId

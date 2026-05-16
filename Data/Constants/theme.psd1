@@ -327,11 +327,14 @@
     Persona           = @{
         Cyber      = @{ Palette = "Neon"; Frame = "Cyber"; Progress = "Spinner"; Animation = $true; Contrast = "Dark" }
         Corporate  = @{ Palette = "Nord"; Frame = "Classic"; Progress = "Default"; Animation = $false; Contrast = "Light" }
-        Hacker     = @{ Palette = "Dracula"; Frame = "Thick"; Progress = "BarOnly"; Animation = $true; Contrast = "Dark" }
+        Hacker     = @{ Palette = "Dracula"; Frame = "Heavy"; Progress = "BarOnly"; Animation = $true; Contrast = "Dark" }
         Minimal    = @{ Palette = "Mono"; Frame = "Borderless"; Progress = "Compact"; Animation = $false; Contrast = "Auto" }
         Retro      = @{ Palette = "GruvboxDark"; Frame = "Retro"; Progress = "Discrete"; Animation = $true; Contrast = "Dark" }
         HighVis    = @{ Palette = "HighContrast"; Frame = "Heavy"; Progress = "Default"; Animation = $false; Contrast = "Light" }
         PowerShell = @{ Palette = "CatppuccinMocha"; Frame = "Rounded"; Progress = "Default"; Animation = $true; Contrast = "Dark" }
+        Sunset     = @{ Palette = "Base"; Frame = "Rounded"; Progress = "Default"; Animation = $true; Contrast = "Dark"; Colors = @{ Primary = "Orange"; Secondary = "Red"; Accent = "Gold" } }
+        Forest     = @{ Palette = "Mono"; Frame = "Classic"; Progress = "Blocks"; Animation = $true; Contrast = "Dark"; Colors = @{ Primary = "Green"; Secondary = "Lime"; Accent = "Mint" } }
+        Lavender   = @{ Palette = "Base"; Frame = "Minimal"; Progress = "Default"; Animation = $false; Contrast = "Light"; Colors = @{ Primary = "Lavender"; Secondary = "Violet"; Accent = "Pink" } }
     }
 
     # ===========================================================================

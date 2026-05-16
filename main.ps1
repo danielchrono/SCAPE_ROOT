@@ -97,6 +97,8 @@ if (Get-Command Initialize-ScapeLogger -ErrorAction SilentlyContinue) { Initiali
 if (Get-Command Initialize-ScapeResolver -ErrorAction SilentlyContinue) { Initialize-ScapeResolver | Out-Null }
 if (Get-Command Initialize-ScapeTheme -ErrorAction SilentlyContinue) { Initialize-ScapeTheme | Out-Null }
 if (Get-Command Initialize-ScapeRenderer -ErrorAction SilentlyContinue) { Initialize-ScapeRenderer | Out-Null }
+# Enable VT100 and graphic mode from parent session or dynamically
+if ([string]::IsNullOrWhiteSpace($env:SCAPE_GRAPHIC_MODE)) { $env:SCAPE_GRAPHIC_MODE = "1" }
 
 if (Get-Command Resolve-ScapeManifestLayer -ErrorAction SilentlyContinue) { Resolve-ScapeManifestLayer -LayerKey "Presentation" | Out-Null }
 if (Get-Command Invoke-ScapeWakeAssets -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAssets -Domain "Presentation" | Out-Null }
@@ -105,5 +107,21 @@ Publish-ScapeEvent -Type "LANG_SWITCH" -Severity "INFO" -Payload @{ Language = $
 
 $navCheck = Get-ScapeAsset -Category "Manifests" -AssetId "navigation"
 if ($null -eq $navCheck) { throw "HANDOFF_FATAL: Navigation manifest failed to mount in RAM." }
-Start-ScapeRouter -InitialMenu "MainMenu"
+
+try {
+    Start-ScapeRouter -InitialMenu "MainMenu"
+}
+catch {
+    $errText = $_.ToString() + " " + $_.Exception.Message
+    if ($errText -match "SCAPE_HANDOVER") {
+        # Handover to another menu/session - logger continues
+        exit 0
+    }
+    # Any other error - log and exit
+    throw
+}
+finally {
+    # Close logger only on real exit, not on handover
+    if (Get-Command Close-ScapeLogStream -ErrorAction SilentlyContinue) { Close-ScapeLogStream }
+}
 

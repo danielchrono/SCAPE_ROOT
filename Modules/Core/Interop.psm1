@@ -161,3 +161,18 @@ function Initialize-ScapeInterop {
         return @{ Success = $true; Data = "Interop.Ready"; Error = $null }
     }
 }
+
+function global:Enable-ScapeVT100 {
+    [CmdletBinding()]
+    param()
+    try {
+        if (-not ("Scape.Core.Native.VT100Enabler" -as [type])) {
+            Add-Type -TypeDefinition $Script:InteropSignature -Language CSharp -ErrorAction Stop
+        }
+        [Scape.Core.Native.VT100Enabler]::Enable()
+        return $true
+    }
+    catch {
+        return $false
+    }
+}

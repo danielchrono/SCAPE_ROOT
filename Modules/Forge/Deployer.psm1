@@ -116,6 +116,8 @@ function Set-MainScript {
 
     [void]$sb.AppendLine('if (Get-Module PSReadLine -ErrorAction SilentlyContinue) { Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue }')
     [void]$sb.AppendLine('[Console]::OutputEncoding = [System.Text.Encoding]::UTF8')
+    [void]$sb.AppendLine('# Enable VT100 and graphic mode from parent session or dynamically')
+    [void]$sb.AppendLine('if ([string]::IsNullOrWhiteSpace($env:SCAPE_GRAPHIC_MODE)) { $env:SCAPE_GRAPHIC_MODE = "1" }')
     [void]$sb.AppendLine('')
 
     [void]$sb.AppendLine('$topoPath = Join-Path -Path $Global:AppRoot -ChildPath "Data\Manifests\Topology.psd1"')
@@ -194,7 +196,23 @@ function Set-MainScript {
     [void]$sb.AppendLine('')
     [void]$sb.AppendLine('$navCheck = Get-ScapeAsset -Category "Manifests" -AssetId "navigation"')
     [void]$sb.AppendLine('if ($null -eq $navCheck) { throw "HANDOFF_FATAL: Navigation manifest failed to mount in RAM." }')
-    [void]$sb.AppendLine('Start-ScapeRouter -InitialMenu "MainMenu"')
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('try {')
+    [void]$sb.AppendLine('    Start-ScapeRouter -InitialMenu "MainMenu"')
+    [void]$sb.AppendLine('}')
+    [void]$sb.AppendLine('catch {')
+    [void]$sb.AppendLine('    $errText = $_.ToString() + " " + $_.Exception.Message')
+    [void]$sb.AppendLine('    if ($errText -match "SCAPE_HANDOVER") {')
+    [void]$sb.AppendLine('        # Handover to another menu/session - logger continues')
+    [void]$sb.AppendLine('        exit 0')
+    [void]$sb.AppendLine('    }')
+    [void]$sb.AppendLine('    # Any other error - log and exit')
+    [void]$sb.AppendLine('    throw')
+    [void]$sb.AppendLine('}')
+    [void]$sb.AppendLine('finally {')
+    [void]$sb.AppendLine('    # Close logger only on real exit, not on handover')
+    [void]$sb.AppendLine('    if (Get-Command Close-ScapeLogStream -ErrorAction SilentlyContinue) { Close-ScapeLogStream }')
+    [void]$sb.AppendLine('}')
 
     Set-Content -Path $mainPath -Value $sb.ToString() -Encoding UTF8 -Force
     return $mainPath
@@ -211,13 +229,27 @@ function New-ScapeHandoverArgument {
     if (-not [string]::IsNullOrWhiteSpace($LogFilePath)) {
         $safeLog = $LogFilePath -replace "'", "''"
         $safeScript = $ScriptPath -replace "'", "''"
-        $command = "`$env:SCAPE_LOG_PARENT_FILE = '$safeLog'; & '$safeScript'"
+        # Enable VT100 BEFORE running the script so icons render in graphic mode
+        $command = @"
+`$env:SCAPE_LOG_PARENT_FILE = '$safeLog'
+`$env:SCAPE_GRAPHIC_MODE = '1'
+if (Get-Command Enable-ScapeVT100 -ErrorAction SilentlyContinue) { Enable-ScapeVT100 }
+& '$safeScript'
+"@
         $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
         $encoded = [Convert]::ToBase64String($bytes)
         return "-NoProfile -ExecutionPolicy Bypass -NoExit -EncodedCommand $encoded"
     }
 
-    return "-NoProfile -ExecutionPolicy Bypass -NoExit -File `"$ScriptPath`""
+    # Without log file, still enable VT100 and graphic mode
+    $command = @"
+`$env:SCAPE_GRAPHIC_MODE = '1'
+if (Get-Command Enable-ScapeVT100 -ErrorAction SilentlyContinue) { Enable-ScapeVT100 }
+& '$safeScript'
+"@
+    $bytes = [System.Text.Encoding]::Unicode.GetBytes($command)
+    $encoded = [Convert]::ToBase64String($bytes)
+    return "-NoProfile -ExecutionPolicy Bypass -NoExit -EncodedCommand $encoded"
 }
 
 function Invoke-ScapeDeployWorkflow {
@@ -275,7 +307,7 @@ function Invoke-ScapeDeployWorkflow {
             Expand-MonolithToDirectory -TargetDir $root -Topology $topology -Registry $registry
             $mainPath = Set-MainScript -TargetDir $root -Topology $topology
             $handoverArgs = New-ScapeHandoverArgument -ScriptPath $mainPath -LogFilePath $activeLogFile
-            Start-Process $pwsh -WorkingDirectory (Split-Path -Parent $mainPath) -ArgumentList $handoverArgs
+            Start-Process $pwsh -WorkingDirectory (Split-Path -Parent $mainPath) -ArgumentList $handoverArgs -NoNewWindow
             throw "SCAPE_HANDOVER"
         }
         'BUILD_AND_LAUNCH_MONOLITH' {
@@ -297,7 +329,7 @@ function Invoke-ScapeDeployWorkflow {
             }
 
             $handoverArgs = New-ScapeHandoverArgument -ScriptPath $monolithPath -LogFilePath $activeLogFile
-            Start-Process $pwsh -WorkingDirectory (Split-Path -Parent $monolithPath) -ArgumentList $handoverArgs
+            Start-Process $pwsh -WorkingDirectory (Split-Path -Parent $monolithPath) -ArgumentList $handoverArgs -NoNewWindow
             throw "SCAPE_HANDOVER"
         }
         'EXE_PORTABLE' { _ExecuteAtomicBuild -Task $Task -TargetBase $targetBase -Topology $topology -Registry $registry -OutDir $outDir -IconPath $IconPath }
