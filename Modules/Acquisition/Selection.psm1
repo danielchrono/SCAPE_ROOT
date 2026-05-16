@@ -15,18 +15,19 @@ function Get-ScapePhysicalTarget {
 
         foreach ($d in $drives) {
             $results.Add([PSCustomObject]@{
-                DeviceID     = $d.DeviceID      # Ex: \\.\PHYSICALDRIVE0
-                Model        = $d.Model
-                Size         = [long]$d.Size
-                Partitions   = $d.Partitions
-                SerialNumber = $d.SerialNumber
-                IsSystem     = ($d.Index -eq 0) # Heurística simples, aprimorar depois
-            })
+                    DeviceID     = $d.DeviceID      # Ex: \\.\PHYSICALDRIVE0
+                    Model        = $d.Model
+                    Size         = [long]$d.Size
+                    Partitions   = $d.Partitions
+                    SerialNumber = $d.SerialNumber
+                    IsSystem     = ($d.Index -eq 0) # Heurística simples, aprimorar depois
+                })
         }
         return $results
-    } catch {
-        Publish-ScapeEvent -Type "LOG_ERR" -Payload @{ Action="LogLine"; Message="Failed to enumerate physical targets: $($_.Exception.Message)" }
+    }
+    catch {
+        $enumFailMsg = Get-ScapeLogMsg -Key "INVENTORY_WMI_FAIL"
+        Publish-ScapeEvent -Type "LOG_ERR" -Payload @{ Action = "LogLine"; Message = $enumFailMsg }
         return $null
     }
 }
-

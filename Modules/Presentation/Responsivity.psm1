@@ -2,7 +2,7 @@
 .SYNOPSIS
     Domain: Presentation\Responsivity
     Module: Scape.Presentation.Responsivity
-    Architecture: Viewport State Tracker | Resize Watchdog | Pure Detection
+    Architecture: Viewport State Tracker | Resize Watchdog | Smart Pagination
 #>
 [CmdletBinding()] param()
 
@@ -86,5 +86,41 @@ function Set-ScapeViewportLocks {
             }
         }
         catch { }
+    }
+}
+
+function Get-ScapeViewportRange {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)][int]$TotalItems,
+        [Parameter(Mandatory = $true)][int]$CursorIndex,
+        [Parameter(Mandatory = $true)][int]$AvailableHeight
+    )
+    process {
+        if ($TotalItems -le 0) { return @{ Start = 0; End = 0; Visible = 0 } }
+
+        $visible = [Math]::Min($TotalItems, $AvailableHeight)
+
+        if ($visible -eq $TotalItems) {
+            return @{ Start = 0; End = $TotalItems; Visible = $visible }
+        }
+
+        $centerOffset = [Math]::Floor($visible / 2)
+
+        if ($CursorIndex -lt $centerOffset) {
+            $start = 0
+        }
+        elseif ($CursorIndex -gt ($TotalItems - ($visible - $centerOffset))) {
+            $start = $TotalItems - $visible
+        }
+        else {
+            $start = $CursorIndex - $centerOffset
+        }
+
+        $start = [Math]::Max(0, [Math]::Min($start, $TotalItems - $visible))
+        $end = [Math]::Min($start + $visible, $TotalItems)
+
+        return @{ Start = $start; End = $end; Visible = $visible }
     }
 }

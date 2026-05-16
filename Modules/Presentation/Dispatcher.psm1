@@ -60,8 +60,8 @@ function Format-ScapeProgressBar {
         $pct = 0
         if ($tot -gt 0) { $pct = [Math]::Min(100, ($cur / $tot) * 100) }
 
-        $state = Get-ScapeColdState
-        $styleName = $state['ProgressStyle']
+        # MVVM estrito: ProgressStyle deve vir do ViewModel/Payload (read-only), não de ColdState
+        $styleName = if ($Payload.ContainsKey('ProgressStyle') -and -not [string]::IsNullOrWhiteSpace($Payload['ProgressStyle'])) { [string]$Payload['ProgressStyle'] } else { 'Default' }
         $barConfig = Get-ScapeConstant -Path "ui::Progress::$styleName"
 
         if ($barConfig.Frames) {

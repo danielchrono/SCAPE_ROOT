@@ -14,9 +14,13 @@
         winfr    = "ms-windows-store://pdp/?ProductId=9N26S50LN705" # Link da store caso o Packager precise invocar
     }
     Paths     = @{
-        OutputBase   = "SCAPE_RELEASE"
-        ExpandedDir  = "SCAPE_EXPANDED"
-        MonolithFile = "SCAPE_DEPLOY.ps1"
+        OutputBase        = "SCAPE_RELEASE"
+        ExpandedDir       = "SCAPE_EXPANDED"
+        MonolithDir       = "Output"
+        MonolithFile      = "SCAPE_DEPLOY.ps1"
+        MainScriptFile    = "main.ps1"
+        DeployWorkspaceDir = "Build"
+        InnoSetupDirs     = @("%ProgramFiles(x86)%\Inno Setup 6", "%ProgramFiles%\Inno Setup 6")
     }
     Installer = @{
         AppName    = "SCAPE Recovery Engine"

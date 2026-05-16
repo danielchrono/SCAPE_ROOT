@@ -38,27 +38,28 @@
     "MENU_MAIN_LAB"                   = @{ T = 'SCAPE LABORATORY (File Repair)'; H = 'Hexadecimal magic repair and block-skip surgery.'; F = '8' }
     "MENU_MAIN_EXIT"                  = @{ T = 'TERMINATE SCAPE ENGINE'; H = 'Quit Scape Engine'; F = 'Q' }
 
-    "MENU_OPTION_ENGINE_MODE"         = @{ T = 'ENGINE_MODE (Efficiency vs Redundancy)'; H = 'Toggles parsing mode between EFFICIENCY (Fast/Strict) and REDUNDANCY (Deep/Fallback).'; F = '1' }
-    "MENU_OPTION_DEFAULT_OUT"         = @{ T = 'DEFAULT_OUTPUT_DIRECTORY'; H = 'Defines the global physical staging directory for extractions.'; F = '2' }
+    "MENU_OPTION_ENGINE_MODE"         = @{ T = 'ENGINE MODE (Efficiency vs Redundancy)'; H = 'Toggles parsing mode between EFFICIENCY (Fast/Strict) and REDUNDANCY (Deep/Fallback).'; F = '1' }
+    "MENU_OPTION_DEFAULT_OUT"         = @{ T = 'DEFAULT OUTPUT DIRECTORY'; H = 'Defines the global physical staging directory for extractions.'; F = '2' }
     "MENU_OPTION_NETWORK_MGR"         = @{ T = 'NETWORK OPTIONS'; H = 'Manage active SMB/CIFS network mounts and credentials.'; F = '3' }
     "MENU_OPTION_ROBOCOPY"            = @{ T = 'ROBOCOPY DEFAULTS & CLOUD SYNC CONFIG'; H = 'Advanced synchronization flags for the Robocopy Cloud engine.'; F = '4' }
-    "MENU_OPTION_LANGUAGE"            = @{ T = 'INTERFACE_LANGUAGE'; H = 'Switches the global SCAPE UI language.'; F = '5' }
-    "MENU_SETTINGS_THEME"             = @{ T = 'NEW RANDOM THEME (DYNAMIC RGB)'; H = 'Applies a new algorithmically generated color palette.'; F = '6' }
+    "MENU_OPTION_LANGUAGE"            = @{ T = 'INTERFACE LANGUAGE'; H = 'Switches the global SCAPE UI language.'; F = '5' }
+    "MENU_SETTINGS_THEME"             = @{ T = 'THEME OPTIONS'; H = 'Configure the visual theme of the interface.'; F = '6' }
     "MENU_OPTION_RETURN"              = @{ T = 'RETURN TO MAESTRO BOOTLOADER'; H = 'Return to previous menu level'; F = 'R' }
     "MENU_OPTION_AUTODETECT"          = @{ T = 'AUTO-DETECT & MOUNT SAMBA VAULT'; H = 'Auto-discover and mount network Samba shares'; F = 'S' }
 
     "MENU_MAESTRO_PROMPT"             = @{ T = 'Awaiting operational command directive'; H = 'Maestro routine status prompt'; F = 'MAESTRO_ROUTINE' }
     "MENU_INPUT_PROMPT"               = @{ T = 'INPUT'; H = 'Input field label'; F = $null }
-    "MENU_VALUE_NOT_SET"              = @{ T = 'NOT_CONFIGURED'; H = 'Configuration value unset indicator'; F = $null }
-    "MENU_VALUE_ENABLED"              = @{ T = 'ENABLED_ACTIVE'; H = 'Feature enabled status indicator'; F = $null }
-    "MENU_VALUE_DISABLED"             = @{ T = 'DISABLED_INACTIVE'; H = 'Feature disabled status indicator'; F = $null }
+    "MENU_VALUE_NOT_SET"              = @{ T = 'NOT CONFIGURED'; H = 'Configuration value unset indicator'; F = $null }
+    "MENU_VALUE_ENABLED"              = @{ T = 'ENABLED ACTIVE'; H = 'Feature enabled status indicator'; F = $null }
+    "MENU_VALUE_DISABLED"             = @{ T = 'DISABLED INACTIVE'; H = 'Feature disabled status indicator'; F = $null }
     "MENU_CHOICE_INVALID"             = @{ T = 'Unrecognized command parameter. Please provide a valid index.'; H = 'Invalid menu selection error'; F = 'INPUT_ERR' }
     "MENU_LANGUAGE_SWITCH"            = @{ T = 'Global language dictionary switched to {0}. Interface components updated.'; H = 'Language change confirmation with locale token'; F = 'UI' }
-    "MENU_OPTION_ICON_LEVEL"          = @{ T = 'ICON_LEVEL (Graphic/Unicode/ASCII)'; H = 'Switch between graphic, solid unicode, or ASCII icons'; F = '1' }
-    "MENU_OPTION_FRAME_STYLE"         = @{ T = 'FRAME_STYLE (Box drawing style)'; H = 'Change the border style of menus'; F = '2' }
-    "MENU_OPTION_PROGRESS_STYLE"      = @{ T = 'PROGRESS_STYLE (Bar/Spinner)'; H = 'Select progress bar or spinner style'; F = '3' }
-    "MENU_OPTION_THEME_PERSONA"       = @{ T = 'THEME_PERSONA (Color palette)'; H = 'Apply a complete color persona'; F = '4' }
-    "MENU_OPTION_COLOR_MODE"          = @{ T = 'COLOR_MODE (TrueColor/ANSI16)'; H = 'Toggle between 24-bit true color and ANSI 16-color fallback'; F = '5' }
+    "MENU_OPTION_ICON_LEVEL"          = @{ T = 'ICON LEVEL (Graphic/Unicode/ASCII)'; H = 'Switch between graphic, solid unicode, or ASCII icons'; F = '1' }
+    "MENU_OPTION_FRAME_STYLE"         = @{ T = 'FRAME STYLE (Box drawing style)'; H = 'Change the border style of menus'; F = '2' }
+    "MENU_OPTION_PROGRESS_STYLE"      = @{ T = 'PROGRESS STYLE (Bar/Spinner)'; H = 'Select progress bar or spinner style'; F = '3' }
+    "MENU_OPTION_THEME_PERSONA"       = @{ T = 'THEME PERSONA (Color palette)'; H = 'Apply a complete color persona'; F = '4' }
+    "MENU_OPTION_COLOR_MODE"          = @{ T = 'COLOR MODE (TrueColor/ANSI16)'; H = 'Toggle between 24-bit true color and ANSI 16-color fallback'; F = '5' }
+    "MENU_RANDOM_THEME"               = @{ T = 'NEW RANDOM THEME (DYNAMIC RGB)'; H = 'Applies a new algorithmically generated color palette.'; F = '6' }
     "THEME_APPLIED"                   = @{ T = 'Quantum UI theme applied successfully. Base RGB: {0}'; H = 'Theme application success with RGB token'; F = $null }
 
     # ─────────────────────────────────────────────────────────────────────
@@ -421,6 +422,7 @@
     "DEPLOYER_OPT_SETUP"              = @{ T = 'BUILD_EXE (Compile via INNO Setup)'; H = 'Setup EXE Installer menu option'; F = '3' }
     "DEPLOYER_OPT_MSI"                = @{ T = 'BUILD_MSI (Compile via WiX Toolset)'; H = 'MSI build menu option'; F = '4' }
     "MENU_DEPLOY_TITLE"               = @{ T = '[ SCAPE DEPLOYMENT MATRIX ]'; H = 'Deployer menu header'; F = $null }
+    "DEPLOYER_MATRIX_HEADER"          = @{ T = '[ SCAPE DEPLOYMENT VECTOR MATRIX ]'; H = 'Deployment vector selection header'; F = $null }
     "DEPLOYER_MOD_DISCOVERY"          = @{ T = 'Scanning scope for module signatures...'; H = 'Auto-discovery start'; F = 'DEPLOYER_MOD_DISCOVERY' }
     "DEPLOYER_ASSETS_DISCOVERY"       = @{ T = 'Scanning scope for data assets...'; H = 'Auto-discovery start'; F = 'DEPLOYER_ASSETS_DISCOVERY' }
 
@@ -551,9 +553,15 @@
     "AUDIT_MANIFEST_FAIL"             = @{ T = 'Critical failure writing JSON manifest/checksum data: {0}'; H = 'Manifest write fail with error token'; F = 'AUDIT_FATAL' }
     "AUDIT_REPORT_GEN"                = @{ T = 'Comprehensive JSON Audit Report cleanly generated at: {0}'; H = 'Report generation success with path token'; F = 'AUDIT_SYSTEM' }
     "AUDIT_REPORT_FAIL"               = @{ T = 'Critical failure compiling final JSON audit report: {0}'; H = 'Report compile fail with error token'; F = 'AUDIT_FATAL' }
+    "AUDIT_INIT_OK"                   = @{ T = 'Forensic audit ledger initialized successfully at: {0}'; H = 'Audit module initialization success with log path token'; F = 'AUDIT_SYSTEM' }
     "AUDIT_INTEGRITY_VERIFIED"        = @{ T = 'VERIFIED_EXACT_MATCH'; H = 'Integrity verification success indicator'; F = $null }
     "AUDIT_INTEGRITY_MISMATCH"        = @{ T = 'CRITICAL_SIZE_MISMATCH'; H = 'Integrity mismatch error indicator'; F = $null }
     "AUDIT_HASH_COMPUTED"             = @{ T = 'SHA256 Cryptographic Checksum: {0}'; H = 'Hash display with checksum token'; F = 'AUDIT_HASH' }
+    "COMPLIANCE_INIT_OK"              = @{ T = 'Compliance engine online. Segments loaded: {0} | Hash algorithm: {1}.'; H = 'Compliance initialization success with segment count and algorithm'; F = 'COMPLIANCE' }
+    "COMPLIANCE_MISSING"              = @{ T = 'Compliance segment [{0}] missing ({1}). Algorithm: {2}.'; H = 'Compliance missing segment warning with segment/reason/algorithm'; F = 'COMPLIANCE_WARN' }
+    "COMPLIANCE_MISMATCH"             = @{ T = 'Integrity mismatch in segment [{0}] | Expected: {1} | Actual: {2} | Algorithm: {3}.'; H = 'Compliance hash mismatch with segment and hash details'; F = 'COMPLIANCE_ERR' }
+    "IO_BIT_ERROR"                    = @{ T = 'Resilient bitwise read/write operation failed after retry budget exhaustion.'; H = 'Bitwise/resilience operation fatal error'; F = 'IO_FATAL' }
+    "LOG_ROTATED"                     = @{ T = 'Log rotation completed. Archived: {0} | Active: {1} | Rotation: {2}.'; H = 'Logger rotation completion with archive/new file and counter'; F = 'LOGGER' }
 
     # ─────────────────────────────────────────────────────────────────────
     # ARCHIVE / CARVING ENGINE

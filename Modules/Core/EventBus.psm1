@@ -17,7 +17,30 @@ function Publish-ScapeEvent {
 
     $maxQueue = 10000
     if ($Script:EventQueue.Count -ge $maxQueue) {
-        if ($Severity -match "^(TRACE|DEBUG|METRIC)$") { return }
+        # Only drop TRACE/DEBUG/METRIC if explicitly set in config, otherwise queue them
+        try {
+            $cfg = Get-ScapeConstant -Path "infrastructure::Logger" -Fallback @{}
+            $minLevelName = $cfg["DEFAULT_LEVEL_NAME"] -or "INFO"
+            if ($null -eq $minLevelName) { $minLevelName = "INFO" }
+
+            # Check for runtime override
+            if ($env:SCAPE_LOG_LEVEL) { $minLevelName = $env:SCAPE_LOG_LEVEL }
+            else {
+                try {
+                    $cs = Get-ScapeColdState
+                    if ($cs -and $cs.ContainsKey('LOG_LEVEL_OVERRIDE')) { $minLevelName = $cs['LOG_LEVEL_OVERRIDE'] }
+                }
+                catch { }
+            }
+
+            # Only drop if below configured min level
+            $severityMap = @{ TRACE = 0; DEBUG = 1; INFO = 2; WARN = 3; ERROR = 4; FATAL = 5 }
+            $minValue = $severityMap[$minLevelName] -or 2
+            $currValue = $severityMap[$Severity -replace '^LOG_', ''] -or 2
+
+            if ($currValue -lt $minValue) { return }
+        }
+        catch { }
     }
 
     # IDENTIFICAÇÃO DE ORIGEM (CALLER ID REAL)

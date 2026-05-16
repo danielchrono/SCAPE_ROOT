@@ -84,3 +84,69 @@ function Get-ScapeTelemetrySnapshot {
         }
     }
 }
+
+function Invoke-ScapeTelemetryWorkflow {
+    [CmdletBinding()]
+    param([Parameter(Mandatory = $true)][string]$Task)
+
+    switch ($Task) {
+        'INVENTORY' {
+            Publish-ScapeEvent -Type "INVENTORY_MANAGER" -Severity "INFO" -Payload (Get-ScapeI18NNode -Key "INVENTORY_PHYSICAL_DISKS").Hint
+            try {
+                $disks = Get-CimInstance Win32_DiskDrive -ErrorAction Stop
+                $vols = Get-Volume | Where-Object DriveLetter -ErrorAction Stop
+                Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{ Disks = $disks; Volumes = $vols }
+            } catch {
+                Publish-ScapeEvent -Type "INVENTORY_FATAL" -Severity "ERROR" -Payload (Get-ScapeI18NNode -Key "INVENTORY_WMI_FAIL").Hint
+            }
+        }
+        'TOPOLOGY' {
+            try {
+                $cpu = Get-CimInstance Win32_Processor -ErrorAction Stop | Select-Object -First 1
+                $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
+                $cs = Get-CimInstance Win32_ComputerSystem -ErrorAction Stop
+                $isVm = ($cs.Model -match "Virtual|VMware|KVM" -or $cs.Manufacturer -match "VMware|Microsoft")
+                $hyp = if ($isVm) { if ($cs.Model -match "VMware") { "VMware" } else { $cs.Model } } else { "BARE_METAL" }
+
+                $topo = @{
+                    CPU   = $cpu.Name.Trim()
+                    RAM   = [Math]::Round($os.TotalVisibleMemorySize / 1MB, 2)
+                    OS    = "$($os.Caption) ($($os.OSArchitecture))"
+                    VM    = @{ IsVirtual = $isVm; Hypervisor = $hyp }
+                    Host  = $env:COMPUTERNAME
+                    User  = "$env:USERNAME@$env:USERDOMAIN"
+                    Admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+                }
+                Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload $topo
+            } catch {
+                Publish-ScapeEvent -Type "INVENTORY_FATAL" -Severity "ERROR" -Payload (Get-ScapeI18NNode -Key "INVENTORY_WMI_FAIL").Hint
+            }
+        }
+        'TELEMETRY' {
+            $temp = Get-ScapeTelemetryThermal
+            $queue = Get-ScapeTelemetryIo
+            $ram = Get-ScapeTelemetryRam
+            $cpu = Get-ScapeTelemetryCpu
+
+            $limits = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
+            $critT = if ($limits.ContainsKey("THERMAL_CRITICAL")) { $limits["THERMAL_CRITICAL"] } else { 85 }
+            $critQ = if ($limits.ContainsKey("QUEUE_CRITICAL")) { $limits["QUEUE_CRITICAL"] } else { 10 }
+
+            $actionNeeded = ($temp -ge $critT) -or ($queue -ge $critQ)
+
+            $metrics = @{
+                Thermal = @{ Value = $temp; Critical = ($temp -ge $critT); Warning = ($temp -ge 75) }
+                IO      = @{ Value = $queue; Critical = ($queue -ge $critQ); Warning = ($queue -ge 5) }
+                Ram     = @{ UsedPct = $ram }
+                CPU     = @{ UsedPct = $cpu }
+                ActionNeeded = $actionNeeded
+            }
+            
+            if ($actionNeeded) {
+                Publish-ScapeEvent -Type "TELEMETRY_CRITICAL" -Severity "FATAL" -Payload $metrics
+            } else {
+                Publish-ScapeEvent -Type "TELEMETRY_UPDATE" -Severity "INFO" -Payload $metrics
+            }
+        }
+    }
+}

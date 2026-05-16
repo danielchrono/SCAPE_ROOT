@@ -63,12 +63,24 @@ function Invoke-ScapeCompileInno {
         [string]$IconPath
     )
 
-    $iscc = @(
-        "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-        "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
-    ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+    $forgePaths = Get-ScapeConstant -Path "forge::Paths" -Fallback @{}
+    $innoDirs = @()
+    if ($forgePaths -is [hashtable] -and $forgePaths.ContainsKey("InnoSetupDirs")) {
+        $innoDirs = @($forgePaths["InnoSetupDirs"])
+    }
+    if ($innoDirs.Count -eq 0) {
+        $innoDirs = @("%ProgramFiles(x86)%\Inno Setup 6", "%ProgramFiles%\Inno Setup 6")
+    }
 
-    if (-not $iscc) { throw "Inno Setup 6 não encontrado. Instale em C:\Program Files (x86)\Inno Setup 6" }
+    $isccCandidates = @($innoDirs | ForEach-Object {
+            $expanded = [Environment]::ExpandEnvironmentVariables([string]$_)
+            Join-ScapePath $expanded 'ISCC.exe'
+        })
+    $iscc = $isccCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+
+    if (-not $iscc) {
+        throw ("Inno Setup compiler not found. Checked: {0}" -f ($isccCandidates -join ', '))
+    }
 
     $appName = Get-ScapeConstant -Path "forge::Installer::AppName" -Fallback "SCAPE Recovery Engine"
     $appVersion = Get-ScapeConstant -Path "forge::Installer::AppVersion" -Fallback "1.0.0"

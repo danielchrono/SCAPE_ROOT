@@ -23,6 +23,35 @@ function Assert-ScapeCapability {
     return $true
 }
 
+function Resolve-ScapeModuleDiskPath {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)][string]$ModuleName,
+        [Parameter(Mandatory = $true)][string]$BaseRoot
+    )
+
+    $parts = $ModuleName -split '\.'
+    if ($parts.Count -lt 3) { return $null }
+
+    $domain = $parts[1]
+    if ([string]::IsNullOrWhiteSpace($domain)) { return $null }
+
+    if ($parts.Count -ge 3) {
+        $leafParts = @($parts[2..($parts.Count - 1)])
+        $relative = "Modules\$domain\$(($leafParts -join '\')).psm1"
+    }
+    else {
+        $relative = "Modules\$domain\$($parts[-1]).psm1"
+    }
+
+    $candidate = Join-ScapePath -Base $BaseRoot -Child $relative
+    if ($candidate -and (Test-Path -LiteralPath $candidate -PathType Leaf)) {
+        return $candidate
+    }
+    return $null
+}
+
 function Invoke-ScapeResolveModule {
     [CmdletBinding()]
     [OutputType([bool])]
@@ -63,12 +92,22 @@ function Invoke-ScapeResolveModule {
     }
     else {
         $modName = if ($modDef -is [hashtable]) { $modDef['Name'] } elseif ($null -ne $modDef.PSObject) { $modDef.Name } else { '' }
-        $fileName = ($modName -split '\.')[-1] + ".psm1"
         $baseRoot = if ($state.ContainsKey("ROOT") -and $state["ROOT"]) { $state["ROOT"] } else { $PSScriptRoot }
 
         if ($baseRoot -and (Test-Path $baseRoot)) {
-            $modPath = Get-ChildItem -Path (Join-ScapePath $baseRoot "Modules") -Filter $fileName -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($modPath) { $payloadContent = Get-Content $modPath.FullName -Raw -Encoding UTF8 }
+            $exactPath = Resolve-ScapeModuleDiskPath -ModuleName $modName -BaseRoot $baseRoot
+            if ($exactPath) {
+                $payloadContent = Get-Content -LiteralPath $exactPath -Raw -Encoding UTF8
+            }
+            else {
+                $modParts = $modName -split '\.'
+                $fileName = ($modParts[-1]) + ".psm1"
+                $domainPath = if ($modParts.Count -ge 2) { Join-ScapePath -Base $baseRoot -Child ("Modules\" + $modParts[1]) } else { Join-ScapePath -Base $baseRoot -Child "Modules" }
+                if ($domainPath -and (Test-Path -LiteralPath $domainPath)) {
+                    $modPath = Get-ChildItem -LiteralPath $domainPath -Filter $fileName -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+                    if ($modPath) { $payloadContent = Get-Content -LiteralPath $modPath.FullName -Raw -Encoding UTF8 }
+                }
+            }
         }
     }
 
@@ -91,7 +130,7 @@ function Invoke-ScapeResolveModule {
             $state["LoadedLayers"].Add($ModuleName)
         }
 
-        Publish-ScapeEvent -Type "MODULE_LOADED" -Severity "DEBUG" -Payload $ModuleName
+        Publish-ScapeEvent -Type "MODULE_LOADED" -Severity "TRACE" -Payload $ModuleName
         return $true
     }
     catch { throw "INJECTION_ERROR: Failed to ignite '$ModuleName' : $($_.Exception.Message)" }
@@ -102,8 +141,26 @@ function Resolve-ScapeManifestLayer {
     param([Parameter(Mandatory = $true)][string]$LayerKey)
 
     $manifest = Get-ScapeManifest
-    if ($null -eq $manifest -or -not $manifest.ContainsKey($LayerKey)) {
-        throw "RESOLVER_ERROR: Layer '$LayerKey' does not exist in Manifest."
+    if ($null -eq $manifest) {
+        throw "RESOLVER_ERROR: Manifest is null in Get-ScapeManifest."
+    }
+
+    if (-not ($manifest -is [hashtable] -or $manifest -is [System.Collections.IDictionary])) {
+        try {
+            $mType = $manifest.GetType().FullName
+            throw "RESOLVER_ERROR: Manifest has invalid type '$mType' (expected hashtable/dictionary)."
+        }
+        catch {
+            throw $_
+        }
+    }
+
+    # debug/diagnóstico: sempre listar keys quando falhar
+    if (-not $manifest.ContainsKey($LayerKey)) {
+        $keys = @()
+        try { $keys = @($manifest.Keys) } catch {}
+        $keysPreview = if ($keys.Count -gt 50) { (($keys[0..49]) -join ',') + ',...' } else { ($keys -join ',') }
+        throw "RESOLVER_ERROR: Layer '$LayerKey' does not exist in Manifest. ManifestKeys=[$keysPreview]"
     }
 
     Publish-ScapeEvent -Type "LAYER_IGNITION" -Severity "INFO" -Payload "Igniting Layer: $LayerKey"
@@ -122,6 +179,15 @@ function Invoke-ScapeWakeAssets {
     if (-not $state.ContainsKey("Registry")) { return }
 
     $reg = $state["Registry"]
+    $requestedDomain = [string]$Domain
+    $domainAliases = @{
+        "Extensions" = @("Extensions", "Extended")
+        "Extended"   = @("Extensions", "Extended")
+        "Extension"  = @("Extensions", "Extended")
+        "Network"    = @("Network", "Extensions", "Extended")
+    }
+    $domainCandidates = if ($domainAliases.ContainsKey($requestedDomain)) { $domainAliases[$requestedDomain] } else { @($requestedDomain) }
+
     foreach ($key in $reg.Segments.Keys) {
         if ($key -eq '__Meta__') { continue }
         $seg = $reg.Segments[$key]
@@ -129,7 +195,7 @@ function Invoke-ScapeWakeAssets {
         $layer = if ($seg -is [hashtable]) { $seg['Layer'] } elseif ($null -ne $seg.PSObject) { $seg.Layer } else { '' }
         $isLazy = if ($seg -is [hashtable]) { $seg['IsLazy'] } elseif ($null -ne $seg.PSObject) { $seg.IsLazy } else { $false }
 
-        if ($layer -ieq $Domain -and $isLazy -eq $true) {
+        if (($domainCandidates | Where-Object { $_ -ieq $layer }).Count -gt 0 -and $isLazy -eq $true) {
             $file = if ($seg -is [hashtable]) { $seg['File'] } elseif ($null -ne $seg.PSObject) { $seg.File } else { '' }
             $cat = if ($seg -is [hashtable]) { $seg['Category'] } elseif ($null -ne $seg.PSObject) { $seg.Category } else { '' }
 
@@ -188,7 +254,7 @@ function Initialize-ScapeResolver {
         if (-not [string]::IsNullOrWhiteSpace($oldLang) -and $oldLang -ne $newLang) {
             $removed = Remove-ScapeAsset -Category "I18N" -AssetId $oldLang
             if ($removed) {
-                Publish-ScapeEvent -Type "LANG_FLUSHED" -Severity "DEBUG" -Payload "Old language '$oldLang' removed from cache."
+                Publish-ScapeEvent -Type "LANG_FLUSHED" -Severity "TRACE" -Payload "Old language '$oldLang' removed from cache."
             }
         }
 
@@ -210,11 +276,11 @@ function Initialize-ScapeResolver {
 
         switch ($menuId) {
             'ThemeMenu' { Resolve-ScapeAsset -AssetId 'theme' -Category 'Constants' -Force:$false | Out-Null }
-            'RobocopyMenu' { Resolve-ScapeAsset -AssetId 'fs' -Category 'Constants' -Force:$false | Out-Null }
+            'RobocopyMenu' { Resolve-ScapeAsset -AssetId 'storage' -Category 'Constants' -Force:$false | Out-Null }
         }
     }
 
-    # --- LISTENER 3: UI_SELECTION (Híbrido) ---
+    # --- LISTENER 3: UI_SELECTION ---
     Register-ScapeEventListener -EventMatch "UI_SELECTION" -Action {
         param($EventFrame)
         $p = $EventFrame.Payload
@@ -226,33 +292,26 @@ function Initialize-ScapeResolver {
                 Resolve-ScapeManifestLayer -LayerKey $wake | Out-Null
             }
             Invoke-ScapeWakeAssets -Domain $wake | Out-Null
-            Publish-ScapeEvent -Type "LAZY_WAKEUP" -Severity "DEBUG" -Payload "Hydrated Domain: $wake"
+            Publish-ScapeEvent -Type "LAZY_WAKEUP" -Severity "TRACE" -Payload "Hydrated Domain: $wake"
         }
 
-        $action = if ($p -is [hashtable]) { $p['Action'] } else { $p.Action }
-        $actionPayload = if ($p -is [hashtable]) { $p['ActionPayload'] } else { $p.ActionPayload }
-        $menuId = if ($p -is [hashtable]) { $p['MenuId'] } else { $p.MenuId }
-        $selectionId = if ($p -is [hashtable]) { $p['SelectionId'] } else { $p.SelectionId }
+        $action = if ($p -is [hashtable]) { $p['Action'] } elseif ($null -ne $p.PSObject) { $p.Action } else { $null }
+
+        $actionPayload = if ($p -is [hashtable]) {
+            if ($p.ContainsKey('Payload')) { $p['Payload'] } else { $p['ActionPayload'] }
+        }
+        elseif ($null -ne $p.PSObject) {
+            if ($p.PSObject.Properties['Payload']) { $p.Payload } elseif ($p.PSObject.Properties['ActionPayload']) { $p.ActionPayload } else { $null }
+        }
+        else { $null }
 
         if ($action -eq 'TRIGGER' -and $null -ne $actionPayload) {
-            $domain = if ($actionPayload -is [hashtable]) { $actionPayload['Domain'] } else { $actionPayload.Domain }
-            $target = if ($actionPayload -is [hashtable]) { $actionPayload['Target'] } else { $actionPayload.Target }
-            $task = if ($actionPayload -is [hashtable]) { $actionPayload['Task'] } else { $actionPayload.Task }
+            # Resolução flexível dependendo se é hashtable ou psobject
+            $target = if ($actionPayload -is [hashtable]) { $actionPayload['Target'] } elseif ($null -ne $actionPayload.PSObject) { $actionPayload.Target } else { $null }
 
             if ($target) {
                 Invoke-ScapeResolveModule -ModuleName $target | Out-Null
-
-                if ($target -eq "Scape.Forge.Deployer") {
-                    Invoke-ScapeDeployWorkflow -Task $task
-                }
-                else {
-                    Publish-ScapeEvent -Type "TRIGGER_DISPATCHED" -Severity "INFO" -Payload $target
-                }
-            }
-        }
-        elseif ($action -eq 'MUTATE' -and $null -ne $actionPayload) {
-            if (Get-Command Invoke-ScapeStateMutation -ErrorAction SilentlyContinue) {
-                Invoke-ScapeStateMutation -MenuId $menuId -SelectionId $selectionId -Payload $actionPayload
+                Publish-ScapeEvent -Type "MODULE_WAKED" -Severity "TRACE" -Payload "Resolver hydrated target module: $target"
             }
         }
     }
@@ -268,9 +327,12 @@ function Initialize-ScapeResolver {
         $isFull = ($rawType -eq 'FULL')
 
         if ($menuId -and $isFull) {
-            $navData = Get-ScapeConstant -Path "navigation::$menuId" -Fallback @()
+            $navData = Get-ScapeConstant -Path "navigation::$menuId" -Fallback @{}
+            $navItems = if ($navData -is [hashtable] -and $navData.ContainsKey('Items')) { @($navData['Items']) }
+            elseif ($null -ne $navData.PSObject -and $navData.PSObject.Properties['Items']) { @($navData.Items) }
+            else { @() }
 
-            $Layers = @($navData | ForEach-Object {
+            $Layers = @($navItems | ForEach-Object {
                     $val = if ($_ -is [hashtable]) { $_['Layer'] } elseif ($null -ne $_.PSObject) { $_.Layer } else { $null }
                 } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
 
@@ -278,7 +340,7 @@ function Initialize-ScapeResolver {
                 Invoke-ScapeWakeAssets -Domain $domain | Out-Null
             }
 
-            Publish-ScapeEvent -Type "RESOLVER_REDRAW_SYNC" -Severity "DEBUG" -Payload @{ Menu = $menuId; Domains = @($Layers) }
+            Publish-ScapeEvent -Type "RESOLVER_REDRAW_SYNC" -Severity "TRACE" -Payload @{ Menu = $menuId; Domains = @($Layers) }
         }
     }
 }

@@ -34,27 +34,28 @@
     "MENU_MAIN_LAB"                   = @{ T = 'SCAPE LABORATORY (Reparo de Arquivos)'; H = 'Reparo de magic bytes e cirurgia de blocos.'; F = '8' }
     "MENU_MAIN_EXIT"                  = @{ T = 'ENCERRAR MOTOR SCAPE'; H = 'Fechar Scape Engine'; F = 'Q' }
 
-    "MENU_OPTION_ENGINE_MODE"         = @{ T = 'MODO_DO_MOTOR (Eficiência vs Redundância)'; H = 'Alterna o modo entre EFICIÊNCIA (Rápido/Estrito) e REDUNDÂNCIA (Profundo/Fallback).'; F = '1' }
-    "MENU_OPTION_DEFAULT_OUT"         = @{ T = 'DIRETÓRIO_DE_SAÍDA_PADRÃO'; H = 'Define o diretório físico global para o armazenamento (staging) das extrações.'; F = '2' }
+    "MENU_OPTION_ENGINE_MODE"         = @{ T = 'MODO DO MOTOR (Eficiência vs Redundância)'; H = 'Alterna o modo entre EFICIÊNCIA (Rápido/Estrito) e REDUNDÂNCIA (Profundo/Fallback).'; F = '1' }
+    "MENU_OPTION_DEFAULT_OUT"         = @{ T = 'DIRETÓRIO DE SAÍDA PADRÃO'; H = 'Define o diretório físico global para o armazenamento (staging) das extrações.'; F = '2' }
     "MENU_OPTION_NETWORK_MGR"         = @{ T = 'CONFIGURAÇÕES DE REDE'; H = 'Gerenciar montagens de rede SMB/CIFS e credenciais ativas.'; F = '3' }
     "MENU_OPTION_ROBOCOPY"            = @{ T = 'CONFIGURAÇÕES GLOBAIS DO ROBOCOPY (SYNC)'; H = 'Flags avançadas de sincronização para o motor de Nuvem Robocopy.'; F = '4' }
-    "MENU_OPTION_LANGUAGE"            = @{ T = 'IDIOMA_DA_INTERFACE'; H = 'Altera o idioma global da interface do SCAPE.'; F = '5' }
-    "MENU_SETTINGS_THEME"             = @{ T = 'NOVO TEMA RANDÔMICO (RGB DINÂMICO)'; H = 'Aplica uma nova paleta de cores gerada algoritmicamente garantindo acessibilidade visual.'; F = '6' }
+    "MENU_OPTION_LANGUAGE"            = @{ T = 'IDIOMA DA INTERFACE'; H = 'Altera o idioma global da interface do SCAPE.'; F = '5' }
+    "MENU_SETTINGS_THEME"             = @{ T = 'OPÇÕES DE TEMA'; H = 'Configurar o tema visual da interface.'; F = '6' }
     "MENU_OPTION_RETURN"              = @{ T = 'RETORNAR AO BOOTLOADER MAESTRO'; H = 'Retornar ao nível anterior do menu'; F = 'R' }
     "MENU_OPTION_AUTODETECT"          = @{ T = 'AUTO-DETECTAR & MONTAR COFRE SAMBA'; H = 'Auto-descobrir e montar compartilhamentos Samba em rede'; F = 'S' }
 
     "MENU_MAESTRO_PROMPT"             = @{ T = 'Aguardando diretiva de comando operacional'; H = 'Prompt de status da rotina Maestro'; F = 'MAESTRO_ROUTINE' }
     "MENU_INPUT_PROMPT"               = @{ T = 'ENTRADA'; H = 'Rótulo do campo de entrada'; F = $null }
-    "MENU_VALUE_NOT_SET"              = @{ T = 'NÃO_CONFIGURADO'; H = 'Indicador de configuração não definida'; F = $null }
-    "MENU_VALUE_ENABLED"              = @{ T = 'ATIVADO_OPERANTE'; H = 'Indicador de recurso habilitado'; F = $null }
-    "MENU_VALUE_DISABLED"             = @{ T = 'DESATIVADO_INOPERANTE'; H = 'Indicador de recurso desabilitado'; F = $null }
+    "MENU_VALUE_NOT_SET"              = @{ T = 'NÃO CONFIGURADO'; H = 'Indicador de configuração não definida'; F = $null }
+    "MENU_VALUE_ENABLED"              = @{ T = 'ATIVADO ACTIVE'; H = 'Indicador de recurso habilitado'; F = $null }
+    "MENU_VALUE_DISABLED"             = @{ T = 'DESATIVADO INACTIVE'; H = 'Indicador de recurso desabilitado'; F = $null }
     "MENU_CHOICE_INVALID"             = @{ T = 'Parâmetro de comando não reconhecido. Por favor, forneça um índice válido.'; H = 'Erro de seleção inválida no menu'; F = 'INPUT_ERR' }
     "MENU_LANGUAGE_SWITCH"            = @{ T = 'Dicionário de idioma global alterado para {0}. Componentes de interface atualizados.'; H = 'Confirmação de troca de idioma com token de localidade'; F = 'UI' }
-    "MENU_OPTION_ICON_LEVEL"          = @{ T = 'NÍVEL_ÍCONE (Gráfico/Unicode/ASCII)'; H = 'Alternar entre ícones gráficos, Unicode sólido ou ASCII'; F = '1' }
-    "MENU_OPTION_FRAME_STYLE"         = @{ T = 'ESTILO_MOLDURA (Estilo de bordas)'; H = 'Alterar o estilo de borda dos menus'; F = '2' }
-    "MENU_OPTION_PROGRESS_STYLE"      = @{ T = 'ESTILO_PROGRESSO (Barra/Spinner)'; H = 'Selecionar estilo de barra de progresso ou spinner'; F = '3' }
-    "MENU_OPTION_THEME_PERSONA"       = @{ T = 'PERSONA_TEMA (Paleta de cores)'; H = 'Aplicar uma paleta de cores completa'; F = '4' }
-    "MENU_OPTION_COLOR_MODE"          = @{ T = 'MODO_COR (TrueColor/ANSI16)'; H = 'Alternar entre TrueColor de 24 bits e fallback de 16 cores ANSI'; F = '5' }
+    "MENU_OPTION_ICON_LEVEL"          = @{ T = 'NÍVEL ÍCONE (Gráfico/Unicode/ASCII)'; H = 'Alternar entre ícones gráficos, Unicode sólido ou ASCII'; F = '1' }
+    "MENU_OPTION_FRAME_STYLE"         = @{ T = 'ESTILO MOLDURA (Estilo de bordas)'; H = 'Alterar o estilo de borda dos menus'; F = '2' }
+    "MENU_OPTION_PROGRESS_STYLE"      = @{ T = 'ESTILO PROGRESSO (Barra/Spinner)'; H = 'Selecionar estilo de barra de progresso ou spinner'; F = '3' }
+    "MENU_OPTION_THEME_PERSONA"       = @{ T = 'PERSONA TEMA (Paleta de cores)'; H = 'Aplicar uma paleta de cores completa'; F = '4' }
+    "MENU_OPTION_COLOR_MODE"          = @{ T = 'MODO COR (TrueColor/ANSI16)'; H = 'Alternar entre TrueColor de 24 bits e fallback de 16 cores ANSI'; F = '5' }
+    "MENU_RANDOM_THEME"               = @{ T = 'NOVO TEMA RANDÔMICO (RGB DINÂMICO)'; H = 'Aplica uma nova paleta de cores gerada algoritmicamente garantindo acessibilidade visual.'; F = '6' }
     "THEME_APPLIED"                   = @{ T = 'Tema Quântico de UI aplicado com sucesso. RGB Base: {0}'; H = 'Sucesso na aplicação de tema com token RGB'; F = $null }
 
     # DRIVE ACTIONS MENU
@@ -383,6 +384,7 @@
     "DEPLOYER_OPT_SETUP"              = @{ T = 'BUILD_EXE (Compilar via INNO Setup)'; H = 'Opção de menu instalador EXE'; F = '3' }
     "DEPLOYER_OPT_MSI"                = @{ T = 'BUILD_MSI (Compilar via WiX Toolset)'; H = 'Opção de menu build MSI'; F = '4' }
     "MENU_DEPLOY_TITLE"               = @{ T = '[ MATRIZ DE DEPLOY SCAPE ]'; H = 'Cabeçalho do menu deployer'; F = $null }
+    "DEPLOYER_MATRIX_HEADER"          = @{ T = '[ MATRIZ DE VETORES DE DEPLOY SCAPE ]'; H = 'Cabeçalho de seleção do vetor de deploy'; F = $null }
     "DEPLOYER_MOD_DISCOVERY"          = @{ T = 'Varrendo escopo por assinaturas de módulos...'; H = 'Início de auto-descoberta'; F = 'DEPLOYER_AUTO_DESCOBERTA' }
     "DEPLOYER_ASSETS_DISCOVERY"       = @{ T = 'Varrendo escopo por assinaturas de ativos binários...'; H = 'Início de descoberta de ativos'; F = 'DEPLOYER_AUTO_ASSETS' }
 
@@ -505,9 +507,15 @@
     "AUDIT_MANIFEST_FAIL"             = @{ T = 'Falha crítica ao gravar dados de manifesto/checksum JSON: {0}'; H = 'Falha na gravação de manifesto com token de erro'; F = 'AUDIT_FATAL' }
     "AUDIT_REPORT_GEN"                = @{ T = 'Relatório de Auditoria JSON Abrangente gerado de forma limpa em: {0}'; H = 'Sucesso na geração de relatório com token de caminho'; F = 'AUDIT_SYSTEM' }
     "AUDIT_REPORT_FAIL"               = @{ T = 'Falha crítica ao compilar o relatório de auditoria JSON final: {0}'; H = 'Falha na compilação de relatório com token de erro'; F = 'AUDIT_FATAL' }
+    "AUDIT_INIT_OK"                   = @{ T = 'Ledger forense de auditoria inicializado com sucesso em: {0}'; H = 'Sucesso de inicialização do módulo de auditoria com token de caminho de log'; F = 'AUDIT_SYSTEM' }
     "AUDIT_INTEGRITY_VERIFIED"        = @{ T = 'VERIFIED_EXACT_MATCH'; H = 'Indicador de sucesso na verificação de integridade'; F = $null }
     "AUDIT_INTEGRITY_MISMATCH"        = @{ T = 'CRITICAL_SIZE_MISMATCH'; H = 'Indicador de erro de mismatch de integridade'; F = $null }
     "AUDIT_HASH_COMPUTED"             = @{ T = 'Checksum Criptográfico SHA256: {0}'; H = 'Exibição de hash com token de checksum'; F = 'AUDIT_HASH' }
+    "COMPLIANCE_INIT_OK"              = @{ T = 'Motor de compliance online. Segmentos carregados: {0} | Algoritmo de hash: {1}.'; H = 'Sucesso de inicialização de compliance com contagem de segmentos e algoritmo'; F = 'COMPLIANCE' }
+    "COMPLIANCE_MISSING"              = @{ T = 'Segmento de compliance [{0}] ausente ({1}). Algoritmo: {2}.'; H = 'Aviso de segmento de compliance ausente com segmento/motivo/algoritmo'; F = 'COMPLIANCE_WARN' }
+    "COMPLIANCE_MISMATCH"             = @{ T = 'Mismatch de integridade no segmento [{0}] | Esperado: {1} | Atual: {2} | Algoritmo: {3}.'; H = 'Mismatch de hash de compliance com detalhes do segmento e hash'; F = 'COMPLIANCE_ERR' }
+    "IO_BIT_ERROR"                    = @{ T = 'Operação bitwise resiliente de leitura/escrita falhou após esgotar orçamento de tentativas.'; H = 'Erro fatal de operação bitwise/resiliência'; F = 'IO_FATAL' }
+    "LOG_ROTATED"                     = @{ T = 'Rotação de log concluída. Arquivado: {0} | Ativo: {1} | Rotação: {2}.'; H = 'Conclusão de rotação de logger com arquivo antigo/novo e contador'; F = 'LOGGER' }
 
     # ARCHIVE / CARVING ENGINE
     "ARCHIVE_ENUMERATING"             = @{ T = 'Enumerando nós de banco de dados para arquivos direcionados...'; H = 'Início de enumeração de archive'; F = 'ARCHIVE_ENGINE' }

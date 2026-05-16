@@ -116,13 +116,13 @@
 ███████╗██║     ███████║██████╔╝█████╗
 ╚════██║██║     ██╔══██║██╔═══╝ ██╔══╝
   ███████║╚██████╗██║  ██║██║     ███████╗
- ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚══════╝
+  ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚══════╝
 "@
 
         SmallLogo       = @"
-╔═╗╔═╗╔═╗╔═╗╔═╗
+ ╔═╗╔═╗╔═╗╔═╗╔═╗
 ╚═╗║  ╠═╣╠═╝║═
-╚═╝╚═╝╩ ╩╩  ╚═╝
+ ╚═╝╚═╝╩ ╩╩  ╚═╝
 "@
 
         SmallLogoMicro  = "◆ SCAPE v1.0 ◆"
@@ -149,12 +149,15 @@
     # 4. LAYOUT & DIMENSÕES
     # ===========================================================================
     Layout               = @{
-        MinWidth = 60; MaxWidth = 140; MinHeight = 15
-        Margin = 2; Padding = 1; MaxLogLines = 1000
-        TitlePadding = 2; FooterHeight = 3; HeaderHeight = 5
-        StatusBarHeight = 1; HelpBarHeight = 2; PanelGap = 2
-        ScrollBarWidth = 1; ResizeMargin = 5; AutoResize = $true
-        SaveWindowSize = $true; SplitRatio = @{ Left = 0.6; Right = 0.4 }
+        MinWidth     = 70       # Aumentei um pouco para dar respiro aos submenus
+        MaxWidth     = 0        # 0 = Dinâmico (Expande até o fim da tela 4k/8k)
+        MinHeight    = 20
+        MaxHeight    = 0       # 0 = Dinâmico
+        Margin       = 2
+        Padding      = 1
+        TitlePadding = 2
+        HeaderHeight = 5    # Altura do banner (importante bater com o tamanho da logo)
+        FooterHeight = 3
     }
 
     # ===========================================================================
@@ -202,7 +205,7 @@
         ASCII      = @{ TL = "+"; TR = "+"; BL = "+"; BR = "+"; HL = "-"; VL = "|"; ML = "+"; MR = "+"; Cross = "+"; TeeUp = "+"; TeeDown = "+"; TeeLeft = "+"; TeeRight = "+"; Name = "ASCII Fallback" }
         Block      = @{ TL = "█"; TR = "█"; BL = "█"; BR = "█"; HL = "█"; VL = "█"; ML = "█"; MR = "█"; Cross = "█"; TeeUp = "█"; TeeDown = "█"; TeeLeft = "█"; TeeRight = "█"; Name = "Block Heavy" }
         Retro      = @{ TL = "┌"; TR = "┐"; BL = "└"; BR = "┘"; HL = "─"; VL = "│"; ML = "├"; MR = "┤"; Cross = "┼"; TeeUp = "┴"; TeeDown = "┬"; TeeLeft = "┤"; TeeRight = "├"; Name = "Retro Terminal" }
-        Cyber      = @{ TL = "▛"; TR = "▜"; BL = "▙"; BR = "▟"; HL = "▄"; VL = "▌"; ML = "▐"; MR = "▐"; Cross = "▀"; TeeUp = "▄"; TeeDown = "▀"; TeeLeft = "▐"; TeeRight = "▌"; Name = "Cyberpunk" }
+        Cyber      = @{ TL = "█"; TR = "█"; BL = "█"; BR = "█"; HL = "─"; VL = "█"; ML = "█"; MR = "█"; Cross = "█"; TeeUp = "─"; TeeDown = "─"; TeeLeft = "█"; TeeRight = "█"; Name = "Cyberpunk" }
         Heavy      = @{ TL = "┏"; TR = "┓"; BL = "┗"; BR = "┛"; HL = "━"; VL = "┃"; ML = "┣"; MR = "┫"; Cross = "╋"; TeeUp = "┻"; TeeDown = "┳"; TeeLeft = "┫"; TeeRight = "┣"; Name = "Heavy Box" }
         Dotted     = @{ TL = "."; TR = "."; BL = "."; BR = "."; HL = "·"; VL = ":"; ML = ":"; MR = ":"; Cross = "+"; TeeUp = "+"; TeeDown = "+"; TeeLeft = "+"; TeeRight = "+"; Name = "Dotted" }
         Borderless = @{ TL = " "; TR = " "; BL = " "; BR = " "; HL = " "; VL = " "; ML = " "; MR = " "; Cross = " "; TeeUp = " "; TeeDown = " "; TeeLeft = " "; TeeRight = " "; Name = "Borderless" }
@@ -333,10 +336,18 @@
     # ===========================================================================
     CycleLists           = @{
         I18N          = @('en-US', 'pt-BR')
+        EngineMode    = @('EFFICIENCY', 'REDUNDANCY')
+        ColorMode     = @('TrueColor', 'ANSI16')
         IconLevel     = @(0, 1, 2)
         FrameStyle    = @('Classic', 'Rounded', 'Minimal', 'ASCII', 'Block', 'Retro', 'Cyber', 'Heavy', 'Dotted', 'Borderless', 'PowerShell')
         ProgressStyle = @('Default', 'Compact', 'BarOnly', 'Discrete', 'Braille', 'Line', 'Dot', 'Blocks')
         ThemePersona  = @('Cyber', 'Corporate', 'Hacker', 'Minimal', 'Retro', 'HighVis', 'PowerShell')
+        ThemeColor    = @(
+            'Blue', 'Green', 'Cyan', 'Magenta', 'Yellow', 'Red', 'Black', 'White',
+            'Gray', 'Purple', 'Orange', 'Teal', 'Pink', 'Brown', 'Lime', 'Indigo',
+            'Navy', 'Violet', 'Gold', 'Silver', 'Bronze',
+            'Amber', 'Dim', 'Coral', 'Salmon', 'Lavender', 'Mint'
+        )
         RC_MT         = @(1, 2, 4, 8, 16, 32, 64, 128)
         RC_R          = @(0, 1, 3, 5, 10)
         RC_W          = @(0, 1, 5, 10, 30)
@@ -645,8 +656,9 @@
         Upload            = @("⬆️📤", "⇡", "[UPL]")
         Download          = @("⬇️📥", "⇣", "[DWN]")
 
-        Install           = @("📦⬇️", "⊞⇣", "[INS]")
-        Uninstall         = @("📦⬆️", "⊠⇡", "[RMV]")
+        Install           = @("💿", "⊞⇣", "[INS]")
+        Installer         = @("📀", "⊞⇣", "[INS]")
+        Uninstall         = @("💽", "⊠⇡", "[RMV]")
         Package           = @("📦", "⊞", "[PKG]")
         Module            = @("🧩", "⎈", "[MOD]")
 
@@ -678,6 +690,7 @@
         Moon              = @("🌙", "☽", "[MON]")
         Cloud             = @("☁️", "☁", "[CLD]")
         Rainbow           = @("🌈", "◮", "[RBW]")
+        Palette           = @("🎨", "☱", "[THM]")
 
         SepDot            = @("・", "·", "[.]")
         SepDash           = @("─", "─", "[-]")

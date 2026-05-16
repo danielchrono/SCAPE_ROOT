@@ -6,11 +6,40 @@
 [CmdletBinding()]
 param(
     [string]$ProjectRoot = $(if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }),
-    [string]$OutputPath = (Join-ScapePath $(if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }) 'Output\SCAPE_DEPLOY.ps1')
+    [string]$OutputPath = ''
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+function Resolve-ForgeMonolithPath {
+    param([Parameter(Mandatory = $true)][string]$RootPath)
+    $forgePath = Join-ScapePath $RootPath "Data\Constants\forge.psd1"
+    $defaultDir = "Output"
+    $defaultFile = "SCAPE_DEPLOY.ps1"
+    if (-not (Test-Path -LiteralPath $forgePath)) {
+        return Join-ScapePath $RootPath (Join-ScapePath $defaultDir $defaultFile)
+    }
+
+    try {
+        $bytes = [System.IO.File]::ReadAllBytes($forgePath)
+        $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+        $raw = $utf8NoBom.GetString($bytes).Trim()
+        if ($raw.Length -gt 0 -and $raw[0] -eq [char]0xFEFF) { $raw = $raw.Substring(1) }
+        $forgeConst = if ([string]::IsNullOrWhiteSpace($raw)) { @{} } else { Invoke-Command -ScriptBlock ([scriptblock]::Create($raw)) }
+        $paths = if ($forgeConst -and $forgeConst.Paths) { $forgeConst.Paths } else { @{} }
+        $dir = if ($paths -and $paths.MonolithDir) { [string]$paths.MonolithDir } else { $defaultDir }
+        $file = if ($paths -and $paths.MonolithFile) { [string]$paths.MonolithFile } else { $defaultFile }
+        return Join-ScapePath $RootPath (Join-ScapePath $dir $file)
+    }
+    catch {
+        return Join-ScapePath $RootPath (Join-ScapePath $defaultDir $defaultFile)
+    }
+}
+
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    $OutputPath = Resolve-ForgeMonolithPath -RootPath $ProjectRoot
+}
 
 # =============================================================================
 # MICRO-RESOLVER (Sincronizado com o i18n)
@@ -74,6 +103,29 @@ function Get-FileContent($Path) {
     catch { return $null }
 }
 
+function Resolve-ForgeModuleRelativePath {
+    param([string]$ModuleName)
+    $parts = $ModuleName -split '\.'
+    if ($parts.Count -lt 3) { return $null }
+    $domain = $parts[1]
+    $leaf = (($parts[2..($parts.Count - 1)] -join '\') + '.psm1')
+    return "Modules\$domain\$leaf"
+}
+
+function Resolve-ForgeModuleFile {
+    param(
+        [Parameter(Mandatory = $true)][string]$ProjectRoot,
+        [Parameter(Mandatory = $true)][string]$ModuleName
+    )
+    $relative = Resolve-ForgeModuleRelativePath -ModuleName $ModuleName
+    if ([string]::IsNullOrWhiteSpace($relative)) { return $null }
+    $candidate = Join-ScapePath $ProjectRoot $relative
+    if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+        return Get-Item -LiteralPath $candidate -ErrorAction SilentlyContinue
+    }
+    return $null
+}
+
 function Get-ModulePayloads($ModulesDir, $ProjectRoot, $Topology) {
     $list = @()
     $domains = @('Root', 'Core', 'Acquisition', 'Analysis', 'Infrastructure', 'Presentation', 'Extensions', 'Forge', 'Orphans')
@@ -85,18 +137,8 @@ function Get-ModulePayloads($ModulesDir, $ProjectRoot, $Topology) {
         foreach ($mod in @($domainMods)) {
             if ($null -eq $mod) { continue }
 
-            $fileNameBase = ($mod.Name -split '\.')[-1]
-            $foundFile = $null
-
-            if ($domain -eq 'Root') {
-                $foundFile = Get-ChildItem -Path $ProjectRoot -File | Where-Object { $_.BaseName -eq $fileNameBase -and $_.Extension -match '\.psm?1$' } | Select-Object -First 1
-            }
-            else {
-                $searchPath = Join-ScapePath $ModulesDir $domain
-                if (Test-Path $searchPath) {
-                    $foundFile = Get-ChildItem -Path $searchPath -File -Recurse | Where-Object { $_.BaseName -eq $fileNameBase -and $_.Extension -match '\.psm?1$' } | Select-Object -First 1
-                }
-            }
+            $modName = if ($mod -is [hashtable]) { $mod['Name'] } else { $mod.Name }
+            $foundFile = Resolve-ForgeModuleFile -ProjectRoot $ProjectRoot -ModuleName $modName
 
             if ($foundFile) {
                 $content = Get-FileContent -Path $foundFile.FullName
@@ -104,7 +146,7 @@ function Get-ModulePayloads($ModulesDir, $ProjectRoot, $Topology) {
                     try { $null = [scriptblock]::Create($content) }
                     catch { throw ($(Get-Msg 'DEPLOYER_FATAL') -f "$($foundFile.Name) - $_") }
                     $list += [PSCustomObject]@{
-                        Name    = if ($mod -is [hashtable]) { $mod['Name'] } else { $mod.Name }
+                        Name    = $modName
                         Content = $content
                         Source  = $foundFile.FullName
                     }
@@ -183,18 +225,8 @@ function Show-ManifestTree {
                 $isLastM = ($m -eq $modCount - 1)
                 $corner = if ($isLastM) { "└── " } else { "├── " }
 
-                $fileNameBase = ($mod.Name -split '\.')[-1]
-                $found = $null
-
-                if ($domain -eq 'Root') {
-                    $found = Get-ChildItem -Path $ProjPath -File | Where-Object { $_.BaseName -eq $fileNameBase -and $_.Extension -match '\.psm?1$' } | Select-Object -First 1
-                }
-                else {
-                    $searchPath = Join-ScapePath $BasePath $domain
-                    if (Test-Path $searchPath) {
-                        $found = Get-ChildItem -Path $searchPath -File -Recurse | Where-Object { $_.BaseName -eq $fileNameBase -and $_.Extension -match '\.psm?1$' } | Select-Object -First 1
-                    }
-                }
+                $moduleName = if ($mod -is [hashtable]) { $mod['Name'] } else { $mod.Name }
+                $found = Resolve-ForgeModuleFile -ProjectRoot $ProjPath -ModuleName $moduleName
 
                 $status = if ($found) { "✓" } else { "✗" }
                 $clr = if ($found) { "Green" } else { "Red" }
@@ -308,6 +340,37 @@ try {
     $Global:AppRoot = $PSScriptRoot
     if ([string]::IsNullOrWhiteSpace($Global:AppRoot)) { try { $Global:AppRoot = Split-Path -Parent $PSCommandPath -ErrorAction Stop } catch {} }
     if ([string]::IsNullOrWhiteSpace($Global:AppRoot)) { $Global:AppRoot = (Get-Location).Path }
+    $workspaceRootName = "SCAPE_Storage"; $workspaceLogsName = "Logs"; $workspaceTempName = "Temp"; $workspaceDeployName = "Build"
+    $systemConstPath = Join-Path $Global:AppRoot "Data\Constants\system.psd1"
+    $forgeConstPath = Join-Path $Global:AppRoot "Data\Constants\forge.psd1"
+    if (Test-Path -LiteralPath $systemConstPath) {
+        $rawSystem = [System.IO.File]::ReadAllText($systemConstPath, [System.Text.Encoding]::UTF8).Trim((([char]0xFEFF), " "))
+        if (-not [string]::IsNullOrWhiteSpace($rawSystem)) {
+            $systemConst = Invoke-Command -ScriptBlock ([scriptblock]::Create($rawSystem))
+            if ($systemConst -and $systemConst.Workspace) {
+                $workspaceRootName = if ($systemConst.Workspace.ROOT) { [string]$systemConst.Workspace.ROOT } else { $workspaceRootName }
+                $workspaceLogsName = if ($systemConst.Workspace.LOGS) { [string]$systemConst.Workspace.LOGS } else { $workspaceLogsName }
+                $workspaceTempName = if ($systemConst.Workspace.TEMP) { [string]$systemConst.Workspace.TEMP } else { $workspaceTempName }
+                $workspaceDeployName = if ($systemConst.Workspace.DEPLOY) { [string]$systemConst.Workspace.DEPLOY } else { $workspaceDeployName }
+            }
+        }
+    }
+    if (Test-Path -LiteralPath $forgeConstPath) {
+        $rawForge = [System.IO.File]::ReadAllText($forgeConstPath, [System.Text.Encoding]::UTF8).Trim((([char]0xFEFF), " "))
+        if (-not [string]::IsNullOrWhiteSpace($rawForge)) {
+            $forgeConst = Invoke-Command -ScriptBlock ([scriptblock]::Create($rawForge))
+            if ($forgeConst -and $forgeConst.Paths -and $forgeConst.Paths.DeployWorkspaceDir) { $workspaceDeployName = [string]$forgeConst.Paths.DeployWorkspaceDir }
+        }
+    }
+    $workspaceRoot = Join-Path $Global:AppRoot $workspaceRootName
+    $preferredWorkspace = Join-Path $Global:AppRoot "Workspace"
+    if (Test-Path -LiteralPath $preferredWorkspace) { $workspaceRoot = $preferredWorkspace }
+    $workspaceLogs = Join-Path $workspaceRoot $workspaceLogsName
+    $workspaceTemp = Join-Path $workspaceRoot $workspaceTempName
+    $workspaceDeploy = Join-Path $workspaceRoot $workspaceDeployName
+    @($workspaceRoot, $workspaceLogs, $workspaceTemp, $workspaceDeploy) | ForEach-Object {
+        if (-not (Test-Path -LiteralPath $_)) { New-Item -ItemType Directory -Path $_ -Force | Out-Null }
+    }
 
     $igniteKey = $null
     foreach ($k in $Global:SCAPE_MEM.Keys) { if ($k -match '\.Ignite$' -or $k -eq 'Ignite') { $igniteKey = $k; break } }
@@ -318,7 +381,14 @@ try {
 
     $registry = Invoke-Command -ScriptBlock ([scriptblock]::Create($Global:SCAPE_MEM['Asset_Registry']))
     $topology = Invoke-Command -ScriptBlock ([scriptblock]::Create($Global:SCAPE_MEM['Asset_Topology']))
-    $navigation = Invoke-Command -ScriptBlock ([scriptblock]::Create($Global:SCAPE_MEM['Asset_Navigation']))
+    $navSeg = if ($registry -and $registry.Segments -and $registry.Segments.ContainsKey('navigation')) { $registry.Segments['navigation'] } else { $null }
+    $navRelPath = if ($navSeg -is [hashtable]) { $navSeg['File'] } else { $navSeg.File }
+    $navMemKey = if ($navRelPath) { "Asset_$($navRelPath -replace '^[Dd]ata[/\\]', '' -replace '[/\\]', '_')" } else { $null }
+    if ($navMemKey -and $Global:SCAPE_MEM.ContainsKey($navMemKey)) {
+        $navigation = Invoke-Command -ScriptBlock ([scriptblock]::Create($Global:SCAPE_MEM[$navMemKey]))
+    } else {
+        throw "HANDOFF_FATAL: Navigation asset payload missing in memory."
+    }
 
     $modulesToLoad = @()
     foreach ($k in $topology.Keys) {
@@ -338,7 +408,18 @@ try {
     # INICIALIZA O ESTADO PRIMEIRO
     Initialize-ScapeState | Out-Null
     Initialize-ScapeInterop | Out-Null
-    Update-ScapeColdState -NewProperties @{ ROOT = $Global:AppRoot; Registry = $registry; Topology = $topology; Navigation = $navigation } -Confirm:$false | Out-Null
+    Update-ScapeColdState -NewProperties @{
+        ROOT = $Global:AppRoot
+        Registry = $registry
+        MANIFEST = $topology
+        Topology = $topology
+        Navigation = $navigation
+        WORKSPACE_ROOT = $workspaceRoot
+        WORKSPACE_LOGS = $workspaceLogs
+        WORKSPACE_TEMP = $workspaceTemp
+        WORKSPACE_DEPLOY = $workspaceDeploy
+        DEV_MODE = $false
+    } -Confirm:$false | Out-Null
 
     # CARREGA OS ASSETS (AGORA O STATE EXISTE)
     if (Get-Command Invoke-ScapeLoadAsset -ErrorAction SilentlyContinue) {
@@ -362,18 +443,37 @@ try {
         }
     }
 
+    # CARGA FORÇADA DE ASSETS CRÍTICOS (para ícones/ui/theme funcionarem no RAM-only monolith)
+    if (Get-Command Invoke-ScapeLoadAsset -ErrorAction SilentlyContinue) {
+        $assetsToForce = @('ui', 'theme', 'en-US', 'infrastructure')
+        foreach ($key in $registry.Segments.Keys) {
+            if ($key -eq '__Meta__') { continue }
+            if ($key -in $assetsToForce) {
+                $seg = $registry.Segments[$key]
+                $file = if ($seg -is [hashtable]) { $seg['File'] } else { $seg.File }
+                $cat  = if ($seg -is [hashtable]) { $seg['Category'] } else { $seg.Category }
+                $assetPath = Join-Path $Global:AppRoot $file
+                if (Test-Path -LiteralPath $assetPath) {
+                    Invoke-ScapeLoadAsset -Category $cat -AssetId $key -FilePath $assetPath -Silent | Out-Null
+                }
+            }
+        }
+    }
+
     Initialize-ScapeSetting -ForceReset:$false | Out-Null
-    # if (Get-Command Initialize-ScapeLogger -ErrorAction SilentlyContinue) { Initialize-ScapeLogger | Out-Null }
+    if (Get-Command Initialize-ScapeLogger -ErrorAction SilentlyContinue) { Initialize-ScapeLogger | Out-Null }
     if (Get-Command Initialize-ScapeResolver -ErrorAction SilentlyContinue) { Initialize-ScapeResolver | Out-Null }
 
     Resolve-ScapeManifestLayer -LayerKey "Presentation" | Out-Null
     Invoke-ScapeWakeAssets -Domain "Presentation" | Out-Null
-    Publish-ScapeEvent -Type "LANG_SWITCH" -Severity "INFO" -Payload @{ Language = "pt-BR" }
+    $defaultLang = Get-ScapeConstant -Path "system::Defaults::LANG" -Fallback "en-US"
+    Publish-ScapeEvent -Type "LANG_SWITCH" -Severity "INFO" -Payload @{ Language = $defaultLang }
 
     Start-ScapeRouter -InitialMenu $InitialMenu
 } catch {
-    Write-Host ("[!] BOOT_FATAL_MATRIX: {0}" -f $_.Exception.Message) -ForegroundColor Red
-    Read-Host "BOOT_PRESS_ENTER_EXIT"
+    $bootMsg = Get-Msg 'BOOT_FATAL_MATRIX'
+    Write-Host ($bootMsg -f $_.Exception.Message) -ForegroundColor Red
+    Read-Host (Get-Msg 'BOOT_PRESS_ENTER_EXIT')
 }
 '@)
 
@@ -393,8 +493,6 @@ $dataDir = Join-ScapePath $ProjectRoot 'Data'
 $modulesDir = Join-ScapePath $ProjectRoot 'Modules'
 $topoPath = Join-ScapePath $dataDir 'Manifests\Topology.psd1'
 $registryPath = Join-ScapePath $dataDir 'Manifests\Registry.psd1'
-$OutputPath = Join-ScapePath $ProjectRoot "Output\SCAPE_DEPLOY.ps1"
-
 $outDir = Split-Path $OutputPath -Parent
 if (-not (Test-Path $outDir)) { $null = New-Item -Path $outDir -ItemType Directory -Force }
 
@@ -416,8 +514,9 @@ $modulePayloads = Get-ModulePayloads -ModulesDir $modulesDir -ProjectRoot $Proje
 
 $igniteFound = $modulePayloads | Where-Object { $_.Name -match 'Ignite' }
 if (-not $igniteFound) {
-    Write-Host "`n[!] $($(Get-Msg 'DEPLOYER_FATAL') -f 'Ignite module missing')" -ForegroundColor Red
-    throw ($(Get-Msg 'DEPLOYER_FATAL') -f "Boot module missing.")
+    $igniteMissing = Get-Msg 'IGNITE_DEPLOYER_MISSING'
+    Write-Host "`n[!] $igniteMissing" -ForegroundColor Red
+    throw (Get-Msg 'BOOT_IMPORT_FATAL' -f $igniteMissing)
 }
 
 $dataAssets = Get-DataAssets -DataDir $dataDir
@@ -425,15 +524,6 @@ $dataAssets = Get-DataAssets -DataDir $dataDir
 Write-Monolith -OutFile $OutputPath -ModulePayloads $modulePayloads -DataAssets $dataAssets
 
 Write-Host "`n[+] $(Get-Msg 'DEPLOYER_SUCCESS') -> $OutputPath" -ForegroundColor (Get-Clr 'Base.Green')
-Write-Host "[>] $(Get-Msg 'DEPLOYER_LAUNCH_SCAPE')" -ForegroundColor (Get-Clr 'Base.Amber')
+Write-Host "[>] Monolith compilation complete." -ForegroundColor (Get-Clr 'Base.Amber')
 
 Start-Sleep -Milliseconds 400
-if (Test-Path $OutputPath) {
-    $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
-    if ($pwsh) {
-        Start-Process pwsh.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -NoExit -File `"$OutputPath`""
-    }
-    else {
-        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -NoExit -File `"$OutputPath`""
-    }
-}

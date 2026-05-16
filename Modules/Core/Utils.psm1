@@ -69,8 +69,8 @@ function Get-ScapeProperty {
         [Parameter()][object]$Fallback = $null
     )
     process {
-        if ($Object.ContainsKey($PropertyName)) { return $Object[$PropertyName] }
         if ($null -eq $Object) { return $Fallback }
+        if ($Object -is [System.Collections.IDictionary] -and $Object.ContainsKey($PropertyName)) { return $Object[$PropertyName] }
         try {
             if ($Object -is [System.Collections.IDictionary]) {
                 foreach ($key in $Object.Keys) {

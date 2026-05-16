@@ -59,12 +59,13 @@ function Open-ScapeRawHandle {
 
         if ($handle.IsInvalid) {
             $err = [System.Runtime.InteropServices.Marshal]::GetLastWin32Error()
+            $errMsg = Get-ScapeLogMsg -Key "IO_CREATEFILE_FAIL" -MsgArgs @($err)
             Publish-ScapeEvent -Type "RAW_HANDLE_DENIED" -Severity "ERROR" -Payload @{
                 DevicePath = $DevicePath
                 Win32Error = $err
-                Message    = "Error Code $err for $DevicePath. Admin rights required."
+                Message    = $errMsg
             }
-            throw "RAW_HANDLE_DENIED: Error Code $err for $DevicePath. Are you running as Admin?"
+            throw $errMsg
         }
 
         return $handle

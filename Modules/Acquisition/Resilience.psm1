@@ -41,11 +41,12 @@ function Invoke-ScapeResilientRead {
         }
         catch {
             $attempt++
-            Publish-ScapeEvent -Type "LOG_WARN" -Payload @{ Action = "LogLine"; Message = "I/O Error at offset $TargetOffset. Attempt $attempt/$maxRetries. Reason: $($_.Exception.Message)" }
+            $retryMsg = Get-ScapeLogMsg -Key "IO_RETRY_ATTEMPT" -MsgArgs @($attempt, $maxRetries, ($delayMs / 1000))
+            Publish-ScapeEvent -Type "LOG_WARN" -Payload @{ Action = "LogLine"; Message = $retryMsg }
 
             if ($attempt -ge $maxRetries) {
-                # Limite atingido. Reporta falha crítica no bloco para o motor pular
-                Publish-ScapeEvent -Type "LOG_ERR" -Payload @{ Action = "LogLine"; Message = "BAD_BLOCK_DETECTED at $TargetOffset. Max retries exhausted." }
+                $badBlockMsg = Get-ScapeLogMsg -Key "IO_BIT_ERROR"
+                Publish-ScapeEvent -Type "LOG_ERR" -Payload @{ Action = "LogLine"; Message = $badBlockMsg }
                 return @{ Success = $false; BytesRead = 0; Error = $_.Exception.Message }
             }
             Start-Sleep -Milliseconds $delayMs

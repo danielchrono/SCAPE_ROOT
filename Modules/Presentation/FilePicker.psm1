@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation | Module: Scape.Presentation.FilePicker
     Architecture: Hybrid COM/TUI Input Dialog

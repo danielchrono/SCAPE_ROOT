@@ -9,7 +9,7 @@
     MainMenu      = @{
         TitleKey = "MENU_MAIN_TITLE"
         Items    = @(
-            @{ Id = "SCAN"; TitleKey = "MENU_MAIN_SCAN"; Type = "Highlight"; Action = "NAVIGATE"; Target = "ScanMenu"; Layer = "Acquisition" }
+            @{ Id = "SCAN"; TitleKey = "MENU_MAIN_SCAN"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Infrastructure.Telemetry"; Task = "INVENTORY" }; Layer = "Infrastructure" }
             @{ Id = "PARSING"; TitleKey = "MENU_MAIN_PARSING"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Analysis"; Target = "Scape.Analysis.Parser.Core" }; Layer = "Analysis" }
             @{ Id = "ARCHAEOLOGY"; TitleKey = "MENU_MAIN_ARCHAEOLOGY"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Analysis"; Target = "Scape.Analysis.Carving.Carver" }; Layer = "Analysis" }
             @{ Id = "HARVESTER"; TitleKey = "MENU_MAIN_HARVESTER"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Acquisition"; Target = "Scape.Acquisition.Selection" }; Layer = "Acquisition" }
@@ -28,19 +28,19 @@
             @{ Id = "CHKDSK"; TitleKey = "TOOL_CHKDSK"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Infrastructure.Compliance" }; Layer = "Infrastructure" }
             @{ Id = "WINFR"; TitleKey = "TOOL_WINFR"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Analysis"; Target = "Scape.Analysis.FS.NTFS" }; Layer = "Analysis" }
             @{ Id = "FSUTIL"; TitleKey = "TOOL_FSUTIL"; Type = "Special"; Action = "TRIGGER"; Payload = @{ Domain = "Analysis"; Target = "Scape.Analysis.FS.PartitionTable" }; Layer = "Analysis" }
-            @{ Id = "STORDIAG"; TitleKey = "TOOL_STORDIAG"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Infrastructure.Telemetry" }; Layer = "Infrastructure" }
+            @{ Id = "STORDIAG"; TitleKey = "TOOL_STORDIAG"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Infrastructure.Telemetry"; Task = "TOPOLOGY" }; Layer = "Infrastructure" }
             @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
         )
     }
 
     SettingsMenu  = @{
-        TitleKey = "MENU_MAIN_TITLE"
+        TitleKey = "MENU_MAIN_SETTINGS"
         Items    = @(
-            @{ Id = "ENGINE_MODE"; TitleKey = "MENU_OPTION_ENGINE_MODE"; Type = "Highlight"; Action = "MUTATE"; Payload = @{ Key = "EngineMode"; Value = "TOGGLE" }; DynamicText = @{ Type = "StateValue"; Key = "EngineMode" } }
+            @{ Id = "ENGINE_MODE"; TitleKey = "MENU_OPTION_ENGINE_MODE"; Type = "Highlight"; Action = "MUTATE"; Payload = @{ Key = "EngineMode"; Value = "CYCLE"; List = "ui::CycleLists::EngineMode" }; DynamicText = @{ Type = "CycleState"; Key = "EngineMode"; List = "ui::CycleLists::EngineMode" } }
             @{ Id = "DEFAULT_OUT"; TitleKey = "MENU_OPTION_DEFAULT_OUT"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Presentation"; Target = "Scape.Presentation.FilePicker" }; Layer = "Presentation" }
             @{ Id = "NET_MGR"; TitleKey = "MENU_OPTION_NETWORK_MGR"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Extensions"; Target = "Scape.Extensions.Network" }; Layer = "Extensions" }
             @{ Id = "ROBOCOPY"; TitleKey = "MENU_OPTION_ROBOCOPY"; Type = "Special"; Action = "NAVIGATE"; Target = "RobocopyMenu"; Layer = "Extensions" }
-            @{ Id = "LANGUAGE"; TitleKey = "MENU_OPTION_LANGUAGE"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "CurrentLanguage"; Value = "TOGGLE" }; DynamicText = @{ Type = "StateValue"; Key = "CurrentLanguage" } }
+            @{ Id = "LANGUAGE"; TitleKey = "MENU_OPTION_LANGUAGE"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "CurrentLanguage"; Value = "CYCLE"; List = "ui::CycleLists::I18N" }; DynamicText = @{ Type = "CycleState"; Key = "CurrentLanguage"; List = "ui::CycleLists::I18N" } }
             @{ Id = "THEME"; TitleKey = "MENU_SETTINGS_THEME"; Type = "Highlight"; Action = "NAVIGATE"; Target = "ThemeMenu"; Layer = "Presentation" }
             @{ Id = "RESET"; TitleKey = "SETTINGS_RESET_DEFAULTS"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Core"; Target = "Scape.Core.Settings"; Task = "RESET" } }
             @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
@@ -72,6 +72,8 @@
             @{ Id = "FRAME_STYLE"; TitleKey = "MENU_OPTION_FRAME_STYLE"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "FrameStyle"; Value = "CYCLE" }; DynamicText = @{ Type = "CycleState"; Key = "FrameStyle"; List = "ui::CycleLists::FrameStyle" } }
             @{ Id = "PROGRESS_STYLE"; TitleKey = "MENU_OPTION_PROGRESS_STYLE"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "ProgressStyle"; Value = "CYCLE" }; DynamicText = @{ Type = "CycleState"; Key = "ProgressStyle"; List = "ui::CycleLists::ProgressStyle" } }
             @{ Id = "THEME_PERSONA"; TitleKey = "MENU_OPTION_THEME_PERSONA"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "ThemePersona"; Value = "CYCLE" }; DynamicText = @{ Type = "CycleState"; Key = "ThemePersona"; List = "ui::CycleLists::ThemePersona" } }
+            @{ Id = "THEME_COLOR"; TitleKey = "MENU_OPTION_COLOR_MODE"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "ColorMode"; Value = "CYCLE"; List = "ui::CycleLists::ColorMode" }; DynamicText = @{ Type = "CycleState"; Key = "ColorMode"; List = "ui::CycleLists::ColorMode" } }
+            @{ Id = "RANDOM_THEME"; TitleKey = "MENU_RANDOM_THEME"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Presentation"; Target = "Scape.Presentation.Theme"; Task = "PROCEDURAL" } }
             @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
         )
     }
@@ -123,7 +125,7 @@
         TitleKey = "MENU_DEPLOY_TITLE"
         Items    = @(
             @{ Id = "INIT_SYSTEM"; TitleKey = "DEPLOYER_GENERATE"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Forge"; Target = "Scape.Forge.Deployer"; Task = "INIT_AND_EXIT" } }
-            @{ Id = "BUILD_MONOLITH"; TitleKey = "DEPLOYER_OPT_DEV"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forge"; Target = "Scape.Forge.Build"; Task = "BUILD_AND_LAUNCH_MONOLITH" } }
+            @{ Id = "BUILD_MONOLITH"; TitleKey = "DEPLOYER_OPT_DEV"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forge"; Target = "Scape.Forge.Deployer"; Task = "BUILD_AND_LAUNCH_MONOLITH" } }
             @{ Id = "EXIT"; TitleKey = "MENU_MAIN_EXIT"; Type = "Destructive"; Action = "TERMINATE" }
         )
     }
@@ -131,7 +133,7 @@
     ForgeMenu     = @{
         TitleKey = "DEPLOYER_MATRIX_HEADER"
         Items    = @(
-            @{ Id = "INIT_SYSTEM"; TitleKey = "DEPLOYER_GENERATE"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Forge"; Target = "Scape.Forge.Deployer"; Task = "INIT_AND_EXIT" } }
+            @{ Id = "INIT_SYSTEM"; TitleKey = "DEPLOYER_GENERATE"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forge"; Target = "Scape.Forge.Deployer"; Task = "INIT_AND_EXIT" } }
             @{ Id = "BUILD_EXE_PORTABLE"; TitleKey = "DEPLOYER_OPT_EXE"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forge"; Target = "Scape.Forge.Deployer"; Task = "EXE_PORTABLE" } }
             @{ Id = "BUILD_EXE_SETUP"; TitleKey = "DEPLOYER_OPT_SETUP"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forge"; Target = "Scape.Forge.Deployer"; Task = "EXE_SETUP" } }
             @{ Id = "BUILD_MSI"; TitleKey = "DEPLOYER_OPT_MSI"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Forge"; Target = "Scape.Forge.Deployer"; Task = "MSI" } }

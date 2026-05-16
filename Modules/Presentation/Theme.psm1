@@ -11,6 +11,8 @@ $Script:UICache = $null
 $Script:IconCache = $null
 $Script:ColorMode = "ANSI16"
 $Script:LiveFlagMap = @{}
+$Script:ActivePaletteName = ""
+$Script:ActivePaletteMap = @{}
 
 function Initialize-ScapeTheme {
     [CmdletBinding()]
@@ -37,16 +39,13 @@ function Initialize-ScapeTheme {
             }
         }
     }
+    $Script:ActivePaletteName = "Default"
+    $Script:ActivePaletteMap = @{}
 
     # 4. Aplicação de Persona e Modo de Cor do Estado (Se houver)
-    $state = Get-ScapeColdState
-    if ($null -ne $state) {
-        $persona = Get-ScapeProperty -Object $state -PropertyName 'ThemePersona' -Fallback 'PowerShell'
-        Set-ScapePersona -Name $persona -Silent
-
-        $colorPref = Get-ScapeProperty -Object $state -PropertyName 'ColorMode'
-        if ($null -ne $colorPref) { Set-ScapeColorMode -UseTrueColor ([bool]$colorPref) -Silent }
-    }
+    # MVVM estrito: Theme apenas inicializa constantes/dados puros.
+    # A leitura de ColdState e aplicação (Set-ScapePersona/ColorMode) devem ser
+    # coordenadas pela camada superior, não na inicialização pura da Theme.
 }
 
 # --- GESTÃO DE ÍCONES (Resolvendo o $icons perdido) ---
@@ -187,18 +186,42 @@ function Set-ScapePersona {
         if (-not $Script:ThemeCache) { Initialize-ScapeTheme }
         $persona = $Script:ThemeCache.Persona[$Name]
         if ($persona) {
+            # Apply Palette
             $paletteName = $persona.Palette
             if ($paletteName -and $Script:ThemeCache.Base[$paletteName]) {
+                $Script:ActivePaletteName = [string]$paletteName
+                $Script:ActivePaletteMap = $Script:ThemeCache.Base[$paletteName]
                 $baseMap = $Script:ThemeCache.FlagMap
                 foreach ($key in $baseMap.Keys) {
                     $rgbRef = $baseMap[$key].RGB
                     if ($rgbRef -is [string] -and $rgbRef -match '^Base\.(\w+)') {
                         $colorName = $matches[1]
-                        $newRGB = $Script:ThemeCache.Base[$paletteName][$colorName]
+                        $newRGB = Resolve-ScapeRawRGB -RawValue $rgbRef
                         if ($newRGB) { $Script:LiveFlagMap[$key].RGB = $newRGB }
                     }
                 }
             }
+            
+            # Apply FrameStyle
+            if ($persona.Frame) {
+                Set-ScapeSettingMutation -Key "FrameStyle" -Value $persona.Frame | Out-Null
+            }
+            
+            # Apply ProgressStyle
+            if ($persona.Progress) {
+                Set-ScapeSettingMutation -Key "ProgressStyle" -Value $persona.Progress | Out-Null
+            }
+            
+            # Apply Animation setting
+            if ($null -ne $persona.Animation) {
+                Set-ScapeSettingMutation -Key "AnimationEnabled" -Value [bool]$persona.Animation | Out-Null
+            }
+            
+            # Apply Contrast hint (store for UI to apply)
+            if ($persona.Contrast) {
+                Set-ScapeSettingMutation -Key "ContrastMode" -Value $persona.Contrast | Out-Null
+            }
+            
             if (-not $Silent) { Publish-ScapeEvent -Type "THEME_PERSONA_APPLIED" -Severity "INFO" -Payload @{ Persona = $Name } }
         }
     }
@@ -219,6 +242,26 @@ function Resolve-ScapeRawRGB {
         $colorName = $matches[1]
         $base = $Script:ThemeCache["Base"]
         if ($base.Contains($colorName)) { return $base[$colorName] }
+        if ($Script:ActivePaletteMap -and $Script:ActivePaletteMap.Contains($colorName)) { return $Script:ActivePaletteMap[$colorName] }
+
+        $aliases = @{
+            Primary = @('Blue', 'Cyan', 'Teal')
+            Accent  = @('Cyan', 'Magenta', 'Purple', 'Green')
+            Surface = @('Gray', 'Dim')
+            Bg      = @('Black', 'DarkGray')
+            Text    = @('White', 'Silver')
+            Muted   = @('Gray', 'Dim')
+            Success = @('Green', 'Lime')
+            Warning = @('Amber', 'Yellow', 'Orange')
+            Error   = @('Red', 'Coral')
+            Info    = @('Cyan', 'Blue')
+        }
+        if ($aliases.ContainsKey($colorName)) {
+            foreach ($candidate in $aliases[$colorName]) {
+                if ($Script:ActivePaletteMap -and $Script:ActivePaletteMap.Contains($candidate)) { return $Script:ActivePaletteMap[$candidate] }
+                if ($base.Contains($candidate)) { return $base[$candidate] }
+            }
+        }
     }
     return @(120, 120, 120)
 }
@@ -231,6 +274,33 @@ function Resolve-ScapeThemeColor {
         return Get-ScapeSafeColor -RGB $rgb
     }
     return @(120, 120, 120)
+}
+
+function Get-ScapeAnsi16SequenceForFlag {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param([string]$Flag)
+
+    if (-not $Script:ThemeCache) { Initialize-ScapeTheme }
+    $fallbackMap = Get-ScapeConstant -Path "theme::Fallback::ANSI16Map" -Fallback @{}
+    $colorRef = "Base.White"
+
+    if ($Script:LiveFlagMap.Contains($Flag)) {
+        $raw = $Script:LiveFlagMap[$Flag].RGB
+        if ($raw -is [string] -and $fallbackMap.Contains($raw)) {
+            $colorRef = $raw
+        }
+    }
+
+    $token = if ($fallbackMap.Contains($colorRef)) { [string]$fallbackMap[$colorRef] } else { "FG.White" }
+    $ansiByToken = @{
+        "FG.Black" = "$([char]0x1B)[30m"; "FG.Red" = "$([char]0x1B)[31m"; "FG.Green" = "$([char]0x1B)[32m"; "FG.Yellow" = "$([char]0x1B)[33m"
+        "FG.Blue" = "$([char]0x1B)[34m"; "FG.Magenta" = "$([char]0x1B)[35m"; "FG.Cyan" = "$([char]0x1B)[36m"; "FG.White" = "$([char]0x1B)[37m"
+        "FG.BrightBlack" = "$([char]0x1B)[90m"; "FG.BrightRed" = "$([char]0x1B)[91m"; "FG.BrightGreen" = "$([char]0x1B)[92m"; "FG.BrightYellow" = "$([char]0x1B)[93m"
+        "FG.BrightBlue" = "$([char]0x1B)[94m"; "FG.BrightMagenta" = "$([char]0x1B)[95m"; "FG.BrightCyan" = "$([char]0x1B)[96m"; "FG.BrightWhite" = "$([char]0x1B)[97m"
+    }
+    if ($ansiByToken.ContainsKey($token)) { return $ansiByToken[$token] }
+    return "$([char]0x1B)[37m"
 }
 
 # --- FORMATADOR FINAL ---
@@ -257,14 +327,8 @@ function Format-ScapeANSIMessage {
         return "${prefix}${fgAnsi}${Text}${reset}"
     }
 
-    # Fallback ANSI 16 cores
-    $fgAnsi16 = switch -Regex ($Flag) {
-        "FATAL|ERR" { "$ESC[91m" }
-        "WARN|MENU" { "$ESC[93m" }
-        "STATUS|DONE" { "$ESC[92m" }
-        "SYSTEM|UI" { "$ESC[96m" }
-        default { "$ESC[97m" }
-    }
+    # Fallback ANSI 16 data-driven via theme::Fallback::ANSI16Map
+    $fgAnsi16 = Get-ScapeAnsi16SequenceForFlag -Flag $Flag
     return "${prefix}${fgAnsi16}${Text}${reset}"
 }
 
@@ -274,7 +338,10 @@ function Format-ScapeANSIMessage {
 function Get-ScapeResolvedIcon {
     [CmdletBinding()]
     [OutputType([string])]
-    param([Parameter(Mandatory = $true)][string]$RouteId)
+    param(
+        [Parameter(Mandatory = $true)][string]$RouteId,
+        [Parameter()][int]$IconLevel = 0
+    )
     process {
         if ($null -eq $Script:IconCache) { Initialize-ScapeTheme }
 
@@ -286,11 +353,9 @@ function Get-ScapeResolvedIcon {
         $iconArr = $Script:IconCache[$iconName]
         if ($null -eq $iconArr -or $iconArr -isnot [array] -or $iconArr.Count -eq 0) { return "" }
 
-        # 3. Seleciona índice baseado no IconLevel do ColdState
-        $state = Get-ScapeColdState
-        $level = if ($state.ContainsKey('IconLevel')) { [int]$state['IconLevel'] } else { 0 }
-        if ($level -lt 0) { $level = 0 }
-        if ($level -ge $iconArr.Count) { $level = $iconArr.Count - 1 }
+        # MVVM estrito: IconLevel deve ser input read-only
+        $level = if ($IconLevel -lt 0) { 0 } else { [int]$IconLevel }
+        if ($level -ge $iconArr.Count) { $level = $iconArr.Count -1 }
 
         return [string]$iconArr[$level]
     }

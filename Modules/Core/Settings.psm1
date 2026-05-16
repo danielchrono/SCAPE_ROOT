@@ -28,6 +28,7 @@ function Get-ScapeSettingDefault {
         $uiDefaults = Get-ScapeConstant -Path "ui::Defaults"
         $uiToggleLists = Get-ScapeConstant -Path "ui::ToggleLists"
         $termCaps = Get-ScapeConstant -Path "ui::TerminalCapabilities"
+        $defaultPersona = if ($uiDefaults.ThemeProfile) { $uiDefaults.ThemeProfile } else { "PowerShell" }
         return [ordered]@{
             # Configurações não-UI
             Theme                      = Get-ScapeConstant -Path "theme::DynamicTheme::Fallback"
@@ -45,7 +46,7 @@ function Get-ScapeSettingDefault {
             IconLevel                  = $uiDefaults.IconLevel
             FrameStyle                 = $uiDefaults.FrameStyle
             ProgressStyle              = $uiDefaults.ProgressStyle
-            ThemePersona               = $uiDefaults.ThemeProfile
+            ThemePersona               = $defaultPersona
             ColorMode                  = $uiDefaults.ColorMode
             # Toggles do Robocopy
             RC_E                       = $uiToggleLists.RC_E
@@ -92,6 +93,7 @@ function Initialize-ScapeSetting {
         else {
             _LoadSettingsFromJson -Defaults $defaults
         }
+        $state = Optimize-ScapeSettingsState -State $state -Defaults $defaults
         Update-ScapeColdState -NewProperties $state | Out-Null
         Update-ScapeColdState -NewProperties @{ Config = @{ Language = $state["CurrentLanguage"] } } | Out-Null
         if (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
@@ -126,28 +128,80 @@ function Set-ScapeSettingMutation {
             foreach ($k in $defaults.Keys) {
                 $settingsToSave[$k] = Get-ScapeProperty -Object $state -PropertyName $k -Fallback $defaults[$k]
             }
-            $settingsToSave[$Key] = $Value
+            $effectiveValue = $Value
+            if ($Key -eq "EngineMode") {
+                if ($Value -is [bool]) { $effectiveValue = if ($Value) { "REDUNDANCY" } else { "EFFICIENCY" } }
+                elseif (-not [string]::IsNullOrWhiteSpace([string]$Value)) { $effectiveValue = ([string]$Value).ToUpperInvariant() }
+            }
+            $settingsToSave[$Key] = $effectiveValue
+
             Invoke-ScapeIO -Action "WRITE_SETTINGS" -Target (Get-ScapeSettingsPath) -Operation {
                 $json = $settingsToSave | ConvertTo-Json -Depth 3 -Compress -WarningAction SilentlyContinue
                 $dir = Split-Path -Path (Get-ScapeSettingsPath) -Parent
                 if (-not (Test-Path -Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
                 [System.IO.File]::WriteAllText((Get-ScapeSettingsPath), $json, [System.Text.UTF8Encoding]::new($false))
             } | Out-Null
-            Update-ScapeColdState -NewProperties @{ $Key = $Value } | Out-Null
+
+            Update-ScapeColdState -NewProperties @{ $Key = $effectiveValue } | Out-Null
+
+            # --- ROTEAMENTO E AÇÕES PÓS-MUTAÇÃO ---
+
+            # 1. Idioma
             if ($Key -eq "CurrentLanguage") {
-                Update-ScapeColdState -NewProperties @{ Config = @{ Language = $Value } } | Out-Null
+                $configObj = Get-ScapeProperty -Object $state -PropertyName "Config" -Fallback @{}
+                $configObj["Language"] = $effectiveValue
+                Update-ScapeColdState -NewProperties @{ Config = $configObj } | Out-Null
+                Publish-ScapeEvent -Type "LANG_SWITCH" -Severity "INFO" -Payload @{ Language = $effectiveValue }
             }
+
+            # 2. Persona de Tema
             if ($Key -eq "ThemePersona" -and (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue)) {
-                Set-ScapePersona -Name $Value
+                Set-ScapePersona -Name $effectiveValue
+                Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{ Type = 'FULL'; MenuId = $state.CurrentMenu }
             }
-            if ($Key -match "^Capability_") {
-                if ($Key -eq "Capability_TrueColor" -and (Get-Command Set-ScapeColorMode -ErrorAction SilentlyContinue)) {
-                    Set-ScapeColorMode -UseTrueColor ([bool]$Value)
+
+            # 3. Color Mode e Capabilities Visuais (Sincronização Bidirecional)
+            if ($Key -eq "ColorMode" -or $Key -eq "Capability_TrueColor") {
+                $useTrueColor = $false
+                if ($Key -eq "ColorMode") {
+                    if ($effectiveValue -is [bool]) { $useTrueColor = $effectiveValue }
+                    elseif ($effectiveValue -is [string]) {
+                        if ($effectiveValue -ieq "TrueColor") { $useTrueColor = $true }
+                        elseif ($effectiveValue -ieq "ANSI16") { $useTrueColor = $false }
+                        else {
+                            $currCapability = Get-ScapeProperty -Object $state -PropertyName "Capability_TrueColor" -Fallback $true
+                            $useTrueColor = [bool]$currCapability
+                        }
+                    }
+                    else {
+                        $useTrueColor = [bool]$effectiveValue
+                    }
                 }
+                else {
+                    $useTrueColor = [bool]$effectiveValue
+                }
+
+                if (Get-Command Set-ScapeColorMode -ErrorAction SilentlyContinue) {
+                    Set-ScapeColorMode -UseTrueColor $useTrueColor
+                }
+                $strMode = if ($useTrueColor) { "TrueColor" } else { "ANSI16" }
+                Update-ScapeColdState -NewProperties @{ ColorMode = $strMode; Capability_TrueColor = $useTrueColor } | Out-Null
+                Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{ Type = 'FULL'; MenuId = $state.CurrentMenu }
+            }
+
+            # 4. Modificadores Visuais Imediatos (Requerem repintura instantânea)
+            if ($Key -match "^(IconLevel|FrameStyle|ProgressStyle)$") {
+                Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{ Type = 'FULL'; MenuId = $state.CurrentMenu }
+            }
+
+            # 5. Outras Capabilities
+            if ($Key -match "^Capability_" -and $Key -ne "Capability_TrueColor") {
                 Publish-ScapeEvent -Type "CAPABILITY_UPDATED" -Severity "INFO" -Payload @{ Capability = $Key; Value = $Value }
             }
-            $msgSuccess = Get-ScapeLogMsg -Key "SETTINGS_MUTATE_SUCCESS" -MsgArgs @($Key, $Value)
-            Publish-ScapeEvent -Type "SYS_CORE" -Payload @{ Key = "SETTINGS_MUTATE_SUCCESS"; Tokens = @($Key, $Value); Message = $msgSuccess }
+
+            $msgSuccess = Get-ScapeLogMsg -Key "SETTINGS_MUTATE_SUCCESS" -MsgArgs @($Key, $effectiveValue)
+            Publish-ScapeEvent -Type "SYS_CORE" -Payload @{ Key = "SETTINGS_MUTATE_SUCCESS"; Tokens = @($Key, $effectiveValue); Message = $msgSuccess }
+
             return $true
         }
         return $false
@@ -155,28 +209,33 @@ function Set-ScapeSettingMutation {
 }
 
 function Reset-ScapeSettingToFactory {
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding()]
     Param()
     process {
-        if ($PSCmdlet.ShouldProcess("ScapeSettings", "Reset to Factory Defaults")) {
-            $settingsPath = Get-ScapeSettingsPath
-            if (Test-Path -Path $settingsPath) {
-                Invoke-ScapeIO -Action "DELETE_SETTINGS" -Target $settingsPath -Operation {
-                    Remove-Item -Path $settingsPath -Force -ErrorAction SilentlyContinue
-                } | Out-Null
-            }
-            $defaults = Get-ScapeSettingDefault
-            Update-ScapeColdState -NewProperties $defaults | Out-Null
-            Update-ScapeColdState -NewProperties @{ Config = @{ Language = $defaults["CurrentLanguage"] } } | Out-Null
-            if (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
-                Set-ScapePersona -Name $defaults["ThemePersona"] -Silent
-            }
-            $useTrueColor = $defaults["Capability_TrueColor"] -eq $true
-            if (Get-Command Set-ScapeColorMode -ErrorAction SilentlyContinue) {
-                Set-ScapeColorMode -UseTrueColor $useTrueColor
-            }
-            $msgReset = Get-ScapeLogMsg -Key "SETTINGS_RESET_SUCCESS" -MsgArgs @()
-            Publish-ScapeEvent -Type "SYS_CORE" -Severity "LOG_WARN" -Payload @{ Key = "SETTINGS_RESET_SUCCESS"; Message = $msgReset }
+        $settingsPath = Get-ScapeSettingsPath
+        if (Test-Path -Path $settingsPath) {
+            Invoke-ScapeIO -Action "DELETE_SETTINGS" -Target $settingsPath -Operation {
+                Remove-Item -Path $settingsPath -Force -ErrorAction SilentlyContinue
+            } | Out-Null
+        }
+        $defaults = Get-ScapeSettingDefault
+        Update-ScapeColdState -NewProperties $defaults | Out-Null
+        Update-ScapeColdState -NewProperties @{ Config = @{ Language = $defaults["CurrentLanguage"] } } | Out-Null
+        if (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
+            Set-ScapePersona -Name $defaults["ThemePersona"] -Silent
+        }
+        $useTrueColor = $defaults["Capability_TrueColor"] -eq $true
+        if (Get-Command Set-ScapeColorMode -ErrorAction SilentlyContinue) {
+            Set-ScapeColorMode -UseTrueColor $useTrueColor
+        }
+
+        $msgReset = Get-ScapeLogMsg -Key "SETTINGS_RESET_SUCCESS" -MsgArgs @()
+        Publish-ScapeEvent -Type "SYS_CORE" -Severity "LOG_WARN" -Payload @{ Key = "SETTINGS_RESET_SUCCESS"; Message = $msgReset }
+        
+        # Trigger full redraw to reflect reset defaults
+        $state = Get-ScapeColdState
+        if ($state -and $state.CurrentMenu) {
+            Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{ Type = "FULL"; MenuId = $state.CurrentMenu }
         }
     }
 }
@@ -210,4 +269,53 @@ function _LoadSettingsFromJson {
             return $Defaults.Clone()
         }
     }
+}
+
+function Optimize-ScapeSettingsState {
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)][hashtable]$State,
+        [Parameter(Mandatory = $true)][hashtable]$Defaults
+    )
+
+    $normalized = [ordered]@{}
+    foreach ($k in $State.Keys) { $normalized[$k] = $State[$k] }
+
+    $engineModes = Get-ScapeConstant -Path "ui::CycleLists::EngineMode" -Fallback @("EFFICIENCY", "REDUNDANCY")
+    $defaultEngine = if ($Defaults.Contains("EngineMode")) { [string]$Defaults["EngineMode"] } else { "EFFICIENCY" }
+    $currEngine = $normalized["EngineMode"]
+    if ($currEngine -is [bool]) {
+        $normalized["EngineMode"] = if ($currEngine) { "REDUNDANCY" } else { "EFFICIENCY" }
+    }
+    elseif ([string]::IsNullOrWhiteSpace([string]$currEngine)) {
+        $normalized["EngineMode"] = $defaultEngine
+    }
+    else {
+        $engineCandidate = ([string]$currEngine).ToUpperInvariant()
+        $normalized["EngineMode"] = if ($engineCandidate -in $engineModes) { $engineCandidate } else { $defaultEngine }
+    }
+
+    $colorModes = Get-ScapeConstant -Path "ui::CycleLists::ColorMode" -Fallback @("TrueColor", "ANSI16")
+    $currColor = $normalized["ColorMode"]
+    if ($currColor -is [bool]) {
+        $normalized["ColorMode"] = if ($currColor) { "TrueColor" } else { "ANSI16" }
+    }
+    elseif ([string]::IsNullOrWhiteSpace([string]$currColor) -or ([string]$currColor -notin $colorModes)) {
+        $normalized["ColorMode"] = if ($normalized["Capability_TrueColor"]) { "TrueColor" } else { "ANSI16" }
+    }
+
+    $i18nList = Get-ScapeConstant -Path "ui::CycleLists::I18N" -Fallback @("en-US")
+    $currLang = [string]$normalized["CurrentLanguage"]
+    if ([string]::IsNullOrWhiteSpace($currLang) -or $currLang -notin $i18nList) {
+        $normalized["CurrentLanguage"] = if ($Defaults.Contains("CurrentLanguage")) { $Defaults["CurrentLanguage"] } else { "en-US" }
+    }
+
+    $personaList = Get-ScapeConstant -Path "ui::CycleLists::ThemePersona" -Fallback @("PowerShell")
+    $currPersona = [string]$normalized["ThemePersona"]
+    if ([string]::IsNullOrWhiteSpace($currPersona) -or $currPersona -notin $personaList) {
+        $normalized["ThemePersona"] = if ($Defaults.Contains("ThemePersona")) { $Defaults["ThemePersona"] } else { "PowerShell" }
+    }
+
+    return $normalized
 }

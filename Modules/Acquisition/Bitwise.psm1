@@ -52,7 +52,7 @@ function Invoke-ScapeBulkBitwise {
                 $currentAttr = [Scape.Core.Native.Win32Bitwise]::GetFileAttributesW($normalizedPath)
 
                 if ($currentAttr -eq [Scape.Core.Native.Win32Bitwise]::INVALID_FILE_ATTRIBUTES) {
-                    throw "Atributos inválidos ou acesso negado."
+                    throw (Get-ScapeLogMsg -Key "ERR_PERMISSION_DENIED")
                 }
 
                 $newAttr = if ($EnableArchiveBit) {
@@ -66,7 +66,7 @@ function Invoke-ScapeBulkBitwise {
                     $report.Success++
                 }
                 else {
-                    throw "Falha ao gravar atributos via Kernel32."
+                    throw (Get-ScapeLogMsg -Key "SETTINGS_IO_FAULT" -MsgArgs @($normalizedPath))
                 }
             }
             catch {

@@ -1,27 +1,24 @@
-
 <#
 .SYNOPSIS
     Domain: Presentation\Router
     Module: Scape.Presentation.Router
-    Architecture: State Machine Governor | Pure Event Publisher | Lazy-Ready | Zero Hardcode
+    Architecture: State Machine | Viewport-Aware Event Loop
 #>
 [CmdletBinding()] param()
 
 function Get-ScapeMenuData {
     [CmdletBinding()]
-    [OutputType([array])]
+    [OutputType([hashtable])]
     param([Parameter(Mandatory = $true)][string]$MenuId)
     process {
-        $data = Get-ScapeConstant -Path "navigation::$MenuId"
+        $data = Get-ScapeConstant -Path "navigation::$MenuId" -Fallback $null
+        if ($null -eq $data -or ($data -is [hashtable] -and $data.Count -eq 0)) {
+            $navAsset = Get-ScapeAsset -Category "Manifests" -AssetId "navigation"
+            if ($navAsset -and $navAsset.ContainsKey($MenuId)) { $data = $navAsset[$MenuId] }
+        }
         if ($null -eq $data) { return $null }
-
-        if ($data -is [hashtable] -and $data.ContainsKey('Items')) {
-            return $data
-        }
-
-        if ($data -is [array]) {
-            return @{ TitleKey = "MENU_$(($MenuId -replace 'Menu$', '').ToUpper())_TITLE"; Items = $data }
-        }
+        if ($data -is [hashtable] -and $data.ContainsKey('Items')) { return $data }
+        if ($data -is [array]) { return @{ TitleKey = "MENU_$(($MenuId -replace 'Menu$', '').ToUpper())_TITLE"; Items = $data } }
         return $null
     }
 }
@@ -31,12 +28,23 @@ function Invoke-ScapeRouterReducer {
     [OutputType([hashtable])]
     param([hashtable]$State, [string]$Intent)
     process {
-        $opts = @()
-        if ($null -ne $State.RawOptions) { $opts = @($State.RawOptions) }
+        $opts = $State.RawOptions
         $max = $opts.Count
-
         $State.LastCursor = $State.Cursor
         $selAction = $null; $selId = $null; $selTarget = $null; $selPayload = $null; $selWake = $null
+        $mutationDirection = $null
+
+        $resolveSelection = {
+            if ($max -eq 0) { return $null }
+            $sel = $opts[$State.Cursor]
+            return @{
+                Action  = if ($sel -is [hashtable]) { $sel['Action'] } else { $sel.Action }
+                Id      = if ($sel -is [hashtable]) { $sel['Id'] } else { $sel.Id }
+                Target  = if ($sel -is [hashtable]) { $sel['Target'] } else { $sel.Target }
+                Payload = if ($sel -is [hashtable]) { $sel['Payload'] } else { $sel.Payload }
+                Layer   = if ($sel -is [hashtable]) { $sel['Layer'] } else { $sel.Layer }
+            }
+        }
 
         switch ($Intent) {
             'UP' {
@@ -49,34 +57,49 @@ function Invoke-ScapeRouterReducer {
                 $State.NeedsCursorUpdate = $true
                 return $State
             }
-            'BACK' {
-                $selAction = 'BACK'
-                $selId = 'CANCEL'
-            }
+            'BACK' { $selAction = 'BACK'; $selId = 'CANCEL' }
             'SELECT' {
-                if ($max -eq 0) { return $State }
-                $sel = $opts[$State.Cursor]
-
-                $selAction = if ($sel -is [hashtable]) { $sel['Action'] } else { $sel.Action }
-                $selId = if ($sel -is [hashtable]) { $sel['Id'] } else { $sel.Id }
-                $selTarget = if ($sel -is [hashtable]) { $sel['Target'] } else { $sel.Target }
-                $selPayload = if ($sel -is [hashtable]) { $sel['Payload'] } else { $sel.Payload }
-                $selWake = if ($sel -is [hashtable]) { $sel['Layer'] } else { $sel.Layer }
+                $resolved = & $resolveSelection
+                if ($null -eq $resolved) { return $State }
+                $selAction = $resolved.Action
+                $selId = $resolved.Id
+                $selTarget = $resolved.Target
+                $selPayload = $resolved.Payload
+                $selWake = $resolved.Layer
+            }
+            'LEFT' {
+                $resolved = & $resolveSelection
+                if ($null -eq $resolved -or $resolved.Action -ne 'MUTATE') { return $State }
+                $selAction = $resolved.Action
+                $selId = $resolved.Id
+                $selTarget = $resolved.Target
+                $selPayload = $resolved.Payload
+                $selWake = $resolved.Layer
+                $mutationDirection = 'PREV'
+                $State.NeedsCursorUpdate = $true
+            }
+            'RIGHT' {
+                $resolved = & $resolveSelection
+                if ($null -eq $resolved -or $resolved.Action -ne 'MUTATE') { return $State }
+                $selAction = $resolved.Action
+                $selId = $resolved.Id
+                $selTarget = $resolved.Target
+                $selPayload = $resolved.Payload
+                $selWake = $resolved.Layer
+                $mutationDirection = 'NEXT'
+                $State.NeedsCursorUpdate = $true
             }
             default { return $State }
         }
 
-        if ($selId -eq 'EXIT' -or $selAction -eq 'TERMINATE') {
-            $State.IsRunning = $false
-            return $State
-        }
+        if ($selId -eq 'EXIT' -or $selAction -eq 'TERMINATE') { $State.IsRunning = $false; return $State }
 
         if ($selAction -or $selId) {
-            $payload = @{
-                MenuId = $State.CurrentMenu; SelectionId = $selId; Action = $selAction;
-                Target = $selTarget; ActionPayload = $selPayload; Layer = $selWake
+            Publish-ScapeEvent -Type "UI_SELECTION" -Severity "INFO" -Payload @{
+                MenuId = $State.CurrentMenu; SelectionId = $selId; Action = $selAction
+                Target = $selTarget; Payload = $selPayload; ActionPayload = $selPayload; Layer = $selWake; MutationDirection = $mutationDirection
+                Cursor = $State.Cursor
             }
-            Publish-ScapeEvent -Type "UI_SELECTION" -Severity "INFO" -Payload $payload
         }
 
         if ($selAction -eq 'BACK' -or $selId -in @('RETURN', 'CANCEL')) {
@@ -87,14 +110,11 @@ function Invoke-ScapeRouterReducer {
             }
             return $State
         }
-
         if ($selAction -eq 'NAVIGATE' -and $selTarget) {
             $State.RouteStack.Add($selTarget)
             $State.CurrentMenu = $selTarget
             $State.NeedsFullRedraw = $true
-            Publish-ScapeEvent -Type "ROUTER_NAVIGATE" -Severity "INFO" -Payload @{ From = $State.RouteStack[-2]; To = $selTarget }
         }
-
         return $State
     }
 }
@@ -102,68 +122,51 @@ function Invoke-ScapeRouterReducer {
 function Start-ScapeRouter {
     param([string]$InitialMenu = 'MainMenu')
     process {
+        # Rastreamento de Viewport (Responsividade)
+        $ViewportState = @{}
+        if (Get-Command Initialize-ScapeViewportState -ErrorAction SilentlyContinue) {
+            $ViewportState = Initialize-ScapeViewportState
+        }
+
         Initialize-ScapeRenderer
         Initialize-ScapeStateObserver -AutoRegister | Out-Null
 
         $State = @{
-            IsRunning         = $true
-            CurrentMenu       = $InitialMenu
-            RouteStack        = New-Object 'System.Collections.Generic.List[string]'
-            Cursor            = 0
-            NeedsFullRedraw   = $true
-            NeedsCursorUpdate = $false
-            RawOptions        = @()
-            LastCursor        = -1
-            TitleKey          = ""
+            IsRunning = $true; CurrentMenu = $InitialMenu
+            RouteStack = New-Object 'System.Collections.Generic.List[string]'
+            Cursor = 0; NeedsFullRedraw = $true; NeedsCursorUpdate = $false
+            RawOptions = @(); LastCursor = -1; TitleKey = ""
         }
         $State.RouteStack.Add($InitialMenu)
 
-        $viewportState = Initialize-ScapeViewportState
-
-        # Limpa buffer antes de começar (segurança)
-        if (Get-Command Clear-ScapeInputBuffer -ErrorAction SilentlyContinue) {
-            Clear-ScapeInputBuffer
-        }
+        Clear-ScapeInputBuffer
 
         try {
             while ($State.IsRunning) {
-                # --------------------------------------------------------------
-                # DRENA FILA DE EVENTOS (obrigatório!)
                 Invoke-ScapeIdlePump | Out-Null
-                # --------------------------------------------------------------
 
-                if (Test-ScapeViewportChanged -ViewportState $viewportState) {
-                    $State.NeedsFullRedraw = $true
+                # PLUG DE RESPONSIVIDADE: Checa redimensionamento em tempo real
+                if (Get-Command Test-ScapeViewportChanged -ErrorAction SilentlyContinue) {
+                    if (Test-ScapeViewportChanged -ViewportState $ViewportState) {
+                        $State.NeedsFullRedraw = $true
+                        Clear-ScapeInputBuffer # Limpa input fantasma gerado pelo redimensionamento no Windows
+                    }
                 }
 
                 if ($State.NeedsFullRedraw -or $State.NeedsCursorUpdate) {
                     if ($State.NeedsFullRedraw -or -not $State.RawOptions) {
                         $menuData = Get-ScapeMenuData -MenuId $State.CurrentMenu
                         if ($null -eq $menuData -or $null -eq $menuData.Items) {
-                            $fatalMsg = "ROUTER_FATAL: Menu starvation. '$($State.CurrentMenu)' not found."
-                            Publish-ScapeEvent -Type "ROUTER_FATAL" -Severity "FATAL" -Payload $fatalMsg
-                            throw $fatalMsg
+                            Publish-ScapeEvent -Type "ROUTER_FATAL" -Severity "FATAL" -Payload "Menu starvation: '$($State.CurrentMenu)'"
+                            throw "ROUTER_FATAL: Menu '$($State.CurrentMenu)' not found."
                         }
                         $State.RawOptions = $menuData.Items
                         $State.TitleKey = $menuData.TitleKey
-                        if ($State.NeedsFullRedraw) {
-                            $State.Cursor = 0
-                            $State.LastCursor = -1
-                        }
+                        if ($State.NeedsFullRedraw) { $State.Cursor = 0; $State.LastCursor = -1 }
                     }
 
-                    $evtType = if ($State.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' }
-
-                    # =================================================================
-                    # CORREÇÃO: usa a função pública do StateObserver
-                    if (Get-Command Request-ScapeRedraw -ErrorAction SilentlyContinue) {
-                        Request-ScapeRedraw -MenuId $State.CurrentMenu -Type $evtType -RouterState $State -TitleKey $State.TitleKey
-                    }
-                    else {
-                        Write-Host "[Router] ERRO: Request-ScapeRedraw não disponível" -ForegroundColor Red
-                    }
-                    # =================================================================
-
+                    $__rrType = $(if ($State.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' })
+                    Request-ScapeRedraw -MenuId $State.CurrentMenu -Type $__rrType -RouterState $State -TitleKey $State.TitleKey
                     Invoke-ScapeIdlePump | Out-Null
 
                     $State.NeedsFullRedraw = $false
@@ -173,8 +176,8 @@ function Start-ScapeRouter {
                 $intent = Get-ScapeInputIntent -CurrentMenuState $State
                 if ($intent -ne 'IDLE') {
                     $State = Invoke-ScapeRouterReducer -State $State -Intent $intent
+                    Clear-ScapeInputBuffer
                 }
-
                 Start-Sleep -Milliseconds 15
             }
         }

@@ -25,13 +25,20 @@
         Orange          = @(255, 165, 0)
         Pink            = @(255, 105, 180)
         Lime            = @( 50, 205, 50)
-        Gold            = @(255, 215, 0)
+        Magenta         = @(255,   0, 255)
+        Yellow          = @(255, 255,   0)
+        Brown           = @(139,  69,  19)
+        Navy            = @(  0,   0, 128)
         Teal            = @(  0, 128, 128)
         Indigo          = @( 75, 0, 130)
         Coral           = @(255, 127, 80)
         Salmon          = @(250, 128, 114)
         Lavender        = @(230, 230, 250)
         Mint            = @(170, 240, 200)
+        Violet          = @(238, 130, 238)
+        Gold            = @(255, 215, 0)
+        Silver          = @(192, 192, 192)
+        Bronze          = @(205, 127,  50)
 
         # ---------- Pastel ----------
         Pastel          = @{
@@ -245,11 +252,11 @@
         CARVE_HIT           = @{ RGB = "Base.Green"; Priority = 2 }
         DONE                = @{ RGB = "Base.Green"; Priority = 3 }
         UI                  = @{ RGB = "Base.Blue"; Priority = 3 }
-        MENU                = @{ RGB = "Base.Amber"; Priority = 2 }
+        MENU                = @{ RGB = "Base.Primary"; Priority = 2 }
         HINT                = @{ RGB = "Base.Blue"; Priority = 3 }
         LOG                 = @{ RGB = "Base.Cyan"; Priority = 3 }
         PROMPT              = @{ RGB = "Base.White"; Priority = 3 }
-        BANNER              = @{ RGB = "Base.Gold"; Priority = 3 }
+        BANNER              = @{ RGB = "Base.Accent"; Priority = 3 }
         TOOLTIP             = @{ RGB = "Base.Gray"; Priority = 4 }
         LAB                 = @{ RGB = "Base.Purple"; Priority = 2 }
         LAB_FATAL           = @{ RGB = "Base.Red"; Priority = 1 }

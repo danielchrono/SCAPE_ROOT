@@ -122,7 +122,18 @@ function Invoke-ScapeBatchAnalysis {
             $results.Add(@{ Index = $i; Offset = $offset; Result = $result })
 
             if ($i % $progressInterval -eq 0) {
-                Publish-ScapeEvent -Type "PROGRESS" -Payload @{ Action = "ProgressBar"; TaskID = 1; Current = $i; Total = $SectorBatch.Count; Label = "Analyzing sectors..." }
+                # MVVM estrito: Presentation não deve buscar ProgressStyle em ColdState/estado global.
+                # Aqui derivamos ProgressStyle como read-only e injetamos no Payload.
+                $progressStyle = $null
+                try { $progressStyle = (Get-ScapeColdState)['ProgressStyle'] } catch {}
+                Publish-ScapeEvent -Type "PROGRESS" -Payload @{
+                    Action         = "ProgressBar"
+                    TaskID         = 1
+                    Current        = $i
+                    Total          = $SectorBatch.Count
+                    Label          = "Analyzing sectors..."
+                    ProgressStyle  = $(if ($null -ne $progressStyle -and -not [string]::IsNullOrWhiteSpace($progressStyle)) { [string]$progressStyle } else { 'Default' })
+                }
                 if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
                 # ── TreeView Hook: Atualiza progresso em lote ──
                 if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {

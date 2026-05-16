@@ -18,7 +18,18 @@ function _GetRawI18NEntry {
         } else { "en-US" }
 
         $i18nBucket = $state.Assets["I18N"]
-        if (-not $i18nBucket.ContainsKey($lang)) { return $null }
+        if (-not $i18nBucket.ContainsKey($lang)) {
+            if (Get-Command Resolve-ScapeAsset -ErrorAction SilentlyContinue) {
+                Resolve-ScapeAsset -AssetId $lang -Category "I18N" | Out-Null
+            }
+            elseif (Get-Command Invoke-ScapeLazyLoadAsset -ErrorAction SilentlyContinue) {
+                Invoke-ScapeLazyLoadAsset -AssetId $lang -Category "I18N" | Out-Null
+            }
+            $state = Get-ScapeColdState
+            if ($null -eq $state -or $null -eq $state.Assets -or -not $state.Assets.ContainsKey("I18N")) { return $null }
+            $i18nBucket = $state.Assets["I18N"]
+            if (-not $i18nBucket.ContainsKey($lang)) { return $null }
+        }
         $langDict = $i18nBucket[$lang]
 
         if ($langDict -is [System.Collections.IDictionary]) {

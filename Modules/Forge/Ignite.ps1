@@ -4,7 +4,6 @@
 #>
 $ErrorActionPreference = "Stop"
 
-# Define a função no escopo GLOBAL para que o AssetManager a encontre
 function global:Read-ScapeAssetFile($Path) {
     if (-not (Test-Path -LiteralPath $Path)) { throw "File not found: $Path" }
     $bytes = [System.IO.File]::ReadAllBytes($Path)
@@ -14,25 +13,48 @@ function global:Read-ScapeAssetFile($Path) {
     return $raw
 }
 
-# 1. GARANTIA ABSOLUTA DE MEMÓRIA
+function Resolve-ScapeForgeModulePath {
+    param(
+        [Parameter(Mandatory = $true)][string]$ProjectRoot,
+        [Parameter(Mandatory = $true)][string]$ModuleName
+    )
+
+    $parts = $ModuleName -split '\.'
+    if ($parts.Count -lt 3) { return $null }
+
+    $domain = $parts[1]
+    $leaf = (($parts[2..($parts.Count - 1)] -join '\') + '.psm1')
+    $candidate = Join-Path $ProjectRoot ("Modules\$domain\$leaf")
+    if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+        return $candidate
+    }
+    return $null
+}
+
 if (Get-Variable SCAPE_MEM -Scope Global -ErrorAction SilentlyContinue) {
     Remove-Variable SCAPE_MEM -Scope Global -Force
 }
 $Global:SCAPE_MEM = @{}
 
-# 2. RESOLUÇÃO DE CAMINHO
-$AppRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$AppRoot = $null
+if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+    $AppRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+}
+if ([string]::IsNullOrWhiteSpace($AppRoot) -and -not [string]::IsNullOrWhiteSpace($Global:AppRoot)) {
+    $AppRoot = $Global:AppRoot
+}
+if ([string]::IsNullOrWhiteSpace($AppRoot)) {
+    $AppRoot = (Get-Location).Path
+}
 
 $topoPath = Join-Path $AppRoot 'Data\Manifests\Topology.psd1'
 $regPath = Join-Path $AppRoot 'Data\Manifests\Registry.psd1'
 
-if (-not (Test-Path $topoPath)) { throw "IGNITE_FATAL: Topology.psd1 não encontrado em $topoPath" }
+if (-not (Test-Path $topoPath)) { throw "IGNITE_FATAL: Topology.psd1 not found at $topoPath" }
 
-# 3. HIDRATAÇÃO DOS MANIFESTOS
 $Global:SCAPE_MEM['Asset_Topology'] = Read-ScapeAssetFile -Path $topoPath
 $Global:SCAPE_MEM['Asset_Registry'] = Read-ScapeAssetFile -Path $regPath
 
-# 4. INJEÇÃO DOS ASSETS NA MATRIZ (Lê Registry)
 $reg = Invoke-Command -ScriptBlock ([scriptblock]::Create($Global:SCAPE_MEM['Asset_Registry']))
 foreach ($key in $reg.Segments.Keys) {
     if ($key -eq '__Meta__') { continue }
@@ -47,7 +69,6 @@ foreach ($key in $reg.Segments.Keys) {
     }
 }
 
-# 5. INJEÇÃO DOS MÓDULOS NA MATRIZ (Lê Topologia)
 $topo = Invoke-Command -ScriptBlock ([scriptblock]::Create($Global:SCAPE_MEM['Asset_Topology']))
 foreach ($domain in $topo.Keys) {
     if ($domain -eq '__Meta__') { continue }
@@ -55,11 +76,9 @@ foreach ($domain in $topo.Keys) {
         $modName = if ($mod -is [hashtable]) { $mod['Name'] } elseif ($null -ne $mod.PSObject) { $mod.Name } else { '' }
         if ([string]::IsNullOrWhiteSpace($modName)) { continue }
 
-        $fileName = ($modName -split '\.')[-1] + ".psm1"
-        $path = Get-ChildItem -Path (Join-Path $AppRoot 'Modules') -Filter $fileName -Recurse -File | Select-Object -First 1
-
+        $path = Resolve-ScapeForgeModulePath -ProjectRoot $AppRoot -ModuleName $modName
         if ($path) {
-            $Global:SCAPE_MEM[$modName] = Read-ScapeAssetFile -Path $path.FullName
+            $Global:SCAPE_MEM[$modName] = Read-ScapeAssetFile -Path $path
         }
     }
 }

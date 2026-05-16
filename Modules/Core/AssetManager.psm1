@@ -14,26 +14,16 @@ function Invoke-ScapeLoadAsset {
         [Parameter(Mandatory = $false)][string]$FilePath,
         [switch]$Silent
     )
-
     try {
         $state = Get-ScapeColdState
         if ($null -eq $state) { throw "STATE_UNINITIALIZED" }
-
-        # Injeção thread-safe garantida com Case-Insensitive
-        if (-not $state.ContainsKey("Assets")) {
-            $state["Assets"] = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new([System.StringComparer]::OrdinalIgnoreCase)
-        }
-        if (-not $state["Assets"].ContainsKey($Category)) {
-            $state["Assets"][$Category] = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new([System.StringComparer]::OrdinalIgnoreCase)
-        }
-
+        if (-not $state.ContainsKey("Assets")) { $state["Assets"] = @{} }
+        if (-not $state["Assets"].ContainsKey($Category)) { $state["Assets"][$Category] = @{} }
         if ($state["Assets"][$Category].ContainsKey($AssetId)) { return $true }
-
         $rawData = $null
         $devMode = $state["DEV_MODE"] -eq $true
-
         if (-not $devMode) {
-            $safeName = $FilePath -replace '^[Dd]ata[/\\]', '' -replace '[/\\]', '_'
+            $safeName = $FilePath -replace '^.*?[Dd]ata[/\\]', '' -replace '^[Dd]ata[/\\]', '' -replace '[/\\]', '_'
             $memKey = "Asset_$safeName"
             if (-not $Global:SCAPE_MEM.ContainsKey($memKey)) { throw "PAYLOAD_NOT_FOUND_IN_RAM: $memKey" }
             $rawData = Invoke-Command -ScriptBlock ([scriptblock]::Create($Global:SCAPE_MEM[$memKey]))
@@ -43,11 +33,9 @@ function Invoke-ScapeLoadAsset {
             $payload = [System.IO.File]::ReadAllText($FilePath, [System.Text.Encoding]::UTF8).Trim((([char]0xFEFF), ' '))
             $rawData = Invoke-Command -ScriptBlock ([scriptblock]::Create($payload))
         }
-
-        if ($null -eq $rawData -or $rawData -isnot [System.Collections.IDictionary]) { throw "PARSE_INVALID_TYPE" }
-
+        if ($null -eq $rawData) { throw "PARSE_FAILED" }
         $state["Assets"][$Category][$AssetId] = $rawData
-        Publish-ScapeEvent -Type "ASSET_LOADED" -Severity "INFO" -Payload "$Category/$AssetId"
+        if (-not $Silent) { Publish-ScapeEvent -Type "ASSET_LOADED" -Severity "INFO" -Payload "$Category/$AssetId" }
         return $true
     }
     catch {
@@ -91,7 +79,7 @@ function Remove-ScapeAsset {
     if ($state.ContainsKey("Assets") -and $state["Assets"].ContainsKey($Category)) {
         $removed = $state["Assets"][$Category].TryRemove($AssetId, [ref]$null)
         if ($removed) {
-            Publish-ScapeEvent -Type "ASSET_REMOVED" -Severity "DEBUG" -Payload "$Category/$AssetId"
+            Publish-ScapeEvent -Type "ASSET_REMOVED" -Severity "TRACE" -Payload "$Category/$AssetId"
             return $true
         }
     }
@@ -107,29 +95,50 @@ function Invoke-ScapeLazyLoadAsset {
     )
 
     $st = Get-ScapeColdState
-    if ($null -eq $st -or -not $st.ContainsKey("Lazy") -or -not $st["Lazy"].ContainsKey("Registry")) {
-        return $false
+    if ($null -eq $st) { return $false }
+
+    $resolveByRegistry = {
+        param([string]$Id, [string]$HintCategory)
+        if (-not $st.ContainsKey("Registry")) { return $false }
+        $segments = $st["Registry"].Segments
+        if ($null -eq $segments) { return $false }
+
+        $segKey = $segments.Keys | Where-Object { $_ -ieq $Id } | Select-Object -First 1
+        if ([string]::IsNullOrWhiteSpace($segKey)) { return $false }
+
+        $seg = $segments[$segKey]
+        $cat = if (-not [string]::IsNullOrWhiteSpace($HintCategory)) { $HintCategory } elseif ($seg -is [hashtable]) { $seg['Category'] } elseif ($null -ne $seg.PSObject) { $seg.Category } else { $null }
+        $file = if ($seg -is [hashtable]) { $seg['File'] } elseif ($null -ne $seg.PSObject) { $seg.File } else { $null }
+        if ([string]::IsNullOrWhiteSpace($cat) -or [string]::IsNullOrWhiteSpace($file)) { return $false }
+
+        $root = if ($st.ContainsKey("ROOT")) { [string]$st["ROOT"] } else { $null }
+        if ([string]::IsNullOrWhiteSpace($root)) { return $false }
+        $filePath = Join-ScapePath -Base $root -Child $file
+        if (-not (Test-Path -LiteralPath $filePath)) { return $false }
+
+        return (Invoke-ScapeLoadAsset -Category $cat -AssetId $segKey -FilePath $filePath -Silent)
     }
 
-    $lazyMap = $st["Lazy"]["Registry"]
-    if (-not $lazyMap.ContainsKey($AssetId)) {
-        if (-not $Category) { return $false }
-        return Invoke-ScapeLoadAsset -Category $Category -AssetId $AssetId -Silent
+    if ($st.ContainsKey("Lazy") -and $st["Lazy"] -and $st["Lazy"].ContainsKey("Registry")) {
+        $lazyMap = $st["Lazy"]["Registry"]
+        if ($lazyMap.ContainsKey($AssetId)) {
+            $entry = $lazyMap[$AssetId]
+            if ($entry["Loaded"] -eq $true) { return $true }
+
+            $content = $entry["Content"]
+            $category = if ($Category) { $Category } else { $entry["Category"] }
+            if ([string]::IsNullOrWhiteSpace($category)) { return $false }
+
+            $null = Invoke-Command -ScriptBlock ([scriptblock]::Create($content))
+            $result = Invoke-ScapeLoadAsset -Category $category -AssetId $AssetId -Silent
+            if ($result) {
+                $entry["Loaded"] = $true
+                Publish-ScapeEvent -Type "LAZY_ASSET_HYDRATED" -Severity "INFO" -Payload "$category/$AssetId"
+                return $true
+            }
+            return $false
+        }
     }
 
-    $entry = $lazyMap[$AssetId]
-    if ($entry["Loaded"] -eq $true) { return $true }
-
-    $content = $entry["Content"]
-    $category = if ($Category) { $Category } else { $entry["Category"] }
-    if ([string]::IsNullOrWhiteSpace($category)) { return $false }
-
-    $null = Invoke-Command -ScriptBlock ([scriptblock]::Create($content))
-    $result = Invoke-ScapeLoadAsset -Category $category -AssetId $AssetId -Silent
-    if ($result) {
-        $entry["Loaded"] = $true
-        Publish-ScapeEvent -Type "LAZY_ASSET_HYDRATED" -Severity "INFO" -Payload "$category/$AssetId"
-        return $true
-    }
-    return $false
+    return (& $resolveByRegistry $AssetId $Category)
 }

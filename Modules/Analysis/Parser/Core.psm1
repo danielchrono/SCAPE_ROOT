@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.Parser.Core
     Architecture: Deterministic Metadata Orchestrator (Plan A)
@@ -16,11 +16,17 @@ function Invoke-ScapeTargetedParsing {
         $target = Get-ScapeProperty -Object $state -PropertyName 'ActiveTarget' -Fallback $null
 
         if ($null -eq $target) {
-            Publish-ScapeEvent -Type "ERR_DRIVE_SELECTION_NONE" -Severity "ERROR" -Payload @{ Message = "No active volume selected for parsing." }
+            Publish-ScapeEvent -Type "ERR_DRIVE_SELECTION_NONE" -Severity "ERROR" -Payload @{
+                Key     = "ERR_DRIVE_SELECTION_NONE"
+                Message = Get-ScapeLogMsg -Key "ERR_DRIVE_SELECTION_NONE"
+            }
             return
         }
 
-        Publish-ScapeEvent -Type "PIPE_TARGETED_RECOVERY" -Severity "INFO" -Payload @{ Message = "TARGETED RECOVERY SEQUENCE ACTIVATED AND LOCKED." }
+        Publish-ScapeEvent -Type "PIPE_TARGETED_RECOVERY" -Severity "INFO" -Payload @{
+            Key     = "PIPE_TARGETED_RECOVERY"
+            Message = Get-ScapeLogMsg -Key "PIPE_TARGETED_RECOVERY"
+        }
 
         try {
             # 1. Preflight
@@ -55,10 +61,16 @@ function Invoke-ScapeTargetedParsing {
             }
 
             Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{ Stage = "MFT Traversal"; Current = $totalRecords; Total = $totalRecords }
-            Publish-ScapeEvent -Type "PIPE_TRAVERSAL_COMPLETE" -Severity "INFO" -Payload @{ Message = "File system metadata traversal completed successfully." }
+            Publish-ScapeEvent -Type "PIPE_TRAVERSAL_COMPLETE" -Severity "INFO" -Payload @{
+                Key     = "PIPE_TRAVERSAL_COMPLETE"
+                Message = Get-ScapeLogMsg -Key "PIPE_TRAVERSAL_COMPLETE"
+            }
         }
         catch {
-            Publish-ScapeEvent -Type "INT_FAILSAFE_TRIG" -Severity "FATAL" -Payload @{ Message = "Parsing core crashed: $($_.Exception.Message)" }
+            Publish-ScapeEvent -Type "INT_FAILSAFE_TRIG" -Severity "FATAL" -Payload @{
+                Key     = "ROUTER_FATAL"
+                Message = Get-ScapeLogMsg -Key "ROUTER_FATAL" -MsgArgs @($_.Exception.Message)
+            }
         }
     }
 }
