@@ -14,6 +14,12 @@ function Get-ScapeInputIntent {
         $pollMs = Get-ScapeConstant -Path "ui::Input::PollMs" -Fallback 30
         $key = Read-ScapeKeyPress -TimeoutMilliseconds $pollMs
         if ($null -eq $key) { return 'IDLE' }
+
+        if (Get-Command Resolve-ScapeInputToAction -ErrorAction SilentlyContinue) {
+            $action = Resolve-ScapeInputToAction -KeyInput $key
+            if ($action -ne 'IDLE') { return $action }
+        }
+
         $combos = Get-ScapeConstant -Path "ui::Input::PSCombos"
         if ($key -eq $combos.Accept -or $key -eq $combos.SecondaryAccept) { return 'SELECT' }
         if ($key -eq $combos.Cancel -or $key -eq $combos.SecondaryCancel) { return 'BACK' }
@@ -101,7 +107,9 @@ function Resolve-ScapeDynamicText {
         $labels = Get-ScapeConstant -Path $DynCfg['Labels']
         if ($labels -is [array]) {
             $curr = Get-ScapeProperty -Object $StateSnapshot -PropertyName $dynKey
-            if ($curr -ge 0 -and $curr -lt $labels.Count) { return " [$($labels[$curr])]" }
+            $idx = if ($null -ne $curr -and $curr -is [int]) { [int]$curr } else { 0 }
+            if ($idx -lt 0 -or $idx -ge $labels.Count) { $idx = 0 }
+            return " [$($labels[$idx])]"
         }
     }
     return $null
@@ -209,7 +217,146 @@ function Invoke-ScapeStateMutation {
     }
 }
 
+function Hydrate-ScapeOptionsWithTheme {
+    [CmdletBinding()]
+    [OutputType([array])]
+    param(
+        [Parameter(Mandatory = $true)][array]$Options,
+        [Parameter()][hashtable]$StateSnapshot,
+        [string]$ThemeFlag = 'MENU'
+    )
+    process {
+        if ($null -eq $Options) { return @() }
+        $st = if ($null -ne $StateSnapshot) { $StateSnapshot } else { Get-ScapeColdState }
+
+        $hydratedWithTheme = foreach ($opt in $Options) {
+            $opt | Add-Member -MemberType NoteProperty -Name 'ThemeFlag' -Value $ThemeFlag -Force
+            $opt | Add-Member -MemberType NoteProperty -Name 'IsHighlighted' -Value $false -Force
+            $opt
+        }
+        return $hydratedWithTheme
+    }
+}
+
+function Render-ScapeGridLayout {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)][array]$GridRows,
+        [int]$Columns = 2,
+        [int]$ColumnWidth = 30,
+        [string]$FrameStyle = 'Classic',
+        [switch]$WithBorder
+    )
+    process {
+        if ($null -eq $GridRows -or $GridRows.Count -eq 0) { return "" }
+
+        $ESC = [char]27
+        $reset = "$ESC[0m"
+        $sb = [System.Text.StringBuilder]::new()
+
+        $frame = Get-ScapeConstant -Path "ui::Frames::$FrameStyle"
+        if ($null -eq $frame) { $frame = Get-ScapeConstant -Path "ui::Frames::Classic" }
+
+        if ($WithBorder) {
+            $borderTop = $frame.TL + ($frame.HL * (($ColumnWidth * $Columns) + ($Columns - 1))) + $frame.TR
+            [void]$sb.AppendLine((Format-ScapeANSIMessage -Text $borderTop -Flag 'MENU'))
+        }
+
+        $cellCount = 0
+        $rowContent = ""
+
+        foreach ($item in $GridRows) {
+            $itemText = if ($item -is [string]) { $item } else { [string]$item }
+            $padded = $itemText.PadRight($ColumnWidth).Substring(0, [Math]::Min($ColumnWidth, $itemText.Length + 5))
+
+            $formatted = if ($item.PSObject.Properties['ThemeFlag']) {
+                Format-ScapeANSIMessage -Text $padded -Flag $item.ThemeFlag
+            } else {
+                Format-ScapeANSIMessage -Text $padded -Flag 'MENU'
+            }
+
+            $rowContent += $formatted
+
+            if ($WithBorder -and $cellCount -lt ($Columns - 1)) {
+                $rowContent += (Format-ScapeANSIMessage -Text " | " -Flag 'HINT')
+            }
+
+            $cellCount++
+            if ($cellCount -ge $Columns) {
+                [void]$sb.AppendLine($rowContent)
+                $rowContent = ""
+                $cellCount = 0
+            }
+        }
+
+        if ($rowContent.Length -gt 0) {
+            [void]$sb.AppendLine($rowContent)
+        }
+
+        if ($WithBorder) {
+            $borderBottom = $frame.BL + ($frame.HL * (($ColumnWidth * $Columns) + ($Columns - 1))) + $frame.BR
+            [void]$sb.AppendLine((Format-ScapeANSIMessage -Text $borderBottom -Flag 'MENU'))
+        }
+
+        return $sb.ToString()
+    }
+}
+
+function Render-ScapeThemifiedMenuBuffer {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)][string]$MenuId,
+        [Parameter(Mandatory = $true)][array]$HydratedOptions,
+        [int]$CursorIndex = 0,
+        [string]$TitleKey,
+        [string]$FrameStyle = 'Classic'
+    )
+    process {
+        if ($null -eq $HydratedOptions -or $HydratedOptions.Count -eq 0) { return "" }
+
+        $ESC = [char]27
+        $reset = "$ESC[0m"
+        $sb = [System.Text.StringBuilder]::new()
+
+        $frame = Get-ScapeConstant -Path "ui::Frames::$FrameStyle"
+        if ($null -eq $frame) { $frame = Get-ScapeConstant -Path "ui::Frames::Classic" }
+
+        if ($null -ne $TitleKey) {
+            $titleNode = Get-ScapeI18NNode -Key $TitleKey
+            $title = $titleNode.Text -replace '^\[\s*|\s*\]$', ''
+            $titleLine = $frame.TL + $title.PadRight(45, $frame.HL) + $frame.TR
+            [void]$sb.AppendLine((Format-ScapeANSIMessage -Text $titleLine -Flag 'BANNER'))
+        }
+
+        for ($i = 0; $i -lt $HydratedOptions.Count; $i++) {
+            $opt = $HydratedOptions[$i]
+            $isSelected = ($i -eq $CursorIndex)
+
+            $icon = if ($opt.PSObject.Properties['Icon']) { $opt.Icon } else { "" }
+            $text = if ($opt.PSObject.Properties['Text']) { $opt.Text } else { $opt.TitleKey }
+            $dynText = if ($opt.PSObject.Properties['DynamicText']) { $opt.DynamicText } else { "" }
+
+            $selector = if ($isSelected) { "▶ " } else { "  " }
+            $line = "$selector$icon $text"
+
+            if ($dynText) { $line += " $dynText" }
+
+            $flag = if ($opt.PSObject.Properties['ThemeFlag']) { $opt.ThemeFlag } else { 'MENU' }
+            $formatted = Format-ScapeANSIMessage -Text $line -Flag $flag -Bold:$isSelected -IncludeBackground:$isSelected
+
+            [void]$sb.AppendLine($formatted)
+        }
+
+        return $sb.ToString()
+    }
+}
+
 Export-ModuleMember -Function 'Get-ScapeInputIntent',
                               'Clear-ScapeInputBuffer',
                               'Update-ScapeMenuViewModel',
-                              'Invoke-ScapeStateMutation'
+                              'Invoke-ScapeStateMutation',
+                              'Hydrate-ScapeOptionsWithTheme',
+                              'Render-ScapeGridLayout',
+                              'Render-ScapeThemifiedMenuBuffer'
