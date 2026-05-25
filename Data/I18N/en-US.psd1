@@ -44,7 +44,7 @@
     "MENU_OPTION_ROBOCOPY"            = @{ T = 'ROBOCOPY DEFAULTS & CLOUD SYNC CONFIG'; H = 'Advanced synchronization flags for the Robocopy Cloud engine.'; F = '4' }
     "MENU_OPTION_LANGUAGE"            = @{ T = 'INTERFACE LANGUAGE'; H = 'Switches the global SCAPE UI language.'; F = '5' }
     "MENU_SETTINGS_THEME"             = @{ T = 'THEME OPTIONS'; H = 'Configure the visual theme of the interface.'; F = '6' }
-    "MENU_OPTION_RETURN"              = @{ T = 'RETURN TO MAESTRO BOOTLOADER'; H = 'Return to previous menu level'; F = 'R' }
+    "MENU_OPTION_RETURN"              = @{ T = 'RETURN TO PREVIOUS MENU'; H = 'Return to previous menu level'; F = 'R' }
     "MENU_OPTION_AUTODETECT"          = @{ T = 'AUTO-DETECT & MOUNT SAMBA VAULT'; H = 'Auto-discover and mount network Samba shares'; F = 'S' }
 
     "MENU_MAESTRO_PROMPT"             = @{ T = 'Awaiting operational command directive'; H = 'Maestro routine status prompt'; F = 'MAESTRO_ROUTINE' }
@@ -688,7 +688,9 @@
     "UI_NATIVE_HYBRID_RUNNING"        = @{ T = 'SCAPE + WinFR dual-engine scan in progress. Please standby...'; H = 'Hybrid scan in progress'; F = 'HYBRID' }
     "UI_NATIVE_DIAG_FAIL"             = @{ T = 'Hardware reports critical failures. Minimal I/O recommended.'; H = 'Hardware diagnostic failure'; F = 'STORDIAG_ALERT' }
 
+    # ─────────────────────────────────────────────────────────────────────   
     # THIRD_PARTY_TOOLS
+    # ─────────────────────────────────────────────────────────────────────
     "TOOL_DISKPART"                   = @{ T = 'DISKPART (Isolation & Partitioning)'; H = 'Force offline or manage partitions'; F = '1' }
     "TOOL_DISKPART_DESC"              = @{ T = 'Force drive offline to prevent OS interference. WARNING: Disconnects all active sessions.'; H = 'DiskPart warning hint'; F = 'WARN' }
     "TOOL_CHKDSK"                     = @{ T = 'CHKDSK (File System Repair)'; H = 'Scan and fix logical file system errors'; F = '2' }
@@ -786,4 +788,16 @@
     "CAP_CSIUKEYBOARD"                = @{ T = 'CSIu Keyboard Protocol'; H = 'Modern keyboard input protocol for better modifier key handling.'; F = 'UI' }
     "CAP_FALLBACK256"                 = @{ T = 'Allow 256-color fallback'; H = 'Use 256-color palette when TrueColor is unavailable.'; F = 'UI' }
     "CAP_FALLBACK16"                  = @{ T = 'Allow 16-color fallback'; H = 'Use ANSI 16-color palette when 256-color is unavailable.'; F = 'UI' }
+
+    "MENU_MAIN_RECOVERY"              = @{ T = 'RECOVERY ENGINE'; H = 'Full SCAPE recovery workflow panel.'; F = '6' }
+    "MENU_RECOVERY_TITLE"             = @{ T = 'SYSTEM RECOVERY ENGINE & FORENSICS'; H = 'Title for the recovery menu'; F = 'UI' }
+    "RC_BITWISE_TAGGING"              = @{ T = 'BITWISE TAGGING'; H = 'Bitwise operations menu'; F = 'A' }
+    "RC_TOPOLOGY_SCAN"                = @{ T = 'TOPOLOGY SCAN'; H = 'Scan topology'; F = 'T' }
+    "RC_BATCH_PROCESSING"             = @{ T = 'BATCH PROCESSING'; H = 'Batch operations'; F = 'B' }
+    "RC_TARGET_ARCHAEOLOGY"           = @{ T = 'TARGET ARCHAEOLOGY'; H = 'Deep recovery'; F = 'R' }
+    "RC_FILE_LABORATORY"              = @{ T = 'FILE LABORATORY'; H = 'File analysis'; F = 'L' }
+    "RC_FORENSIC_TOOLS"               = @{ T = 'FORENSIC TOOLS'; H = 'Forensics tools menu'; F = 'F' }
+    "RC_ROBOCOPY_ENGINE"              = @{ T = 'ROBOCOPY ENGINE'; H = 'Robocopy engine menu'; F = 'E' }
+    "RC_TELEMETRY_SCAN"               = @{ T = 'TELEMETRY SCAN'; H = 'Hardware telemetry scan'; F = 'S' }
+    "RC_CLOUD_SYNC"                   = @{ T = 'CLOUD SYNC'; H = 'Cloud synchronization subsystem'; F = '7' }
 }

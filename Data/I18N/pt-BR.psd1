@@ -1,5 +1,7 @@
 @{
+    # ─────────────────────────────────────────────────────────────────────
     # CORE ENGINE
+    # ─────────────────────────────────────────────────────────────────────
     "CORE_ENGINE_START"               = @{ T = 'Sequência de Boot do Motor SCAPE Iniciada. Alocando recursos do núcleo...'; H = 'Mensagem de inicialização do motor'; F = 'SYSTEM' }
     "CORE_ENGINE_STOP"                = @{ T = 'Motor SCAPE Offline. Sequência de encerramento e expurgo de memória concluídos.'; H = 'Confirmação de desligamento do motor'; F = 'SYSTEM' }
     "CORE_KERNEL_SHIELD_ACTIVE"       = @{ T = 'SHIELD_ESTÁVEL: NT_IO_PRIORITY_HIGH acoplado. Threads de execução elevadas.'; H = 'Sucesso na elevação de prioridade do kernel'; F = 'KERNEL' }
@@ -22,7 +24,9 @@
     "SETTINGS_RESET_DEFAULTS"         = @{ T = 'Redefinir para Padrões de Fábrica'; H = 'Opção para redefinir todas as configurações para os padrões de fábrica'; F = 'UI' }
     "SETTINGS_RESET_SUCCESS"          = @{ T = 'Todas as configurações restauradas para o padrão de fábrica (.psd1).'; H = 'Confirmação de redefinição de fábrica'; F = 'SYSTEM' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # MAIN MENU
+    # ─────────────────────────────────────────────────────────────────────
     "MENU_MAIN_TITLE"                 = @{ T = 'CONFIGURAÇÕES DO SISTEMA E DEFINIÇÕES DE AMBIENTE'; H = 'Título do menu principal'; F = $null }
     "MENU_MAIN_SCAN"                  = @{ T = 'SCAN COMPLETO & TOPOLOGIA DE INVENTÁRIO'; H = 'Auditoria de hardware e inventário de topologia de disco.'; F = '1' }
     "MENU_MAIN_PARSING"               = @{ T = 'RECUPERAÇÃO TARGETADA (Plano A - MFT/Inode)'; H = 'Recuperação determinística de registros MFT/Inode.'; F = '2' }
@@ -40,7 +44,7 @@
     "MENU_OPTION_ROBOCOPY"            = @{ T = 'CONFIGURAÇÕES GLOBAIS DO ROBOCOPY (SYNC)'; H = 'Flags avançadas de sincronização para o motor de Nuvem Robocopy.'; F = '4' }
     "MENU_OPTION_LANGUAGE"            = @{ T = 'IDIOMA DA INTERFACE'; H = 'Altera o idioma global da interface do SCAPE.'; F = '5' }
     "MENU_SETTINGS_THEME"             = @{ T = 'OPÇÕES DE TEMA'; H = 'Configurar o tema visual da interface.'; F = '6' }
-    "MENU_OPTION_RETURN"              = @{ T = 'RETORNAR AO BOOTLOADER MAESTRO'; H = 'Retornar ao nível anterior do menu'; F = 'R' }
+    "MENU_OPTION_RETURN"              = @{ T = 'RETORNAR AO MENU ANTERIOR'; H = 'Retornar ao nível anterior do menu'; F = 'R' }
     "MENU_OPTION_AUTODETECT"          = @{ T = 'AUTO-DETECTAR & MONTAR COFRE SAMBA'; H = 'Auto-descobrir e montar compartilhamentos Samba em rede'; F = 'S' }
 
     "MENU_MAESTRO_PROMPT"             = @{ T = 'Aguardando diretiva de comando operacional'; H = 'Prompt de status da rotina Maestro'; F = 'MAESTRO_ROUTINE' }
@@ -58,7 +62,9 @@
     "MENU_RANDOM_THEME"               = @{ T = 'NOVO TEMA RANDÔMICO (RGB DINÂMICO)'; H = 'Aplica uma nova paleta de cores gerada algoritmicamente garantindo acessibilidade visual.'; F = '6' }
     "THEME_APPLIED"                   = @{ T = 'Tema Quântico de UI aplicado com sucesso. RGB Base: {0}'; H = 'Sucesso na aplicação de tema com token RGB'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # DRIVE ACTIONS MENU
+    # ─────────────────────────────────────────────────────────────────────
     "MENU_DRIVE_TARGET_LABEL"         = @{ T = '>> ALVO SELECIONADO: {0}'; H = 'Rótulo do drive selecionado com token de dispositivo'; F = $null }
     "MENU_DRIVE_OPT_TARGETED"         = @{ T = 'Recuperação Direcionada (SCAPE Plano A)'; H = 'Extrai caminhos específicos ignorando APIs do Windows.'; F = '1' }
     "MENU_DRIVE_OPT_ARCHAEOLOGY"      = @{ T = 'Modo Arqueologia (SCAPE Plano B)'; H = 'Escavação profunda de setores RAW por assinaturas perdidas.'; F = '2' }
@@ -67,7 +73,9 @@
     "MENU_DRIVE_OPT_HYBRID"           = @{ T = 'Recuperação Híbrida (WinFR + SCAPE)'; H = 'Scan de motor duplo alavancando Windows File Recovery.'; F = '5' }
     "MENU_DRIVE_OPT_RETURN"           = @{ T = 'Retornar'; H = 'Retornar ao menu anterior.'; F = 'R' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # PIPELINE / COMPLIANCE
+    # ─────────────────────────────────────────────────────────────────────
     "TUI_PREFLIGHT"                   = @{ T = 'Iniciando sequência de diagnóstico {0}...'; H = 'Início de diagnóstico pré-voo com token de ferramenta'; F = 'PRE-FLIGHT' }
     "TUI_EXECUTION"                   = @{ T = 'Motor {0} operante. Processando fluxos...'; H = 'Status da fase de execução com token de motor'; F = 'EXECUTION' }
     "TUI_POSTFLIGHT"                  = @{ T = 'Sequência operacional {0} finalizada.'; H = 'Conclusão pós-voo com token de ferramenta'; F = 'POST-FLIGHT' }
@@ -92,7 +100,9 @@
     "SYNC_SUSPEND"                    = @{ T = 'Suspendendo Monitor Ao Vivo assíncrono para evitar colisões COM/Handle.'; H = 'Aviso de suspensão de sincronismo para segurança de recursos'; F = 'SYNC' }
     "SYNC_RESUME"                     = @{ T = 'Trava síncrona liberada. Retomando thread do Monitor Ao Vivo.'; H = 'Aviso de retomada de sincronismo'; F = 'SYNC' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # STATUS ENUMERATIONS
+    # ─────────────────────────────────────────────────────────────────────
     "STATUS_DISCOVERED"               = @{ T = 'DESCOBERTO_PARSEADO'; H = 'Arquivo descoberto via parsing de metadados'; F = $null }
     "STATUS_DISCOVERED_RAW"           = @{ T = 'DESCOBERTO_ESCULPIDO'; H = 'Arquivo descoberto via carving bruto'; F = $null }
     "STATUS_EXTRACTED"                = @{ T = 'EXTRAÍDO_COM_SUCESSO'; H = 'Extração de arquivo concluída com sucesso'; F = $null }
@@ -103,7 +113,9 @@
     "STATUS_PROCESSING"               = @{ T = 'PROCESSAMENTO_ATIVO'; H = 'Operação atualmente em progresso'; F = $null }
     "STATUS_VERIFIED"                 = @{ T = 'INTEGRIDADE_VERIFICADA'; H = 'Verificação de integridade de dados aprovada'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # TABLE HEADERS
+    # ─────────────────────────────────────────────────────────────────────
     "TABLE_HEADER_ID"                 = @{ T = 'ID_DO_OBJETO'; H = 'Cabeçalho de tabela: Identificador do objeto'; F = $null }
     "TABLE_HEADER_NAME"               = @{ T = 'NOME_DO_ARQUIVO'; H = 'Cabeçalho de tabela: Nome do arquivo'; F = $null }
     "TABLE_HEADER_SIZE"               = @{ T = 'TAMANHO_ALOCADO'; H = 'Cabeçalho de tabela: Tamanho alocado em bytes'; F = $null }
@@ -115,12 +127,16 @@
     "TABLE_HEADER_OFFSET"             = @{ T = 'OFFSET_FÍSICO'; H = 'Cabeçalho de tabela: Offset físico do disco'; F = $null }
     "TABLE_HEADER_LENGTH"             = @{ T = 'COMPRIMENTO_EM_BYTES'; H = 'Cabeçalho de tabela: Comprimento em bytes do objeto'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # INVENTORY & DISCOVERY
+    # ─────────────────────────────────────────────────────────────────────
     "INVENTORY_PHYSICAL_DISKS"        = @{ T = 'ENUMERANDO TOPOLOGIA DE DISCOS FÍSICOS:'; H = 'Mensagem de início de enumeração de discos físicos'; F = 'GERENCIADOR_INVENTÁRIO' }
     "INVENTORY_LOGICAL_VOLUMES"       = @{ T = 'ENUMERANDO MONTAGENS DE VOLUMES LÓGICOS:'; H = 'Mensagem de início de enumeração de volumes lógicos'; F = 'GERENCIADOR_INVENTÁRIO' }
     "INVENTORY_WMI_FAIL"              = @{ T = 'Subsistema WMI/CIM sem resposta. Não é possível enumerar a topologia de hardware.'; H = 'Erro fatal de falha do subsistema WMI'; F = 'INVENTÁRIO_FATAL' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # VOLUME TYPES & SELECTION
+    # ─────────────────────────────────────────────────────────────────────
     "VOLUME_TYPE_NTFS"                = @{ T = 'NTFS'; H = 'Identificador de tipo de sistema de arquivos'; F = $null }
     "VOLUME_TYPE_EXFAT"               = @{ T = 'exFAT'; H = 'Identificador de tipo de sistema de arquivos'; F = $null }
     "VOLUME_TYPE_FAT32"               = @{ T = 'FAT32'; H = 'Identificador de tipo de sistema de arquivos'; F = $null }
@@ -136,7 +152,9 @@
     "VOLUME_SELECTION_INDEX"          = @{ T = 'ÍNDICE_DO_ALVO'; H = 'Cabeçalho de tabela de seleção de volume'; F = $null }
     "VOLUME_NO_TARGETS"               = @{ T = 'Nenhum alvo de armazenamento viável detectado na configuração de hardware atual.'; H = 'Aviso de nenhum alvo encontrado'; F = 'SYSTEM_WARN' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # I/O OPERATIONS
+    # ─────────────────────────────────────────────────────────────────────
     "IO_CREATEFILE_FAIL"              = @{ T = 'A API Win32 CreateFile falhou em garantir o handle. Código Win32Error: {0}'; H = 'Falha da API CreateFile com token de código de erro'; F = 'IO_FATAL' }
     "IO_READ_SUCCESS"                 = @{ T = 'Lidos com sucesso {0} bytes do offset físico {1}'; H = 'Confirmação de leitura bem-sucedida com tokens de bytes/offset'; F = 'IO_STREAM' }
     "IO_READ_PARTIAL"                 = @{ T = 'Leitura parcial detectada: esperados {0} bytes, recuperados apenas {1} bytes. Preenchimento (padding) pode ocorrer.'; H = 'Aviso de leitura parcial com tokens esperado/recebido'; F = 'IO_STREAM_WARN' }
@@ -147,14 +165,18 @@
     "IO_DASD_HANDLE_CLOSED"           = @{ T = 'Handle do Dispositivo de Armazenamento de Acesso Direto (DASD) liberado de volta ao SO.'; H = 'Confirmação de liberação de handle DASD'; F = 'IO_GERENCIADOR' }
     "IO_DEVICE_NOT_READY"             = @{ T = 'O dispositivo de armazenamento reportou status Não Pronto. Aguardando reconexão de hardware.'; H = 'Aviso de dispositivo não pronto'; F = 'IO_WARN' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # SYSTEM TOPOLOGY & SPECS
+    # ─────────────────────────────────────────────────────────────────────
     "TOPOLOGY_TITLE"                  = @{ T = '[ TOPOLOGIA DE INFRAESTRUTURA DO SISTEMA ]'; H = 'Cabeçalho de exibição de topologia'; F = $null }
     "SPEC_LABEL_CPU"                  = @{ T = 'PROCESSADOR'; H = 'Rótulo de especificação de hardware para CPU'; F = $null }
     "SPEC_LABEL_RAM"                  = @{ T = 'MEMÓRIA'; H = 'Rótulo de especificação de hardware para RAM'; F = $null }
     "SPEC_LABEL_OS"                   = @{ T = 'KERNEL'; H = 'Rótulo de especificação de hardware para kernel do SO'; F = $null }
     "SPEC_LABEL_VIRT"                 = @{ T = 'VIRT_LAYER'; H = 'Rótulo de especificação de hardware para camada de virtualização'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # HARDWARE METRICS & TELEMETRY
+    # ─────────────────────────────────────────────────────────────────────
     "HW_SMART_FAIL"                   = @{ T = 'Limite de pré-falha S.M.A.R.T. excedido para o atributo ID {0} (Valor Bruto: {1}). Falha mecânica iminente.'; H = 'Aviso crítico S.M.A.R.T. com tokens de atributo/valor'; F = 'HW_METRICS_CRÍTICO' }
     "HW_TBW_WARN"                     = @{ T = 'AVISO DE RESISTÊNCIA NAND: O Total de Bytes Gravados (TBW) do SSD alvo está próximo dos limites do fabricante. Risco de bloqueio de hardware para somente-leitura.'; H = 'Aviso de resistência de SSD'; F = 'HW_METRICS_AVISO' }
     "HW_TBW_CRITICAL"                 = @{ T = 'Limite TBW estritamente excedido. A unidade pode entrar em estado de proteção somente-leitura a qualquer momento.'; H = 'Falha crítica de resistência de SSD'; F = 'HW_METRICS_FATAL' }
@@ -169,7 +191,9 @@
     "HW_CACHE_FLUSH"                  = @{ T = 'Descarregando cache de gravação volátil do disco para a NAND física para evitar perda de dados.'; H = 'Notificação de operação de flush de cache'; F = 'HW_GERENCIADOR' }
     "HW_STORAGE_HEALTH"               = @{ T = 'Aviso: Latência de resposta crítica detectada em {0}. Verifique a integridade física do cabo SATA/NVMe e da controladora.'; H = 'Aviso de saúde de armazenamento com token de dispositivo'; F = 'HW_DIAGNÓSTICO' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # NETWORK / SAMBA OPERATIONS
+    # ─────────────────────────────────────────────────────────────────────
     "NET_SMB_LOCK"                    = @{ T = 'Cofre Samba mapeado e travado com sucesso na letra de unidade {0} (Alvo: {1}).'; H = 'Sucesso na montagem SMB com tokens de unidade/alvo'; F = 'NETWORK_SEGURO' }
     "NET_SMB_TIMEOUT"                 = @{ T = 'Varredura de sub-rede do Radar Samba esgotada. O IP alvo está inacessível, bloqueado por firewall ou offline.'; H = 'Erro de timeout na descoberta SMB'; F = 'NETWORK_ERR' }
     "NET_SMB_UNMOUNT"                 = @{ T = 'Desmontando Unidade Samba {0} e destruindo credenciais de rede ativas...'; H = 'Desmontagem SMB com token de unidade'; F = 'NETWORK_CLEANUP' }
@@ -216,7 +240,9 @@
     "NET_MGR_ALL_REMOVED"             = @{ T = 'Todas as unidades de rede foram removidas.'; H = 'Confirmação de desmontagem em massa'; F = $null }
     "NET_MGR_UNMOUNT_REGEX"           = @{ T = '^(?:UNMOUNT|DESMONTAR|\[DESMONTAR\]):\s*([A-Z]):'; H = 'Padrão regex para parsing de comando de desmontagem'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # SQLITE DATABASE ENGINE
+    # ─────────────────────────────────────────────────────────────────────
     "SQLITE_ENGINE_LOADED"            = @{ T = 'Motor de Interoperação Nativa Carregado do caminho: {0}'; H = 'Sucesso no carregamento do motor SQLite com token de caminho'; F = 'SQLITE_ENGINE' }
     "SQLITE_ENGINE_FAIL"              = @{ T = 'Falha ao carregar ou vincular dependência DLL do SQLite: {0}'; H = 'Falha no carregamento do SQLite com token de erro'; F = 'SQLITE_FATAL' }
     "SQLITE_DB_INIT"                  = @{ T = 'Esquema do banco de dados e estruturas relacionais inicializados com sucesso em modo WAL.'; H = 'Sucesso na inicialização do banco de dados'; F = 'SQLITE_CORE' }
@@ -232,7 +258,9 @@
     "DB_QUERY_ERROR"                  = @{ T = 'Falha na execução da consulta: {0}'; H = 'Erro de consulta com token de exceção'; F = 'DB_ERR' }
     "DB_MONITOR_STATS"                = @{ T = 'Registros: {0} | Órfãos: {1} | Gravado: {2} MB'; H = 'Exibição de estatísticas ao vivo com tokens de registro/órfão/tamanho'; F = 'LIVE' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # INTEGRITY & FAILSAFE SYSTEMS
+    # ─────────────────────────────────────────────────────────────────────
     "INT_MFT_MIRROR_DIV"              = @{ T = 'Divergência entre a MFT primária e o MFTMirror detectada. A lógica subjacente do sistema de arquivos está comprometida.'; H = 'Alerta de integridade por divergência de MFT'; F = 'ALERTA_SANCTUARY' }
     "INT_SQLITE_CORRUPT"              = @{ T = 'Corrupção no Write-Ahead Log (WAL) do SQLite detectada. Forçando vacuum estrutural e reconstrução.'; H = 'Recuperação de corrupção WAL do SQLite'; F = 'SQLITE_FATAL' }
     "INT_MODE_CONFLICT"               = @{ T = "O sistema de arquivos detectado '{0}' inerentemente não suporta o modo de parsing de motor '{1}'."; H = 'Incompatibilidade filesystem/modo com tokens'; F = 'CONFLITO_CONFIG' }
@@ -242,7 +270,9 @@
     "INT_CONVERSION_OK"               = @{ T = 'EngineMode alterado com sucesso para REDUNDANCY.'; H = 'Confirmação de conversão de modo'; F = 'ATUALIZAÇÃO_CONFIG' }
     "INT_CHECKPOINT_CREATED"          = @{ T = 'Ponto de verificação operacional salvo no banco de dados. A capacidade de retomada do motor está agora ativa.'; H = 'Confirmação de criação de checkpoint'; F = 'MÁQUINA_ESTADO' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # PIPELINE / EXTRACTION FLOW
+    # ─────────────────────────────────────────────────────────────────────
     "PIPE_TRAVERSAL_START"            = @{ T = 'Caminhando a árvore de metadados deterministicamente em {0}...'; H = 'Início de travessia com token de alvo'; F = 'INIT_TRAVERSAL' }
     "PIPE_TRAVERSAL_COMPLETE"         = @{ T = 'Caminhada de metadados do sistema de arquivos concluída com sucesso.'; H = 'Aviso de conclusão de travessia'; F = 'TRAVERSAL_CONCLUÍDO' }
     "PIPE_ARCHAEOLOGY_START"          = @{ T = 'Varredura bruta de assinaturas hexadecimais iniciada para o motor: {0}.'; H = 'Início de arqueologia com token de motor'; F = 'INIT_ARQUEOLOGIA' }
@@ -260,7 +290,9 @@
     "PIPE_EXTRACTION_PHASE"           = @{ T = 'Iniciando a fase física de extração de bytes...'; H = 'Transição para fase de extração'; F = 'TRANSIÇÃO_PIPELINE' }
     "PIPE_CARVING_PROGRESS"           = @{ T = 'Offset Físico: {0} GB | Taxa de Transf.: {1} MB/s | Órfãos Recuperados: {2}'; H = 'Telemetria de carving com tokens de offset/velocidade/contagem'; F = 'TELEMETRIA_CARVING' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # UI / INTERACTIVE EXPLORER
+    # ─────────────────────────────────────────────────────────────────────
     "UI_ExplorerTitle"                = @{ T = 'EXPLORADOR DE ARQUIVOS INTERATIVO - SISTEMA DE RECUPERAÇÃO SCAPE'; H = 'Título da janela do explorador'; F = $null }
     "UI_BreadcrumbRoot"               = @{ T = 'RAIZ_VIRTUAL'; H = 'Rótulo de breadcrumb raiz'; F = $null }
     "UI_NavHelp"                      = @{ T = 'ATALHOS: [CIMA/BAIXO] Navegar | [ENTER] Abrir Pasta | [ESPAÇO] Alternar Marcação | [E] Executar Extração | [B] Voltar | [Q] Sair do Explorador'; H = 'Texto de ajuda de navegação do explorador'; F = $null }
@@ -289,7 +321,9 @@
     "UI_COMPLIANCE_DISCLAIMER"        = @{ T = 'O acesso a setores RAW acarreta risco de estresse de hardware ou perda de dados. Aceitar? (s/N): '; H = 'Aviso de risco de acesso RAW'; F = 'COMPLIANCE DASD' }
     "UI_ABORT_CONFIRM_CRITICAL"       = @{ T = 'Abortar E/S ativa pode deixar handles abertos ou corromper o banco de dados. Forçar Abortar? (s/N): '; H = 'Confirmação de abort crítico'; F = 'AVISO CRÍTICO' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # VIEW / DASHBOARD UI
+    # ─────────────────────────────────────────────────────────────────────
     "DASH_HEADER_NODE"                = @{ T = 'SYSTEM-CRITICAL ANALYSIS PARTITION EXTRACTOR | NÓ: {0}'; H = 'Cabeçalho do dashboard com token de nó'; F = $null }
     "BANNER_TITLE"                    = @{ T = 'SCAPE Recovery System - Motor Forense Avançado v1.0'; H = 'Título do banner da aplicação'; F = $null }
 
@@ -298,7 +332,9 @@
     "DASH_LINE2"                      = @{ T = 'DB_PARSED: {0} | DB_ORPHANS: {1} | DB_EXTRACTED: {2}'; H = 'Linha de métricas do dashboard com tokens de estatísticas do BD'; F = $null }
     "DASH_LINE3"                      = @{ T = 'LCN_POS: {0} | PROG: {1} | RATE: {2} MB/s'; H = 'Linha de métricas do dashboard com tokens de progresso/taxa'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # ROBOCOPY / CLOUD SYNC CONFIG
+    # ─────────────────────────────────────────────────────────────────────
     "RC_TITLE"                        = @{ T = 'LOGÍSTICA & PAINEL DE CONTROLE DE CLOUD SYNC - SCAPE ROBOSYNC'; H = 'Título do painel Robocopy'; F = $null }
     "RC_STAGING_LABEL"                = @{ T = 'Diretório de Staging Local'; H = 'Rótulo do campo de caminho de staging'; F = $null }
     "RC_DEST_LABEL"                   = @{ T = 'Destino Final Cloud/UNC'; H = 'Rótulo do campo de caminho de destino'; F = $null }
@@ -367,7 +403,9 @@
     "RC_TAGGING_START"                = @{ T = 'Iniciando Marcacao de Archive Bit em Alta Velocidade em {0}...'; H = 'Início de tagging com token de alvo'; F = 'ROBOSYNC' }
     "RC_TAGGING_DONE"                 = @{ T = 'Marcacao de Archive Bit Concluida.'; H = 'Aviso de conclusão de tagging'; F = 'ROBOSYNC' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # DEPLOYER / COMPILER ENGINE
+    # ─────────────────────────────────────────────────────────────────────
     "DEPLOYER_START"                  = @{ T = 'Iniciando orquestração estrutural dinâmica do Monolito SCAPE...'; H = 'Inicialização do deployer'; F = 'DEPLOYER_INIT' }
     "DEPLOYER_PURGE"                  = @{ T = 'Árvore de implantação ativa anterior detectada. Purgando arquitetura antiga...'; H = 'Aviso de purga de build antigo'; F = 'DEPLOYER_WARN' }
     "DEPLOYER_EXTRACT"                = @{ T = 'Extraindo cargas modulares dinamicamente da matriz...'; H = 'Início de extração de módulos'; F = 'DEPLOYER_EXEC' }
@@ -426,7 +464,9 @@
     "DEPLOYER_ERR_LIGHT"              = @{ T = 'Pipeline de linkedição Light falhou.'; H = 'Erro do pipeline Light'; F = $null }
     "DEPLOYER_ERR_MSI_FORGE"          = @{ T = 'Falha de compilação durante a forja do MSI WiX: {0}'; H = 'Falha na forja MSI com token de erro'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # COMPILER SUBSYSTEM
+    # ─────────────────────────────────────────────────────────────────────
     "COMPILER_MSI_BASE_EXE"           = @{ T = 'Forjando o executável base para o payload MSI...'; H = 'Prep do EXE Base'; F = 'COMPILADOR' }
     "COMPILER_MSI_SUCCESS"            = @{ T = 'Instalador MSI gerado com sucesso: {0}'; H = 'Sucesso na geração do MSI'; F = 'COMPILADOR' }
     "COMPILER_CHECK_PS2EXE"           = @{ T = 'Verificando módulo ps2exe...'; H = 'Aviso de verificação ps2exe'; F = 'COMPILADOR' }
@@ -459,7 +499,9 @@
     "NATIVE_LINUX_ISOLATE"            = @{ T = '[LINUX] Roteando para pipeline nativa umount / dd...'; H = 'Redirecionamento de isolamento Linux'; F = 'HINT' }
     "NATIVE_JOURNAL_EXPORTED"         = @{ T = 'Journal exportado para {0}. Processando entradas...'; H = 'Sucesso na extração do USN Journal'; F = 'FSUTIL' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # BOOT & IGNITION SEQUENCE
+    # ─────────────────────────────────────────────────────────────────────
     "ERR_ADMIN_REQUIRED"              = @{ T = 'Privilégios de Administrador são estritamente necessários.'; H = 'Erro de requisito de admin'; F = $null }
     "ERR_BOOT_SECTOR_READ"            = @{ T = 'Falha na leitura do Boot Sector.'; H = 'Erro de leitura de boot sector'; F = 'IO_FATAL' }
     "ERR_SUPERBLOCK_READ"             = @{ T = 'Falha na leitura do Superblock EXT.'; H = 'Erro de leitura de superblock EXT'; F = 'IO_FATAL' }
@@ -497,12 +539,16 @@
     "IGNITE_DEPLOY_FAIL"              = @{ T = 'Falha ao iniciar Start-ScapeDeployment: {0}'; H = 'Falha no lançamento do deploy com token de erro'; F = 'FATAL' }
     "IGNITE_DEPLOYER_MISSING"         = @{ T = 'DeployerPayload (A Fábrica) não foi encontrado na memória!'; H = 'Fatal de deployer ausente'; F = 'FATAL' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # DEPLOYER PROCESS MANAGEMENT
+    # ─────────────────────────────────────────────────────────────────────
     "DEPLOYER_PROCESS_CLEANUP"        = @{ T = 'Instâncias ativas detectadas. Encerrando processos para limpeza...'; H = 'Início de cleanup de processos'; F = 'DEPLOYER' }
     "DEPLOYER_PURGE_SUCCESS"          = @{ T = 'Arquitetura anterior removida com sucesso.'; H = 'Aviso de sucesso na purga'; F = 'DEPLOYER' }
     "DEPLOYER_PURGE_BUSY_WARN"        = @{ T = 'Diretório de saída está ocupado. Build antigo movido para caminho temporário: {0}'; H = 'Fallback de purga ocupada com token de caminho'; F = 'DEPLOYER' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # AUDIT & FORENSIC MANIFEST
+    # ─────────────────────────────────────────────────────────────────────
     "AUDIT_MANIFEST_DEPLOY"           = @{ T = 'Manifesto Forense JSON implantado com segurança em: {0} [Status: {1}]'; H = 'Deploy de manifesto com tokens caminho/status'; F = 'AUDIT_SYSTEM' }
     "AUDIT_MANIFEST_FAIL"             = @{ T = 'Falha crítica ao gravar dados de manifesto/checksum JSON: {0}'; H = 'Falha na gravação de manifesto com token de erro'; F = 'AUDIT_FATAL' }
     "AUDIT_REPORT_GEN"                = @{ T = 'Relatório de Auditoria JSON Abrangente gerado de forma limpa em: {0}'; H = 'Sucesso na geração de relatório com token de caminho'; F = 'AUDIT_SYSTEM' }
@@ -517,7 +563,9 @@
     "IO_BIT_ERROR"                    = @{ T = 'Operação bitwise resiliente de leitura/escrita falhou após esgotar orçamento de tentativas.'; H = 'Erro fatal de operação bitwise/resiliência'; F = 'IO_FATAL' }
     "LOG_ROTATED"                     = @{ T = 'Rotação de log concluída. Arquivado: {0} | Ativo: {1} | Rotação: {2}.'; H = 'Conclusão de rotação de logger com arquivo antigo/novo e contador'; F = 'LOGGER' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # ARCHIVE / CARVING ENGINE
+    # ─────────────────────────────────────────────────────────────────────
     "ARCHIVE_ENUMERATING"             = @{ T = 'Enumerando nós de banco de dados para arquivos direcionados...'; H = 'Início de enumeração de archive'; F = 'ARCHIVE_ENGINE' }
     "ARCHIVE_BAR_TOTAL"               = @{ T = 'NÓS_DB_TOTAIS: {0} | MARCADOS_ATIVAMENTE: {1} | ERROS_CORRUPÇÃO: {2} | TAXA_SCAN: {3} nós/seg'; H = 'Barra de progresso de archive com tokens de estatísticas'; F = $null }
     "ARCHIVE_COMPLETE"                = @{ T = 'Ciclo de marcação direcionada do banco de dados concluído inteiramente.'; H = 'Conclusão de ciclo de archive'; F = 'ARCHIVE_ENGINE' }
@@ -529,7 +577,9 @@
     "CARVE_ZFS_SIG"                   = @{ T = 'Mágica label/uberblock ZFS válida identificada no offset físico {0}'; H = 'Hit de assinatura ZFS com token de offset'; F = 'CARVE_HIT' }
     "CARVE_RECORD_ADDED"              = @{ T = 'Registro órfão bruto bufferizado com segurança para o motor de persistência SQL.'; H = 'Sucesso no buffer de registro'; F = 'CARVE_STATE' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # ERROR HANDLING & MISC
+    # ─────────────────────────────────────────────────────────────────────
     "MANIFEST_NOT_FOUND"              = @{ T = 'Nó do manifesto não encontrado: {0}'; H = 'Nó de manifesto ausente com token de chave'; F = 'ORCH_FATAL' }
     "ROUTER_FATAL"                    = @{ T = '{0}'; H = 'Fatal genérico de router com token de erro'; F = 'ROUTER_FATAL' }
     "ROUTE_EXEC_FAIL"                 = @{ T = '{0}'; H = 'Falha de execução de rota com token de erro'; F = 'ROUTE_EXEC_FAIL' }
@@ -546,7 +596,6 @@
     "ERR_PERMISSION_DENIED"           = @{ T = 'Acesso negado forçadamente pelo SO. Você deve re-inicializar o terminal SCAPE como Administrador.'; H = 'Erro de permissão negada'; F = 'PRIV_FATAL' }
     "ERR_DISK_FULL"                   = @{ T = 'Espaço em disco físico insuficiente detectado na mídia de destino. Operação abortada com segurança para prevenir crash.'; H = 'Erro de disco cheio'; F = 'IO_FATAL' }
     "ERR_CORRUPTED_RECORD"            = @{ T = 'Registro estrutural MFT/Inode severamente corrompido detectado. Pulando o parsing para prevenir falha do motor.'; H = 'Aviso de registro corrompido'; F = 'PARSE_WARN' }
-
 
     # ─────────────────────────────────────────────────────────────────────
     # MISCELLANEOUS & PROMPTS
@@ -574,40 +623,54 @@
     "MISC_PRESS_ENTER_EXIT"           = @{ T = 'Pressione a tecla [ENTER] para fechar o terminal e sair...'; H = 'Prompt de saída do terminal'; F = $null }
     "MISC_RESTART_STATE_MACHINE"      = @{ T = 'Pressione a tecla [ENTER] para reiniciar forçadamente a Máquina de Estados Maestro...'; H = 'Prompt de reinício da máquina de estados'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # PERFORMANCE METRICS
+    # ─────────────────────────────────────────────────────────────────────
     "PERF_RAM_STRATEGY"               = @{ T = 'RAM validada disponível: {0} GB | Tamanho Alvo Estimado: {1} GB -> Estratégia de Alocação Atribuída: {2}'; H = 'Estratégia de RAM com tokens disponível/alvo/estratégia'; F = 'PERF_METRIC' }
     "PERF_THREAD_AUTO"                = @{ T = 'Auto-ajustando threads de transferência de dados dinamicamente para {0} com base no meio de destino analisado.'; H = 'Auto-ajuste de threads com token de contagem'; F = 'PERF_TUNE' }
     "PERF_LOW_MEM_WARNING"            = @{ T = 'Memória física extremamente baixa detectada no host. Forçando mudança da pipeline para modo DISK_SPOOL para prevenir crash por falta de memória.'; H = 'Aviso de memória baixa'; F = 'PERF_WARN' }
     "PERF_HIGH_IO_WARNING"            = @{ T = 'Carga I/O excepcionalmente alta registrada na controladora de armazenamento. Protocolos de estrangulamento automatizados engajados.'; H = 'Aviso de carga I/O alta'; F = 'PERF_WARN' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # DEPENDENCY MANAGEMENT
+    # ─────────────────────────────────────────────────────────────────────
     "DEP_ARM64_FALLBACK"              = @{ T = 'DLL nativa ARM64 ausente. Utilizando fallback x64 (emulação).'; H = 'Aviso de fallback ARM64'; F = 'SQLITE' }
     "DEP_EXTRACT_SUCCESS"             = @{ T = 'Dependências nativas extraídas da matriz de memória com sucesso.'; H = 'Sucesso na extração de dependências'; F = 'SYSTEM' }
     "DEP_LOCAL_DETECTED"              = @{ T = 'Dependências detectadas localmente (DEV_MODE).'; H = 'Dependências locais detectadas'; F = 'SYSTEM' }
     "DEP_MISSING_ERROR"               = @{ T = 'ERRO: Arquivos não encontrados no disco e não embutidos na memória.'; H = 'Erro de dependências ausentes'; F = 'SQLITE' }
     "DEP_SIZE_MISMATCH"               = @{ T = 'Inconsistência no tamanho da DLL gerenciada após extração.'; H = 'Erro de mismatch de tamanho de DLL'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # CONFIGURATION VALUES
+    # ─────────────────────────────────────────────────────────────────────
     "CONFIG_VAL_EFFICIENCY"           = @{ T = 'EFICIÊNCIA'; H = 'Modo do motor: Eficiência'; F = $null }
     "CONFIG_VAL_REDUNDANCY"           = @{ T = 'REDUNDÂNCIA'; H = 'Modo do motor: Redundância'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # WAIT / RETURN PROMPTS
+    # ─────────────────────────────────────────────────────────────────────
     "WAIT_ENTER_CONTINUE"             = @{ T = 'Pressione ENTER para continuar...'; H = 'Prompt de espera para continuar'; F = $null }
     "WAIT_ENTER_ESC_PROMPT"           = @{ T = 'Pressione [ENTER] para prosseguir, ou [ESC] para cancelar.'; H = 'Prompt prosseguir/cancelar'; F = $null }
     "WAIT_ENTER_ACCEPT_RISK"          = @{ T = 'Pressione [ENTER] para aceitar o risco e continuar, ou [ESC] para abortar.'; H = 'Prompt aceitar risco/abortar'; F = $null }
     "WAIT_ENTER_RETURN"               = @{ T = 'Pressione ENTER para retornar...'; H = 'Prompt de espera para retornar'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # SYSTEM DETECTION
+    # ─────────────────────────────────────────────────────────────────────
     "SYS_BARE_METAL"                  = @{ T = 'Bare Metal'; H = 'Indicador de host físico'; F = $null }
     "SYS_NA"                          = @{ T = 'N/A'; H = 'Indicador não aplicável'; F = $null }
     "SYS_VM_DETECTED"                 = @{ T = 'Maquina Virtual Detectada (Hypervisor: {0})'; H = 'Detecção de VM com token de hypervisor'; F = 'SYSTEM' }
     "SYS_HOST_DETECTED"               = @{ T = 'Host Fisico Detectado (Bare Metal)'; H = 'Detecção de bare metal'; F = 'SYSTEM' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # FORENSIC WALK / TRAVERSAL
+    # ─────────────────────────────────────────────────────────────────────
     "FOR_MFT_WALK"                    = @{ T = 'Mapeando arvore MFT deterministicamente... Registro {0} / {1}'; H = 'Progresso de caminhada MFT com tokens atual/total'; F = $null }
     "FOR_EXT_WALK"                    = @{ T = 'Mapeando arvore Inode deterministicamente... Inode {0} / {1}'; H = 'Progresso de caminhada Inode com tokens atual/total'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # SAMBA / NETWORK MOUNT REMOVAL
+    # ─────────────────────────────────────────────────────────────────────
     "SAMBA_UNMOUNT_ALL"               = @{ T = 'Removendo todas as unidades de rede...'; H = 'Início de desmontagem em massa'; F = $null }
     "SAMBA_UNMOUNT_SINGLE"            = @{ T = 'Removendo unidade mapeada {0}...'; H = 'Desmontagem única com token de unidade'; F = $null }
     "SAMBA_SELECT_IP"                 = @{ T = 'MÚLTIPLOS HOSTS SMB DETECTADOS. SELECIONE O ALVO:'; H = 'Seleção de múltiplos hosts'; F = $null }
@@ -616,14 +679,18 @@
     "SAMBA_MGR_NONE"                  = @{ T = 'Nenhuma unidade de rede ativa detectada.'; H = 'Aviso de nenhuma montagem'; F = $null }
     "SAMBA_MGR_REMOVED"               = @{ T = 'Unidade {0} ({1}) desmontada com sucesso.'; H = 'Sucesso na desmontagem com tokens unidade/caminho'; F = $null }
 
+    # ─────────────────────────────────────────────────────────────────────
     # NATIVE BRIDGE / SAFETY CONTROLS
+    # ─────────────────────────────────────────────────────────────────────
     "ERR_SYSTEM_DRIVE_LOCK"           = @{ T = 'Operação bloqueada: Impossível isolar ou reparar o disco ativo do Sistema.'; H = 'Erro de proteção do disco do sistema'; F = 'ERRO_SEGURANÇA' }
-    "NET_NATIVE_ISOLATION_OK"         = @{ T = 'Disco alvo está OFFLINE. Acesso DASD exclusivo garantido.'; H = 'Sucesso no isolamento de disco'; F = 'DISKPART' }
+    "NET_NATIVE_ISOLATION_OK"         = @{ T = 'Drive isolado com sucesso. Acesso exclusivo DASD garantido.'; H = 'Sucesso no isolamento de disco'; F = 'DISKPART' }
     "NET_NATIVE_JOURNAL_START"        = @{ T = 'Colhendo USN Journal do NTFS para deleções recentes...'; H = 'Início de colheita de journal'; F = 'FSUTIL' }
     "UI_NATIVE_HYBRID_RUNNING"        = @{ T = 'Scan dual SCAPE + WinFR em progresso. Aguarde...'; H = 'Scan híbrido em progresso'; F = 'HÍBRIDO' }
     "UI_NATIVE_DIAG_FAIL"             = @{ T = 'O hardware reporta falhas críticas. Recomenda-se I/O mínimo.'; H = 'Falha no diagnóstico de hardware'; F = 'ALERTA_STORDIAG' }
 
+    # ─────────────────────────────────────────────────────────────────────
     # THIRD_PARTY_TOOLS
+    # ─────────────────────────────────────────────────────────────────────
     "TOOL_DISKPART"                   = @{ T = 'DISKPART (Isolamento & Particionamento)'; H = 'Forçar offline ou gerenciar partições'; F = '1' }
     "TOOL_DISKPART_DESC"              = @{ T = 'Força o drive offline para evitar interferência do SO. AVISO: Desconecta todas as sessões ativas.'; H = 'Dica de aviso DiskPart'; F = 'WARN' }
     "TOOL_CHKDSK"                     = @{ T = 'CHKDSK (Reparo de Sistema de Arquivos)'; H = 'Escanear e corrigir erros lógicos do sistema de arquivos'; F = '2' }
@@ -658,15 +725,15 @@
     "FS_REFS"                         = @{ T = 'RESILIENTE_REFS'; H = 'Sistema de arquivos resiliente (ReFS)'; F = 'FS' }
     "FS_XFS"                          = @{ T = 'EXTENDIDO_XFS'; H = 'Sistema de arquivos estendido (XFS)'; F = 'FS' }
     "FS_HFS"                          = @{ T = 'HIERARQUICO_HFS'; H = 'Sistema de arquivos hierárquico (HFS)'; F = 'FS' }
-    "FS_HFSX"                         = @{ T = 'HFSX_CASE_SENSITIVE'; H = 'HFS Plus (Sensível a maiúsculas)'; F = 'FS' }
+    "FS_HFSX"                         = @{ T = 'HFSX_CASE_SENSITIVE'; H = 'HFS Plus (Sensível a maiúscu(exFAT)'; F = 'FS' }
     "FS_EXFAT"                        = @{ T = 'TABELA_FLASH_EXFAT'; H = 'Tabela de alocação de arquivos estendida (exFAT)'; F = 'FS' }
     "FS_FAT32"                        = @{ T = 'LEGADO_FAT32'; H = 'Tabela de alocação de arquivos legada (FAT32)'; F = 'FS' }
     "FS_UDF"                          = @{ T = 'FORMATO_UNIVERSAL_UDF'; H = 'Formato de disco universal (Óptico)'; F = 'FS' }
     "FS_JFS"                          = @{ T = 'JOURNALED_JFS'; H = 'Sistema de arquivos Journaled (IBM)'; F = 'FS' }
-    "FS_F2FS"                         = @{ T = 'FLASH_FRIENDLY_F2FS'; H = 'Sistema de arquivos Flash-Friendly (F2FS)'; F = 'FS' }
-    "FS_ISO9660"                      = @{ T = 'PADRAO_ISO9660'; H = 'Sistema de arquivos padrão de CD-ROM'; F = 'FS' }
-    "FS_PART_TABLE"                   = @{ T = 'ESTRUTURA_TABELA_PARTICAO'; H = 'Estrutura de partição do disco'; F = 'META' }
-    "FS_DISK_IMAGE"                   = @{ T = 'IMAGEM_DISCO_VIRTUAL'; H = 'Contêiner de imagem de disco (VMDK/VHDX/DMG)'; F = 'VIRT' }
+    "FS_F2FS"                         = @{ T = 'F2FS_FLASH_NAND'; H = 'Sistema de arquivos flash NAND (F2FS)'; F = 'FS' }
+    "FS_ISO9660"                      = @{ T = 'ISO9660_CD_ROM'; H = 'Padrão de sistema de arquivos de CD-ROM'; F = 'FS' }
+    "FS_PART_TABLE"                   = @{ T = 'PARTITION_TABLE_STRUCT'; H = 'Estrutura de tabela de partições'; F = 'META' }
+    "FS_DISK_IMAGE"                   = @{ T = 'VIRTUAL_DISK_IMAGE'; H = 'Container de imagem de disco (VMDK/VHDX/DMG)'; F = 'VIRT' }
 
     # ─────────────────────────────────────────────────────────────────────
     # HARDWARE & TOPOLOGY
@@ -707,7 +774,7 @@
     "DOMAIN_INFRA"                    = @{ T = 'CAMADA_INFRAESTRUTURA'; H = 'Camada de suporte do sistema'; F = 'SYS' }
 
     # ─────────────────────────────────────────────────────────────────────
-    # ALTERNATIVAS DE CAPACIDADE DO TERMINAL (adicione no final do arquivo)
+    # ALTERNATIVAS DE CAPACIDADE DO TERMINAL
     # ─────────────────────────────────────────────────────────────────────
     "CAP_MENU_TITLE"                  = @{ T = 'CONFIGURAÇÕES DE CAPACIDADE DO TERMINAL'; H = 'Título do menu de capacidades do terminal'; F = 'UI' }
     "CAP_TRUECOLOR"                   = @{ T = 'TrueColor (RGB de 24 bits)'; H = 'Ativa suporte a cores reais de 24 bits. Desative para reverter à paleta ANSI de 16 cores.'; F = 'UI' }
@@ -721,4 +788,16 @@
     "CAP_CSIUKEYBOARD"                = @{ T = 'Protocolo de Teclado CSIu'; H = 'Protocolo moderno de entrada de teclado para melhor tratamento de teclas modificadoras.'; F = 'UI' }
     "CAP_FALLBACK256"                 = @{ T = 'Permitir fallback de 256 cores'; H = 'Usa a paleta de 256 cores quando TrueColor não estiver disponível.'; F = 'UI' }
     "CAP_FALLBACK16"                  = @{ T = 'Permitir fallback de 16 cores'; H = 'Usa a paleta ANSI de 16 cores quando a de 256 cores não estiver disponível.'; F = 'UI' }
+
+    "MENU_MAIN_RECOVERY"              = @{ T = 'MOTOR DE RECUPERAÇÃO'; H = 'Painel de fluxo de recuperação completo do SCAPE.'; F = '6' }
+    "MENU_RECOVERY_TITLE"             = @{ T = 'MOTOR DE RECUPERAÇÃO DO SISTEMA & FORENSE'; H = 'Título para o menu de recuperação'; F = 'UI' }
+    "RC_BITWISE_TAGGING"              = @{ T = 'MARCAÇÃO BITWISE'; H = 'Menu de operações bitwise'; F = 'A' }
+    "RC_TOPOLOGY_SCAN"                = @{ T = 'VARREDURA DE TOPOLOGIA'; H = 'Escanear topologia'; F = 'T' }
+    "RC_BATCH_PROCESSING"             = @{ T = 'PROCESSAMENTO EM LOTE'; H = 'Operações em lote'; F = 'B' }
+    "RC_TARGET_ARCHAEOLOGY"           = @{ T = 'ARQUEOLOGIA DE ALVO'; H = 'Recuperação profunda'; F = 'R' }
+    "RC_FILE_LABORATORY"              = @{ T = 'LABORATÓRIO DE ARQUIVOS'; H = 'Análise de arquivos'; F = 'L' }
+    "RC_FORENSIC_TOOLS"               = @{ T = 'FERRAMENTAS FORENSES'; H = 'Menu de ferramentas forenses'; F = 'F' }
+    "RC_ROBOCOPY_ENGINE"              = @{ T = 'MOTOR ROBOCOPY'; H = 'Menu do motor robocopy'; F = 'E' }
+    "RC_TELEMETRY_SCAN"               = @{ T = 'VARREDURA DE TELEMETRIA'; H = 'Varredura de telemetria de hardware'; F = 'S' }
+    "RC_CLOUD_SYNC"                   = @{ T = 'CLOUD SYNC'; H = 'Subsistema de sincronização em nuvem'; F = '7' }
 }

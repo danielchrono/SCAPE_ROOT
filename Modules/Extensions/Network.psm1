@@ -34,6 +34,19 @@ function Find-ScapeNetworkNode {
     return $results.ToArray()
 }
 
+function Invoke-ScapeCredentialPopup {
+    param([string]$Target)
+    $tmpFile = Join-Path ([System.IO.Path]::GetTempPath()) "scape_cred_$([Guid]::NewGuid()).xml"
+    $script = "Get-Credential -Message 'SCAPE: Authentication required for $Target' | Export-Clixml -Path '$tmpFile'"
+    $proc = Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $script -Wait -PassThru
+    if ($proc.ExitCode -eq 0 -and (Test-Path $tmpFile)) {
+        $cred = Import-Clixml -Path $tmpFile
+        Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+        return $cred
+    }
+    return $null
+}
+
 function New-ScapeNetworkMount {
     [CmdletBinding()]
     [OutputType([bool])]
@@ -42,9 +55,14 @@ function New-ScapeNetworkMount {
         [Parameter(Mandatory = $true)][string]$DriveLetter
     )
 
+    $cred = Invoke-ScapeCredentialPopup -Target $RemoteVault
+    if (-not $cred) { return $false }
+    $user = $cred.UserName
+    $pass = $cred.GetNetworkCredential().Password
+
     $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" -Fallback "net.exe"
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
-                FileName = $netExe; Arguments = "use $DriveLetter $RemoteVault /persistent:yes"
+                FileName = $netExe; Arguments = "use $DriveLetter $RemoteVault $pass /user:$user /persistent:yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
             }))
     $proc.WaitForExit()
