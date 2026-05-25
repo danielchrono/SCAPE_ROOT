@@ -142,10 +142,10 @@ function Get-ScapeSafeColor {
 
 function Invoke-ScapeProceduralTheme {
     [CmdletBinding()]
-    param()
+    param([double]$BaseHue)
     if (-not $Script:ThemeCache) { Initialize-ScapeTheme }
-    $rand = [Random]::new()
-    $baseHue = $rand.NextDouble() * 360
+    $hasBaseHue = $PSBoundParameters.ContainsKey('BaseHue') -and -not [double]::IsNaN($BaseHue) -and -not [double]::IsInfinity($BaseHue)
+    $baseHue = if ($hasBaseHue) { ((($BaseHue % 360) + 360) % 360) } else { ([Random]::new()).NextDouble() * 360 }
     $uiHue = ($baseHue + 30) % 360
     $warnHue = ($baseHue + 180) % 360
     $dangerHue = ($warnHue + 30) % 360

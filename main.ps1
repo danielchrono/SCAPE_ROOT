@@ -96,6 +96,7 @@ if (Get-Command Initialize-ScapeSetting -ErrorAction SilentlyContinue) { Initial
 if (Get-Command Initialize-ScapeLogger -ErrorAction SilentlyContinue) { Initialize-ScapeLogger | Out-Null }
 if (Get-Command Initialize-ScapeResolver -ErrorAction SilentlyContinue) { Initialize-ScapeResolver | Out-Null }
 if (Get-Command Initialize-ScapeTheme -ErrorAction SilentlyContinue) { Initialize-ScapeTheme | Out-Null }
+if (Get-Command Sync-ScapeThemeHydration -ErrorAction SilentlyContinue) { Sync-ScapeThemeHydration | Out-Null }
 if (Get-Command Initialize-ScapeRenderer -ErrorAction SilentlyContinue) { Initialize-ScapeRenderer | Out-Null }
 # Enable VT100 and graphic mode from parent session or dynamically
 if ([string]::IsNullOrWhiteSpace($env:SCAPE_GRAPHIC_MODE)) { $env:SCAPE_GRAPHIC_MODE = "1" }
@@ -124,4 +125,3 @@ finally {
     # Close logger only on real exit, not on handover
     if (Get-Command Close-ScapeLogStream -ErrorAction SilentlyContinue) { Close-ScapeLogStream }
 }
-

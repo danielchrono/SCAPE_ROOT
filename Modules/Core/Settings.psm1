@@ -47,6 +47,7 @@ function Get-ScapeSettingDefault {
             FrameStyle                 = $uiDefaults.FrameStyle
             ProgressStyle              = $uiDefaults.ProgressStyle
             ThemePersona               = $defaultPersona
+            RandomBaseHue              = $null
             ColorMode                  = $uiDefaults.ColorMode
             # Toggles do Robocopy
             RC_E                       = $uiToggleLists.RC_E
@@ -106,6 +107,59 @@ function Initialize-ScapeSetting {
         $msgInit = Get-ScapeLogMsg -Key "SETTINGS_ENGINE_ONLINE" -MsgArgs @()
         Publish-ScapeEvent -Type "SYS_CORE" -Payload @{ Action = "LogLine"; Key = "SETTINGS_ENGINE_ONLINE"; Message = $msgInit }
         return $state
+    }
+}
+
+function Sync-ScapeThemeHydration {
+    [CmdletBinding()]
+    param()
+    process {
+        $state = Get-ScapeColdState
+        if ($null -eq $state) { return }
+
+        $persona = [string](Get-ScapeProperty -Object $state -PropertyName "ThemePersona")
+        if (-not [string]::IsNullOrWhiteSpace($persona)) {
+            if ($persona -eq "RANDOM") {
+                $rawHue = Get-ScapeProperty -Object $state -PropertyName "RandomBaseHue"
+                $baseHue = $null
+                $hasHue = $false
+                if ($rawHue -is [double] -or $rawHue -is [float] -or $rawHue -is [int] -or $rawHue -is [decimal]) {
+                    $baseHue = [double]$rawHue
+                    $hasHue = $true
+                } elseif ($rawHue -is [string]) {
+                    $hasHue = [double]::TryParse($rawHue, [ref]$baseHue)
+                }
+
+                if (-not $hasHue -or [double]::IsNaN($baseHue) -or [double]::IsInfinity($baseHue)) {
+                    $baseHue = ([Random]::new()).NextDouble() * 360
+                    if (Get-Command Set-ScapeSettingMutation -ErrorAction SilentlyContinue) {
+                        Set-ScapeSettingMutation -Key "RandomBaseHue" -Value $baseHue | Out-Null
+                    } else {
+                        Update-ScapeColdState -NewProperties @{ RandomBaseHue = $baseHue } | Out-Null
+                    }
+                }
+
+                if (Get-Command Invoke-ScapeProceduralTheme -ErrorAction SilentlyContinue) {
+                    Invoke-ScapeProceduralTheme -BaseHue $baseHue
+                }
+            } elseif (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
+                Set-ScapePersona -Name $persona -Silent
+            }
+        }
+
+        $useTrueColor = $false
+        $colorMode = Get-ScapeProperty -Object $state -PropertyName "ColorMode"
+        if ($colorMode -is [string]) {
+            $useTrueColor = $colorMode -ieq "TrueColor"
+        } elseif ($colorMode -is [bool]) {
+            $useTrueColor = [bool]$colorMode
+        } else {
+            $useTrueColor = (Get-ScapeProperty -Object $state -PropertyName "Capability_TrueColor" -Fallback $true) -eq $true
+        }
+
+        if (Get-Command Set-ScapeColorMode -ErrorAction SilentlyContinue) {
+            Set-ScapeColorMode -UseTrueColor $useTrueColor -Silent
+        }
     }
 }
 
@@ -313,8 +367,28 @@ function Optimize-ScapeSettingsState {
 
     $personaList = Get-ScapeConstant -Path "ui::CycleLists::ThemePersona" -Fallback @("PowerShell")
     $currPersona = [string]$normalized["ThemePersona"]
-    if ([string]::IsNullOrWhiteSpace($currPersona) -or $currPersona -notin $personaList) {
+    if ([string]::IsNullOrWhiteSpace($currPersona) -or ($currPersona -notin $personaList -and $currPersona -ne "RANDOM")) {
         $normalized["ThemePersona"] = if ($Defaults.Contains("ThemePersona")) { $Defaults["ThemePersona"] } else { "PowerShell" }
+    }
+
+    $rawHue = $normalized["RandomBaseHue"]
+    if ($null -ne $rawHue -and $rawHue -ne "") {
+        $parsedHue = $null
+        $isNumeric = $false
+        if ($rawHue -is [double] -or $rawHue -is [float] -or $rawHue -is [int] -or $rawHue -is [decimal]) {
+            $parsedHue = [double]$rawHue
+            $isNumeric = $true
+        } elseif ($rawHue -is [string]) {
+            $isNumeric = [double]::TryParse($rawHue, [ref]$parsedHue)
+        }
+
+        if ($isNumeric -and -not [double]::IsNaN($parsedHue) -and -not [double]::IsInfinity($parsedHue)) {
+            $normalized["RandomBaseHue"] = ((($parsedHue % 360) + 360) % 360)
+        } else {
+            $normalized["RandomBaseHue"] = $null
+        }
+    } else {
+        $normalized["RandomBaseHue"] = $null
     }
 
     return $normalized
