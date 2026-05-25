@@ -326,7 +326,7 @@ function Write-ScapeMenuBuffer {
         $Script:RenderCache.LastMenuHash = ""
     }
 
-    $menuHash = "$TitleKey`:$CursorIndex`:$($(($Options.Id) -join ','))"
+    $menuHash = "$TitleKey`:$CursorIndex`:$($(($Options.Id) -join ',')):$($(($Options.DynamicText) -join ','))"
     if (-not $FullRedraw -and $Script:RenderCache.LastMenuHash -eq $menuHash) {
         return
     }

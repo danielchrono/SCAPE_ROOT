@@ -17,6 +17,7 @@
             @{ Id = "SETTINGS"; TitleKey = "MENU_MAIN_SETTINGS"; Type = "Warning"; Action = "NAVIGATE"; Target = "SettingsMenu"; Layer = "Core" }
             @{ Id = "LOGISTICS"; TitleKey = "MENU_MAIN_LOGISTICS"; Type = "Special"; Action = "NAVIGATE"; Target = "LogisticsMenu"; Layer = "Extensions" }
             @{ Id = "LABORATORY"; TitleKey = "MENU_MAIN_LAB"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Analysis"; Target = "Scape.Analysis.FS.Abstraction" }; Layer = "Analysis" }
+            @{ Id = "FORGE"; TitleKey = "DEPLOYER_MATRIX_HEADER"; Type = "Highlight"; Action = "NAVIGATE"; Target = "ForgeMenu" }
             @{ Id = "EXIT"; TitleKey = "MENU_MAIN_EXIT"; Type = "Destructive"; Action = "TERMINATE" }
         )
     }
@@ -24,11 +25,35 @@
     ForensicsMenu = @{
         TitleKey = "MENU_MAIN_FORENSICS"
         Items    = @(
-            @{ Id = "DISKPART"; TitleKey = "TOOL_DISKPART"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Infrastructure.Audit" }; Layer = "Infrastructure" }
-            @{ Id = "CHKDSK"; TitleKey = "TOOL_CHKDSK"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Infrastructure.Compliance" }; Layer = "Infrastructure" }
-            @{ Id = "WINFR"; TitleKey = "TOOL_WINFR"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Analysis"; Target = "Scape.Analysis.FS.NTFS" }; Layer = "Analysis" }
-            @{ Id = "FSUTIL"; TitleKey = "TOOL_FSUTIL"; Type = "Special"; Action = "TRIGGER"; Payload = @{ Domain = "Analysis"; Target = "Scape.Analysis.FS.PartitionTable" }; Layer = "Analysis" }
+            @{ Id = "NATIVE"; TitleKey = "TOOL_NATIVE_FORENSICS"; Type = "Highlight"; Action = "NAVIGATE"; Target = "NativeForensicsMenu" }
+            @{ Id = "THIRDPARTY"; TitleKey = "TOOL_THIRDPARTY_FORENSICS"; Type = "Warning"; Action = "NAVIGATE"; Target = "ThirdPartyForensicsMenu" }
+            @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
+        )
+    }
+
+    NativeForensicsMenu = @{
+        TitleKey = "TOOL_NATIVE_FORENSICS"
+        Items    = @(
+            @{ Id = "DISKPART"; TitleKey = "TOOL_DISKPART"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.Native.DiskPart" } }
+            @{ Id = "CHKDSK"; TitleKey = "TOOL_CHKDSK"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.Native.Chkdsk" } }
+            @{ Id = "WINFR"; TitleKey = "TOOL_WINFR"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.Native.WinFR" } }
+            @{ Id = "FSUTIL"; TitleKey = "TOOL_FSUTIL"; Type = "Special"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.Native.Fsutil" } }
+            @{ Id = "SFC"; TitleKey = "TOOL_SFC"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.Native.Sfc" } }
+            @{ Id = "DISM"; TitleKey = "TOOL_DISM"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.Native.Dism" } }
+            @{ Id = "EVENTVWR"; TitleKey = "TOOL_EVENTVWR"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.Native.EventVwr" } }
+            @{ Id = "FILEHASH"; TitleKey = "TOOL_FILEHASH"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.Native.FileHash" } }
             @{ Id = "STORDIAG"; TitleKey = "TOOL_STORDIAG"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Infrastructure.Telemetry"; Task = "TOPOLOGY" }; Layer = "Infrastructure" }
+            @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
+        )
+    }
+
+    ThirdPartyForensicsMenu = @{
+        TitleKey = "TOOL_THIRDPARTY_FORENSICS"
+        Items    = @(
+            @{ Id = "WINDIRSTAT"; TitleKey = "TOOL_WINDIRSTAT"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.ThirdParty.WinDirStat" } }
+            @{ Id = "PROCEXP"; TitleKey = "TOOL_PROCEXP"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.ThirdParty.ProcessExplorer" } }
+            @{ Id = "AUTORUNS"; TitleKey = "TOOL_AUTORUNS"; Type = "Special"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.ThirdParty.Autoruns" } }
+            @{ Id = "EVERYTHING"; TitleKey = "TOOL_EVERYTHING"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Forensics"; Target = "Scape.Forensics.ThirdParty.Everything" } }
             @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
         )
     }
@@ -38,11 +63,21 @@
         Items    = @(
             @{ Id = "ENGINE_MODE"; TitleKey = "MENU_OPTION_ENGINE_MODE"; Type = "Highlight"; Action = "MUTATE"; Payload = @{ Key = "EngineMode"; Value = "CYCLE"; List = "ui::CycleLists::EngineMode" }; DynamicText = @{ Type = "CycleState"; Key = "EngineMode"; List = "ui::CycleLists::EngineMode" } }
             @{ Id = "DEFAULT_OUT"; TitleKey = "MENU_OPTION_DEFAULT_OUT"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Presentation"; Target = "Scape.Presentation.FilePicker" }; Layer = "Presentation" }
-            @{ Id = "NET_MGR"; TitleKey = "MENU_OPTION_NETWORK_MGR"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Extensions"; Target = "Scape.Extensions.Network" }; Layer = "Extensions" }
+            @{ Id = "NET_MGR"; TitleKey = "MENU_OPTION_NETWORK_MGR"; Type = "Normal"; Action = "NAVIGATE"; Target = "NetworkMenu"; Layer = "Extensions" }
             @{ Id = "ROBOCOPY"; TitleKey = "MENU_OPTION_ROBOCOPY"; Type = "Special"; Action = "NAVIGATE"; Target = "RobocopyMenu"; Layer = "Extensions" }
             @{ Id = "LANGUAGE"; TitleKey = "MENU_OPTION_LANGUAGE"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "CurrentLanguage"; Value = "CYCLE"; List = "ui::CycleLists::I18N" }; DynamicText = @{ Type = "CycleState"; Key = "CurrentLanguage"; List = "ui::CycleLists::I18N" } }
             @{ Id = "THEME"; TitleKey = "MENU_SETTINGS_THEME"; Type = "Highlight"; Action = "NAVIGATE"; Target = "ThemeMenu"; Layer = "Presentation" }
+            @{ Id = "CAPABILITIES"; TitleKey = "CAP_MENU_TITLE"; Type = "Highlight"; Action = "NAVIGATE"; Target = "CapMenu" }
             @{ Id = "RESET"; TitleKey = "SETTINGS_RESET_DEFAULTS"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Core"; Target = "Scape.Core.Settings"; Task = "RESET" } }
+            @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
+        )
+    }
+
+    NetworkMenu   = @{
+        TitleKey = "NET_MGR_TITLE"
+        Items    = @(
+            @{ Id = "NET_SCAN"; TitleKey = "NET_MGR_AUTO_MOUNT"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Extensions"; Target = "Scape.Extensions.Network"; Task = "SCAN" }; Layer = "Extensions" }
+            @{ Id = "NET_UNMOUNT_ALL"; TitleKey = "NET_MGR_UNMOUNT_ALL"; Type = "Destructive"; Action = "TRIGGER"; Payload = @{ Domain = "Extensions"; Target = "Scape.Extensions.Network"; Task = "UNMOUNT_ALL" }; Layer = "Extensions" }
             @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
         )
     }
@@ -77,6 +112,8 @@
             @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
         )
     }
+
+
 
     LogisticsMenu = @{
         TitleKey = "RC_TITLE"

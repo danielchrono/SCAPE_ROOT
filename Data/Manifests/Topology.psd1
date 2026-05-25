@@ -84,6 +84,11 @@
         @{ Name = "Scape.Extensions.CloudSync"; LoadOrder = 84; IsVital = $false; Domain = "Extensions" }
     )
 
+    Forensics      = @(
+        @{ Name = "Scape.Forensics.NativeTools"; LoadOrder = 85; IsVital = $true; Domain = "Forensics" }
+        @{ Name = "Scape.Forensics.ThirdPartyTools"; LoadOrder = 86; IsVital = $false; Domain = "Forensics" }
+    )
+
     Forge          = @(
         @{ Name = "Scape.Forge.Ignite"; LoadOrder = 88; IsVital = $false; IsDeployEssential = $true; Domain = "Forge"; BuildTimeOnly = $true }
         @{ Name = "Scape.Forge.Build"; LoadOrder = 89; IsVital = $false; IsDeployEssential = $true; Domain = "Forge"; BuildTimeOnly = $true }

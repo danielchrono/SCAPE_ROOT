@@ -31,15 +31,22 @@ function Get-ScapeConsoleDimension {
             $margin = if ($WithMargins) { $layout.Margin * 2 } else { 0 }
 
             $calcW = $w - $margin
-            $calcH = $h - $layout.HeaderHeight
+            $calcH = $h # Do not subtract HeaderHeight here, Renderer handles actual banner height
 
             # Se MaxWidth for 0, deixa usar a largura infinita da tela
             $finalW = if ($layout.MaxWidth -gt 0) { [Math]::Min($calcW, $layout.MaxWidth) } else { $calcW }
             $finalH = if ($layout.MaxHeight -gt 0) { [Math]::Min($calcH, $layout.MaxHeight) } else { $calcH }
 
+            # Safe constraints: Never exceed physical window size!
+            $safeW = [Math]::Max($layout.MinWidth, $finalW)
+            $safeW = [Math]::Min($safeW, $w)
+
+            $safeH = [Math]::Max($layout.MinHeight, $finalH)
+            $safeH = [Math]::Min($safeH, $h)
+
             return @{
-                Width  = [Math]::Max($layout.MinWidth, $finalW)
-                Height = [Math]::Max($layout.MinHeight, $finalH)
+                Width  = $safeW
+                Height = $safeH
             }
         }
         catch {

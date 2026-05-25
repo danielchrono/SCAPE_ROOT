@@ -384,22 +384,7 @@ function Invoke-ScapeSelectionTriggerAction {
         }
         'Scape.Presentation.Theme' {
             if ($Task -eq 'PROCEDURAL' -and (Get-Command Invoke-ScapeProceduralTheme -ErrorAction SilentlyContinue)) {
-                $state = Get-ScapeColdState
-                $rawHue = if ($state) { Get-ScapeProperty -Object $state -PropertyName "RandomBaseHue" } else { $null }
-                $baseHue = $null
-                $hasHue = $false
-                if ($rawHue -is [double] -or $rawHue -is [float] -or $rawHue -is [int] -or $rawHue -is [decimal]) {
-                    $baseHue = [double]$rawHue
-                    $hasHue = $true
-                } elseif ($rawHue -is [string]) {
-                    $hasHue = [double]::TryParse($rawHue, [ref]$baseHue)
-                }
-
-                if ($hasHue -and -not [double]::IsNaN($baseHue) -and -not [double]::IsInfinity($baseHue)) {
-                    Invoke-ScapeProceduralTheme -BaseHue $baseHue
-                } else {
-                    Invoke-ScapeProceduralTheme
-                }
+                Invoke-ScapeProceduralTheme
                 # Preserve current cursor position instead of resetting to 0
                 $cursorIdx = if ($p -is [hashtable]) { $p['Cursor'] } elseif ($null -ne $p.PSObject) { $p.Cursor } else { 0 }
                 if ($null -eq $cursorIdx) { $cursorIdx = 0 }
