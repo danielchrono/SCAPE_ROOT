@@ -168,9 +168,9 @@
         HoldThresholdMs = 500; RepeatDelayMs = 200; RepeatRateMs = 50
         AltKeyModifier = $true; CtrlKeyModifier = $true; WinKeyModifier = $false
         MouseSupport = "auto"; PasteTimeoutMs = 2000; KeyEscapeTimeoutMs = 100
-        Protocol      = "CSIu"  # "Legacy", "CSIu", "Kitty"
+        Protocol = "CSIu"  # "Legacy", "CSIu", "Kitty"
 
-        KeyMap        = @{
+        KeyMap = @{
             Up = "$([char]27)[A"; Down = "$([char]27)[B"; Right = "$([char]27)[C"; Left = "$([char]27)[D"
             Home = "$([char]27)[H"; End = "$([char]27)[F"; PageUp = "$([char]27)[5~"; PageDown = "$([char]27)[6~"
             Insert = "$([char]27)[2~"; Delete = "$([char]27)[3~"; F1 = "$([char]27)OP"; F2 = "$([char]27)OQ"
@@ -185,7 +185,7 @@
             112 = "F1"; 113 = "F2"; 114 = "F3"; 115 = "F4"; 116 = "F5"; 117 = "F6";
             118 = "F7"; 119 = "F8"; 120 = "F9"; 121 = "F10"; 122 = "F11"; 123 = "F12"
         }
-        PSCombos      = @{
+        PSCombos = @{
             Accept = "Enter"; Cancel = "Escape"
             SecondaryAccept = "Spacebar"; SecondaryCancel = "Backspace"
             HistoryPrev = "UpArrow"; HistoryNext = "DownArrow"
