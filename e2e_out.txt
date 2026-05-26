@@ -1,0 +1,6 @@
+AVISO: Os nomes de alguns comandos importados do módulo 'Scape.Presentation.Controller' incluem verbos não aprovados 
+que podem os tornar menos detectáveis. Para localizar os comandos com verbos não aprovados, execute novamente o comando
+ Import-Module com o parâmetro Verbose. Para obter uma lista de verbos aprovados, digite Get-Verb.
+DownArrow
+DownArrow
+Enter

@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$repoRoot = (Get-Item .).FullName
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 # ============================================================================
 # Pester v3 Bootstrap

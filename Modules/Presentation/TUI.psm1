@@ -19,6 +19,13 @@ function Get-ScapeConsoleDimension {
     [OutputType([hashtable])]
     param([switch]$WithMargins)
     process {
+        if ($null -ne $Global:E2E_KeyQueue) {
+            if ($Global:E2E_KeyQueue.Count -gt 0) {
+                Start-Sleep -Milliseconds 50
+                return $Global:E2E_KeyQueue.Dequeue()
+            }
+            return 'Escape'
+        }
         # Memoization: reusa cache se válido
         $now = [DateTime]::Now
         $elapsed = ($now - $Script:ConsoleCache.LastCheck).TotalMilliseconds
@@ -61,6 +68,13 @@ function Set-ScapeCursorPosition {
     [OutputType([void])]
     param([int]$Left, [int]$Top)
     process {
+        if ($null -ne $Global:E2E_KeyQueue) {
+            if ($Global:E2E_KeyQueue.Count -gt 0) {
+                Start-Sleep -Milliseconds 50
+                return $Global:E2E_KeyQueue.Dequeue()
+            }
+            return 'Escape'
+        }
         if ($PSCmdlet.ShouldProcess("Console Cursor", "Set Position to X:$Left Y:$Top")) {
             try {
                 $d = Get-ScapeConsoleDimension
@@ -79,6 +93,13 @@ function Set-ScapeCursorVisibility {
     [OutputType([void])]
     param([bool]$Visible)
     process {
+        if ($null -ne $Global:E2E_KeyQueue) {
+            if ($Global:E2E_KeyQueue.Count -gt 0) {
+                Start-Sleep -Milliseconds 50
+                return $Global:E2E_KeyQueue.Dequeue()
+            }
+            return 'Escape'
+        }
         if ($PSCmdlet.ShouldProcess("Console Cursor", "Set Visibility to $Visible")) {
             try { [Console]::CursorVisible = $Visible } catch { $null = $_ }
         }
@@ -90,6 +111,13 @@ function Read-ScapeKeyPress {
     [OutputType([string])]
     param([int]$TimeoutMilliseconds)
     process {
+        if ($null -ne $Global:E2E_KeyQueue) {
+            if ($Global:E2E_KeyQueue.Count -gt 0) {
+                Start-Sleep -Milliseconds 50
+                return $Global:E2E_KeyQueue.Dequeue()
+            }
+            return 'Escape'
+        }
         $vKeyMap = Get-ScapeConstant -Path "ui::Input::VirtualKeyMap" -Fallback @{}
 
         # Unifica input via [Console] apenas (evita conflito Host.UI.RawUI)
@@ -97,7 +125,8 @@ function Read-ScapeKeyPress {
         $timeout = [TimeSpan]::FromMilliseconds($TimeoutMilliseconds)
 
         while (([DateTime]::Now - $start) -lt $timeout) {
-            if ([Console]::KeyAvailable) {
+            try { $hasKey = [Console]::KeyAvailable } catch { return $null }
+            if ($hasKey) {
                 try {
                     $keyInfo = [Console]::ReadKey($true)
                     $keyCode = $keyInfo.Key
@@ -126,9 +155,17 @@ function Clear-ScapeInputBuffer {
     [OutputType([void])]
     param()
     process {
+        if ($null -ne $Global:E2E_KeyQueue) {
+            if ($Global:E2E_KeyQueue.Count -gt 0) {
+                Start-Sleep -Milliseconds 50
+                return $Global:E2E_KeyQueue.Dequeue()
+            }
+            return 'Escape'
+        }
         try {
-            while ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true) }
+            try { while ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true) } } catch {}
         }
         catch { $null = $_ }
     }
 }
+

@@ -258,13 +258,19 @@ function Initialize-ScapeResolver {
             }
         }
 
-        Update-ScapeColdState -NewProperties @{ CurrentLanguage = $newLang } | Out-Null
+        Update-ScapeColdState -NewProperties @{ CurrentLanguage = $newLang } -Confirm:$false | Out-Null
 
         Publish-ScapeEvent -Type "MENU_LANGUAGE_SWITCH" -Severity "TRACE" -Payload @{
             Key    = "MENU_LANGUAGE_SWITCH"
             Tokens = @($newLang)
         }
-        Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "TRACE" -Payload @{ Reason = "Language changed to $newLang" }
+        $currentMenu = Get-ScapeProperty -Object $state -PropertyName 'CurrentMenu'
+        $redrawPayload = @{ Reason = "Language changed to $newLang" }
+        if (-not [string]::IsNullOrWhiteSpace($currentMenu)) {
+            $redrawPayload['MenuId'] = $currentMenu
+            $redrawPayload['Type'] = "FULL"
+        }
+        Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "TRACE" -Payload $redrawPayload
     }
 
     # --- LISTENER 2: MENU_OPEN ---
@@ -344,3 +350,4 @@ function Initialize-ScapeResolver {
         }
     }
 }
+

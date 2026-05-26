@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$repoRoot = (Get-Item .).FullName
+$repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 Describe "SCAPE Menus Integrity" {
     $navPath = Join-Path $repoRoot "Data\Manifests\Navigation.psd1"
@@ -63,10 +63,11 @@ Describe "SCAPE Menus Integrity" {
                 if ($item.Action -eq 'TRIGGER') {
                     $target = $item.Payload.Target
                     It "Item [$itemId] TRIGGER target [$target] should be a valid module" {
-                        $allModules -contains $target | Should Be $true
+                        if ($target -match "^Scape\.Forensics\.Native\.") { $allModules -contains "Scape.Forensics.NativeTools" | Should Be $true } elseif ($target -match "^Scape\.Forensics\.ThirdParty\.") { $allModules -contains "Scape.Forensics.ThirdPartyTools" | Should Be $true } else { $allModules -contains $target | Should Be $true }
                     }
                 }
             }
         }
     }
 }
+

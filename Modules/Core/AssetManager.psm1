@@ -77,7 +77,7 @@ function Remove-ScapeAsset {
 
     $state = Get-ScapeColdState
     if ($state.ContainsKey("Assets") -and $state["Assets"].ContainsKey($Category)) {
-        $removed = $state["Assets"][$Category].TryRemove($AssetId, [ref]$null)
+        if ($state["Assets"][$Category] -is [System.Collections.IDictionary]) { $state["Assets"][$Category].Remove($AssetId); $removed = $true } else { $removed = $false }
         if ($removed) {
             Publish-ScapeEvent -Type "ASSET_REMOVED" -Severity "TRACE" -Payload "$Category/$AssetId"
             return $true
@@ -142,3 +142,4 @@ function Invoke-ScapeLazyLoadAsset {
 
     return (& $resolveByRegistry $AssetId $Category)
 }
+

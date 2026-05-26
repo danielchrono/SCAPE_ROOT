@@ -115,7 +115,7 @@ function Receive-ScapeEvent {
     return $batch.ToArray()
 }
 
-function Get-ScapeEventQueue { return $Script:EventQueue }
+function Get-ScapeEventQueue { return ,$Script:EventQueue }
 
 function Publish-ScapeFault {
     [CmdletBinding()]
@@ -150,7 +150,8 @@ function Invoke-ScapeIdlePump {
 
     $eventFrame = $null
     while ($Script:EventQueue.TryDequeue([ref]$eventFrame)) {
-        foreach ($sub in $Script:EventSubscribers) {
+        $subsCopy = [System.Collections.Generic.List[hashtable]]::new($Script:EventSubscribers)
+        foreach ($sub in $subsCopy) {
             $isMatch = $false
             if ($sub.Match -eq '*') { $isMatch = $true }
             elseif ($sub.Match -like '*') {
@@ -174,3 +175,4 @@ function Invoke-ScapeIdlePump {
         }
     }
 }
+

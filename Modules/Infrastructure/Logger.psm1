@@ -77,8 +77,8 @@ function Initialize-ScapeLogger {
         $pattern = $Script:Config.Logger["LOG_FILE_PATTERN"]
         if ($null -eq $pattern) { $pattern = "scape_{0:yyyyMMdd_HHmmss}.log" }
 
-        $requestedLogFile = $env:SCAPE_LOG_FILE_OVERRIDE
         $requestedParentLog = $env:SCAPE_LOG_PARENT_FILE
+        $requestedLogFile = if ($env:SCAPE_LOG_FILE_OVERRIDE) { $env:SCAPE_LOG_FILE_OVERRIDE } else { $requestedParentLog }
         $openFailedOnOverride = $false
 
         if (-not [string]::IsNullOrWhiteSpace($requestedLogFile)) {
@@ -186,6 +186,7 @@ function Initialize-ScapeLogger {
             }
         }
 
+        $env:SCAPE_LOG_PARENT_FILE = $Script:CurrentLogFile
         $Script:Initialized = $true
         return $true
     }

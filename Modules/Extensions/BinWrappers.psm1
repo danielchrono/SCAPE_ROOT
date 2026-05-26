@@ -60,7 +60,23 @@ function Invoke-ScapeBinWrapper {
 }
 
 function ConvertFrom-ScapeDiskpartOutput { param([string]$Raw) return @{ Volumes = ([regex]::Matches($Raw, "(?im)Volume\s+(\d+)")).Count; Status = "OK" } }
-function ConvertFrom-ScapeWinFROutput { param([string]$Raw) return @{ Recovered = if ($Raw -match "(?im)Recovered\s+(\d+)") { [int]$matches[1] } else { 0 }; Status = "OK" } }
-function ConvertFrom-ScapeChkdskOutput { param([string]$Raw) return @{ BadSectors = if ($Raw -match "(?im)(\d+)\s+bad") { [int]$matches[1] } else { 0 }; Status = "OK" } }
+function ConvertFrom-ScapeWinFROutput {
+    param([string]$Raw)
+    $recovered = 0
+    if ($Raw -match "(?im)Recovered\s+(\d+)") { $recovered = [int]$matches[1] }
+    return @{ Recovered = $recovered; Status = "OK" }
+}
+function ConvertFrom-ScapeChkdskOutput {
+    param([string]$Raw)
+    $bad = 0
+    if ($Raw -match "(?im)(\d+)\s+bad") { $bad = [int]$matches[1] }
+    return @{ BadSectors = $bad; Status = "OK" }
+}
 function ConvertFrom-ScapeFsutilOutput { param([string]$Raw) return @{ Entries = ([regex]::Matches($Raw, "(?im)^\d+\s+")).Count; Status = "OK" } }
-function ConvertFrom-ScapeStordiagOutput { param([string]$Raw) return @{ ReportPath = if ($Raw -match "(?im)Report\s+saved\s+to:\s+(.+)$") { $matches[1].Trim() } else { $null }; Status = "OK" } }
+function ConvertFrom-ScapeStordiagOutput {
+    param([string]$Raw)
+    $path = $null
+    if ($Raw -match "(?im)Report\s+saved\s+to:\s+(.+)$") { $path = $matches[1].Trim() }
+    return @{ ReportPath = $path; Status = "OK" }
+}
+

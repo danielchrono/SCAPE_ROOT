@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Renderer
     Module: Scape.Presentation.Renderer
@@ -126,7 +126,7 @@ function Write-ScapeScrollIndicator {
         if (-not (Get-Command Format-ScapeANSIMessage -ErrorAction SilentlyContinue)) { return }
         if (-not (Get-Command Set-ScapeCursorPosition -ErrorAction SilentlyContinue)) { return }
 
-        $arrow = if ($Direction -eq 'up') { '▲' } else { '▼' }
+        $arrow = if ($Direction -eq 'up') { 'â–²' } else { [char]0x2502 }
         $dimPrefix = "$([char]27)[2m"
         Set-ScapeCursorPosition -Left $X -Top $Y
         $formatted = Format-ScapeANSIMessage -Text $arrow -Flag $Flag
@@ -199,7 +199,7 @@ function Write-ScapeScrollIndicatorsView {
 
     $effectiveFrameStyle = if (-not [string]::IsNullOrWhiteSpace($FrameStyle)) { $FrameStyle } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
     $frame = Get-ScapeConstant -Path "ui::Frames::$effectiveFrameStyle"
-    $wallChar = if ($frame -and $frame.VL) { $frame.VL } else { '│' }
+    $wallChar = if ($frame -and $frame.VL) { $frame.VL } else { [char]0x2502 }
 
     if ($ViewportStart -gt 0) {
         Write-ScapeScrollIndicator -Direction 'up' -X $FrameCoords.RightWallX -Y ($FrameCoords.TitleY + 1) -Flag 'HINT'

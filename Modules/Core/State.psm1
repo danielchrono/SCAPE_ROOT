@@ -12,8 +12,8 @@ namespace Scape.Core.Memory
     {
         private long _bytesRead;
         private long _badSectors;
-        public long BytesRead => Interlocked.Read(ref _bytesRead);
-        public long BadSectors => Interlocked.Read(ref _badSectors);
+        public long BytesRead { get { return Interlocked.Read(ref _bytesRead); } }
+        public long BadSectors { get { return Interlocked.Read(ref _badSectors); } }
         public void AddBytes(long count) { Interlocked.Add(ref _bytesRead, count); }
         public void IncrementBadSector() { Interlocked.Increment(ref _badSectors); }
         public void Reset()
