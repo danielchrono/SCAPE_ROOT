@@ -31,12 +31,6 @@ function Get-ScapeInputIntent {
     }
 }
 
-function Clear-ScapeInputBuffer {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param()
-    process { while ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true) } }
-}
 
 # EXTRAÍDO PARA SRP
 function Resolve-ScapeDynamicText {
@@ -217,7 +211,7 @@ function Invoke-ScapeStateMutation {
     }
 }
 
-function Hydrate-ScapeOptionsWithTheme {
+function Get-ScapeHydratedOptions {
     [CmdletBinding()]
     [OutputType([array])]
     param(
@@ -238,7 +232,7 @@ function Hydrate-ScapeOptionsWithTheme {
     }
 }
 
-function Render-ScapeGridLayout {
+function Format-ScapeGridLayout {
     [CmdletBinding()]
     [OutputType([string])]
     param(
@@ -303,7 +297,7 @@ function Render-ScapeGridLayout {
     }
 }
 
-function Render-ScapeThemifiedMenuBuffer {
+function Format-ScapeThemifiedMenuBuffer {
     [CmdletBinding()]
     [OutputType([string])]
     param(
@@ -354,9 +348,8 @@ function Render-ScapeThemifiedMenuBuffer {
 }
 
 Export-ModuleMember -Function 'Get-ScapeInputIntent',
-                              'Clear-ScapeInputBuffer',
                               'Update-ScapeMenuViewModel',
                               'Invoke-ScapeStateMutation',
-                              'Hydrate-ScapeOptionsWithTheme',
-                              'Render-ScapeGridLayout',
-                              'Render-ScapeThemifiedMenuBuffer'
+                              'Get-ScapeHydratedOptions',
+                              'Format-ScapeGridLayout',
+                              'Format-ScapeThemifiedMenuBuffer'

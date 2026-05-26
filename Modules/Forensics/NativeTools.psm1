@@ -166,3 +166,7 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.FileHash' -Handler {
     }
     Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "FILEHASH AUDIT PENDING" -StatusFlag "Success"
 }
+
+# Registration-only module: handlers are registered via Register-ScapeActionHandler at load time.
+# No public functions to export directly.
+Export-ModuleMember -Function @()

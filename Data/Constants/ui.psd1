@@ -1,4 +1,3 @@
-
 @{
         Segment              = @{
                 Name         = "ui"
@@ -54,7 +53,7 @@
                         BlinkUnderscore = "$([char]27)[3 q"
                 }
                 Screen            = @{
-                        ClearFull = "$([char]27)[2J$([char]27)[H"; ClearToEOL = "$([char]27)[0K"; ClearToBOL = "$([char]27)[1K"
+                        ClearFull = "$([char]27)[H$([char]27)[2J"; ClearToEOL = "$([char]27)[0K"; ClearToBOL = "$([char]27)[1K"
                         ClearLineFull = "$([char]27)[2K"; EraseScreen = "$([char]27)[2J"; EraseSavedLines = "$([char]27)[3J"
                         ScrollUp = "$([char]27)[{0}S"; ScrollDown = "$([char]27)[{0}T"; SetRegion = "$([char]27)[{0};{1}r"
                         SetColumns = "$([char]27)[?3h$([char]27)[?3l"; SaveCursorState = "$([char]27)[s"; RestoreCursorState = "$([char]27)[u"
@@ -669,6 +668,10 @@
 
                 # OPERAÇÕES DE DISCO, STORAGE & FORENSE
                 DISKPART = "Disk"; CHKDSK = "ShieldCheck"; WINFR = "Carve"; FSUTIL = "Screwdriver"
+                AUTOSPSY = "Toolbox";                 VOLATILITY = "Toolbox";                 FTKIMAGER = "Toolbox";                 KAPE = "Toolbox";                 TESTDISK = "Toolbox";                 PHOTOREC = "Toolbox";                 WIRESHARK = "Toolbox";                 TCPDUMP = "Toolbox";                 NMAP = "Toolbox";                 SYSINTERNALS = "Toolbox";                 REGCFG = "Toolbox";                 MEMORYZE = "Toolbox";                 REDLINE = "Toolbox";                 PLASO = "Toolbox";                 LOG2TIMELINE = "Toolbox";                 XWAYS = "Toolbox";                 SLEUTHKIT = "Toolbox";
+                SFC = "ShieldCheck"; DISM = "Wrench"; EVENTVWR = "ListAlt"; FILEHASH = "FingerprintID"
+                WINDIRSTAT = "PieChart"; PROCEXP = "ActivityPulse"; AUTORUNS = "Gear"; EVERYTHING = "Search"
+                NATIVE = "Terminal"; THIRDPARTY = "Toolbox"
                 STORDIAG = "Bug"; VOLUME = "Disk"; PARTITION = "WindowSplitV"; MOUNT = "Disk"
                 DISMOUNT = "Eject"; DRIVE = "Disk"; STORAGE = "ServerRack"; SSD = "DiskSSD"
                 HDD = "DiskHDD"; USB = "DiskUSB"; NETWORK_DRIVE = "DiskNetwork"; NAS = "DiskNetwork"

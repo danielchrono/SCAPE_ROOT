@@ -21,6 +21,8 @@
         @{ Name = "Scape.Core.Interop"; LoadOrder = 17; IsVital = $true; Domain = "Core"; CompileOnce = $true }
         @{ Name = "Scape.Core.Security"; LoadOrder = 18; IsVital = $true; Domain = "Core" }
         @{ Name = "Scape.Core.Resolver"; LoadOrder = 19; IsVital = $true; Domain = "Core" }
+        @{ Name = "Scape.Core.ActionManager"; LoadOrder = 20; IsVital = $true; Domain = "Core"; DependsOn = @("Scape.Core.EventBus","Scape.Core.Constants") }
+        @{ Name = "Scape.Core.HardwareProfile"; LoadOrder = 21; IsVital = $false; Domain = "Core" }
     )
 
     Acquisition    = @(
@@ -52,6 +54,8 @@
         @{ Name = "Scape.Analysis.FS.ISO9660"; LoadOrder = 52; IsVital = $false; Domain = "Analysis" }
         @{ Name = "Scape.Analysis.FS.DiskImage"; LoadOrder = 53; IsVital = $false; Domain = "Analysis" }
         @{ Name = "Scape.Analysis.FS.PartitionTable"; LoadOrder = 54; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.FS.Metadata"; LoadOrder = 55; IsVital = $false; Domain = "Analysis" }
+        @{ Name = "Scape.Analysis.Analyzer"; LoadOrder = 56; IsVital = $false; Domain = "Analysis" }
     )
 
     Infrastructure = @(
@@ -74,6 +78,7 @@
         @{ Name = "Scape.Presentation.Responsivity"; LoadOrder = 77; IsVital = $true; Domain = "Presentation" }
         @{ Name = "Scape.Presentation.Router"; LoadOrder = 78; IsVital = $true; Domain = "Presentation" }
         @{ Name = "Scape.Presentation.StateObserver"; LoadOrder = 79; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.KeyBindings"; LoadOrder = 80; IsVital = $false; Domain = "Presentation" }
     )
 
     Extensions     = @(
@@ -82,6 +87,7 @@
         @{ Name = "Scape.Extensions.Database.MetaDB"; LoadOrder = 82; IsVital = $false; Domain = "Extensions" }
         @{ Name = "Scape.Extensions.Network"; LoadOrder = 83; IsVital = $false; Domain = "Extensions" }
         @{ Name = "Scape.Extensions.CloudSync"; LoadOrder = 84; IsVital = $false; Domain = "Extensions" }
+        @{ Name = "Scape.Extensions.BinWrappers"; LoadOrder = 85; IsVital = $false; Domain = "Extensions" }
     )
 
     Forensics      = @(

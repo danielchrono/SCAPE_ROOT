@@ -60,7 +60,6 @@ function Write-ScapeActionProgress {
 }
 
 
-
 function Invoke-ScapeActionDispatcher {
     [CmdletBinding()]
     [OutputType([bool])]
@@ -142,51 +141,83 @@ function Invoke-ScapeActionDispatcher {
 }
 
 # ==============================================================================
-# ACTION REGISTRY BINDINGS (Pure & Decoupled)
+# TARGET RESOLUTION HELPER (shared by all handlers requiring active target)
 # ==============================================================================
 
-Register-ScapeActionHandler -Target 'Scape.Forge.Deployer' -Handler {
-    param($Task, $PayloadDef, $Target)
-    if (Get-Command Invoke-ScapeDeployWorkflow -ErrorAction SilentlyContinue) {
-        Invoke-ScapeDeployWorkflow -Task $Task
-    } else { throw "Not Implemented" }
-}
+function Resolve-ScapeActiveTarget {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param()
+    process {
+        $state = Get-ScapeColdState
+        if ($state -and $state.ContainsKey('ActiveTarget') -and -not [string]::IsNullOrWhiteSpace([string]$state['ActiveTarget'])) {
+            return [string]$state['ActiveTarget']
+        }
 
-Register-ScapeActionHandler -Target 'Scape.Core.Settings' -Handler {
-    param($Task, $PayloadDef, $Target)
-    if ($Task -eq 'RESET' -and (Get-Command Reset-ScapeSettingToFactory -ErrorAction SilentlyContinue)) {
-        Reset-ScapeSettingToFactory | Out-Null
+        $resolvedTarget = $null
+
+        if (Get-Command Get-ScapePhysicalTarget -ErrorAction SilentlyContinue) {
+            $physicalTargets = @(Get-ScapePhysicalTarget)
+            if ($physicalTargets.Count -gt 0 -and -not [string]::IsNullOrWhiteSpace([string]$physicalTargets[0].DeviceID)) {
+                $resolvedTarget = [string]$physicalTargets[0].DeviceID
+            }
+        }
+
+        if ([string]::IsNullOrWhiteSpace($resolvedTarget)) {
+            try {
+                $volume = Get-Volume | Where-Object DriveLetter | Select-Object -First 1
+                if ($volume -and $volume.DriveLetter) {
+                    $resolvedTarget = ('{0}:\' -f $volume.DriveLetter)
+                }
+            }
+            catch { }
+        }
+
+        if ([string]::IsNullOrWhiteSpace($resolvedTarget) -and $state -and $state.ContainsKey('ROOT')) {
+            $resolvedTarget = [string]$state['ROOT']
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($resolvedTarget)) {
+            Update-ScapeColdState -NewProperties @{ ActiveTarget = $resolvedTarget } | Out-Null
+            Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{
+                Key    = "MENU_DRIVE_TARGET_LABEL"
+                Tokens = @($resolvedTarget)
+            }
+        }
+
+        return $resolvedTarget
     }
 }
 
-Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync.Robocopy' -Handler {
-    param($Task, $PayloadDef, $Target)
+# ==============================================================================
+# ACTION DELEGATES (Pure Domain Functions)
+# ==============================================================================
+
+function Start-ScapeRobocopyConfiguration {
+    [CmdletBinding()]
+    param([string]$Task, [string]$Target)
+
     Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "PREPARING ROBOCOPY CONFIGURATION..." -StatusFlag "INFO"
 
-    $rcOptions = Get-ScapeConstant -Path "ui::ToggleLists" -Fallback @{}
+    $rcOptionsData = Get-ScapeConstant -Path "ui::ToggleLists" -Fallback @{}
     $rcCycles = Get-ScapeConstant -Path "ui::CycleLists" -Fallback @{}
 
     $rcConfig = @{
         Flags = @{
-            RC_E = $rcOptions.RC_E
-            RC_ZB = $rcOptions.RC_ZB
-            RC_M = $rcOptions.RC_M
-            RC_B = $rcOptions.RC_B
-            RC_COPYALL = $rcOptions.RC_COPYALL
-            RC_DCOPY_T = $rcOptions.RC_DCOPY_T
-            RC_NP = $rcOptions.RC_NP
-            RC_FFT = $rcOptions.RC_FFT
-            RC_XO = $rcOptions.RC_XO
-            RC_XN = $rcOptions.RC_XN
-            RC_XJ = $rcOptions.RC_XJ
-            RC_L = $rcOptions.RC_L
-            RC_V = $rcOptions.RC_V
+            RC_E = $rcOptionsData.RC_E; RC_ZB = $rcOptionsData.RC_ZB; RC_M = $rcOptionsData.RC_M; RC_B = $rcOptionsData.RC_B
+            RC_COPYALL = $rcOptionsData.RC_COPYALL; RC_DCOPY_T = $rcOptionsData.RC_DCOPY_T; RC_NP = $rcOptionsData.RC_NP
+            RC_FFT = $rcOptionsData.RC_FFT; RC_XO = $rcOptionsData.RC_XO; RC_XN = $rcOptionsData.RC_XN
+            RC_XJ = $rcOptionsData.RC_XJ; RC_L = $rcOptionsData.RC_L; RC_V = $rcOptionsData.RC_V
         }
         Parameters = @{
             RC_MT = if ($rcCycles.ContainsKey('RC_MT')) { $rcCycles['RC_MT'][0] } else { 1 }
             RC_R = if ($rcCycles.ContainsKey('RC_R')) { $rcCycles['RC_R'][0] } else { 0 }
             RC_W = if ($rcCycles.ContainsKey('RC_W')) { $rcCycles['RC_W'][0] } else { 0 }
         }
+    }
+
+    if (Get-Command Set-ScapeProperty -ErrorAction SilentlyContinue) {
+        Set-ScapeProperty -Object (Get-ScapeColdState) -PropertyName "RobocopyConfig" -Value $rcConfig | Out-Null
     }
 
     $rcOptions = @(
@@ -199,8 +230,8 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync.Robocopy' -Handl
 
     $hydratedOptions = Update-ScapeMenuViewModel -MenuId 'RobocopyConfig' -RawOptions $rcOptions -StateSnapshot (Get-ScapeColdState)
 
-    if (Get-Command Update-ScapeOptionsWithTheme -ErrorAction SilentlyContinue) {
-        $hydratedOptions = Update-ScapeOptionsWithTheme -Options $hydratedOptions -StateSnapshot (Get-ScapeColdState) -ThemeFlag 'UI'
+    if (Get-Command Get-ScapeHydratedOptions -ErrorAction SilentlyContinue) {
+        $hydratedOptions = Get-ScapeHydratedOptions -Options $hydratedOptions -StateSnapshot (Get-ScapeColdState) -ThemeFlag 'UI'
     }
 
     if (Get-Command Format-ScapeThemifiedMenuBuffer -ErrorAction SilentlyContinue) {
@@ -215,44 +246,10 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync.Robocopy' -Handl
     Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "ROBOCOPY CONFIGURATION READY" -StatusFlag "Success"
 }
 
-Register-ScapeActionHandler -Target 'Scape.Analysis.Parser.Core' -Handler {
-    param($Task, $PayloadDef, $Target)
-    Resolve-ScapeActiveTarget | Out-Null
-    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) {
-        Invoke-ScapeTargetedParsing -Payload $PayloadDef
-    } else { throw "Not Implemented" }
-}
+function Invoke-ScapeKeyBindingAction {
+    [CmdletBinding()]
+    param([string]$Task, [hashtable]$PayloadDef, [string]$Target)
 
-Register-ScapeActionHandler -Target 'Scape.Analysis.Carving.Carver' -Handler {
-    param($Task, $PayloadDef, $Target)
-    Resolve-ScapeActiveTarget | Out-Null
-    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) {
-        Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "CARVING" }
-    } else { throw "Not Implemented" }
-}
-
-Register-ScapeActionHandler -Target 'Scape.Analysis.FS.Abstraction' -Handler {
-    param($Task, $PayloadDef, $Target)
-    Resolve-ScapeActiveTarget | Out-Null
-    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) {
-        Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "FS_ABSTRACTION" }
-    } else { throw "Not Implemented" }
-}
-
-
-
-Register-ScapeActionHandler -Target 'Scape.Infrastructure.Telemetry' -Handler {
-    param($Task, $PayloadDef, $Target)
-    if ($Task -eq 'TOPOLOGY' -and (Get-Command Invoke-ScapeStorDiag -ErrorAction SilentlyContinue)) {
-        Invoke-ScapeStorDiag
-    } elseif (Get-Command Invoke-ScapeTelemetryWorkflow -ErrorAction SilentlyContinue) {
-        $taskName = if ([string]::IsNullOrWhiteSpace($Task)) { 'TELEMETRY' } else { $Task }
-        Invoke-ScapeTelemetryWorkflow -Task $taskName
-    } else { throw "Not Implemented" }
-}
-
-Register-ScapeActionHandler -Target 'Scape.Presentation.KeyBindings' -Handler {
-    param($Task, $PayloadDef, $Target)
     Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "INITIALIZING KEY BINDINGS MANAGER..." -StatusFlag "INFO"
 
     if (-not (Get-Command Initialize-ScapeKeyBindings -ErrorAction SilentlyContinue)) {
@@ -281,16 +278,16 @@ Register-ScapeActionHandler -Target 'Scape.Presentation.KeyBindings' -Handler {
             Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                 Row = @{ LeftText = "Action [$action]"; RightText = $currentSeq; Flag = "Hint"; RightFlag = "Info" }
             }
-
             Start-Sleep -Milliseconds 100
         }
 
         Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "KEY BINDINGS READY" -StatusFlag "Success"
+
     } elseif ($Task -eq 'LOAD_PROFILE') {
-        $profile = $PayloadDef['Profile']
-        if ($null -ne $profile) {
-            Set-ScapeKeyBindingProfile -ProfileName $profile | Out-Null
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "PROFILE [$profile] LOADED" -StatusFlag "Success"
+        $TargetProfile = $PayloadDef['Profile']
+        if ($null -ne $TargetProfile) {
+            Set-ScapeKeyBindingProfile -ProfileName $TargetProfile | Out-Null
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "PROFILE [$TargetProfile] LOADED" -StatusFlag "Success"
         } else {
             Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "NO PROFILE SPECIFIED" -StatusFlag "Failure"
         }
@@ -306,154 +303,294 @@ Register-ScapeActionHandler -Target 'Scape.Presentation.KeyBindings' -Handler {
     }
 }
 
+function Start-ScapeNetworkScan {
+    [CmdletBinding()]
+    param()
+    
+    $radarSweepMsg = Get-ScapeLogMsg -Key "NET_RADAR_SWEEP"
+    Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $radarSweepMsg }
 
-    param($Task, $PayloadDef, $Target)
-    if (Get-Command Find-ScapeNetworkNode -ErrorAction SilentlyContinue) {
-        if ($Task -eq 'SCAN') {
-            $radarSweepMsg = Get-ScapeLogMsg -Key "NET_RADAR_SWEEP"
-            Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $radarSweepMsg }
+    $gw = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Select-Object -First 1).NextHop
+    if (-not $gw) {
+        $gwErr = Get-ScapeLogMsg -Key "NET_RADAR_GATEWAY_ERR"
+        Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = $gwErr }
+        return $null
+    }
 
-            $gw = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Select-Object -First 1).NextHop
-            if (-not $gw) {
-                $gwErr = Get-ScapeLogMsg -Key "NET_RADAR_GATEWAY_ERR"
-                Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = $gwErr }
-                return
-            }
+    $subnet = $gw -replace '\.\d+$', ''
+    $scanMsg = Get-ScapeLogMsg -Key "NET_RADAR_SCAN" -MsgArgs @($subnet)
+    Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $scanMsg }
 
-            $subnet = $gw -replace '\.\d+$', ''
+    $nodes = Find-ScapeNetworkNode -SubnetRoot $subnet
+    return $nodes
+}
 
-            $scanMsg = Get-ScapeLogMsg -Key "NET_RADAR_SCAN" -MsgArgs @($subnet)
-            Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $scanMsg }
+function Invoke-ScapeNetworkRadarAction {
+    [CmdletBinding()]
+    param()
+    
+    $nodes = Start-ScapeNetworkScan
+    if ($null -eq $nodes -or $nodes.Count -eq 0) {
+        $noneMsg = Get-ScapeLogMsg -Key "NET_RADAR_NONE"
+        Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $noneMsg }
+        Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+            ScreenId = "NetworkRadar"
+            TitleKey = "NET_MGR_TITLE"
+            Rows = @( @{ LeftText = "Scan Result"; RightText = "NO SERVERS DETECTED"; Flag = "Failure"; RightFlag = "Failure" } )
+        }
+        return
+    }
 
-            $nodes = Find-ScapeNetworkNode -SubnetRoot $subnet
+    $rows = @()
+    foreach ($node in $nodes) {
+        $foundMsg = Get-ScapeLogMsg -Key "NET_RADAR_FOUND" -MsgArgs @($node)
+        Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $foundMsg }
+        $rows += @{ LeftText = "Samba Server"; RightText = "\\$node"; Flag = "Success"; RightFlag = "Info" }
+    }
 
-            if ($nodes.Count -eq 0) {
-                $noneMsg = Get-ScapeLogMsg -Key "NET_RADAR_NONE"
-                Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $noneMsg }
+    Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+        ScreenId = "NetworkRadar"
+        TitleKey = "NET_MGR_TITLE"
+        Rows = $rows
+    }
 
-                Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
-                    ScreenId = "NetworkRadar"
-                    TitleKey = "NET_MGR_TITLE"
-                    Rows = @(
-                        @{ LeftText = "Scan Result"; RightText = "NO SERVERS DETECTED"; Flag = "Failure"; RightFlag = "Failure" }
-                    )
-                }
-                return
-            }
+    $targetNode = $nodes[0]
+    $usedLetters = (Get-Volume).DriveLetter
+    $driveLetter = $null
+    foreach ($l in ([char]'Z')..([char]'D')) {
+        if ([char]$l -notin $usedLetters) {
+            $driveLetter = "$([char]$l):"
+            break
+        }
+    }
 
-            $rows = @()
-            foreach ($node in $nodes) {
-                $foundMsg = Get-ScapeLogMsg -Key "NET_RADAR_FOUND" -MsgArgs @($node)
-                Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $foundMsg }
-                $rows += @{ LeftText = "Samba Server"; RightText = "\\$node"; Flag = "Success"; RightFlag = "Info" }
-            }
+    if (-not $driveLetter) {
+        Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = "No free drive letters available." }
+        return
+    }
 
-            Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
-                ScreenId = "NetworkRadar"
-                TitleKey = "NET_MGR_TITLE"
-                Rows = $rows
-            }
+    [Console]::WriteLine()
+    [Console]::Write("Target Server: ")
+    [Console]::ForegroundColor = [ConsoleColor]::Cyan
+    [Console]::WriteLine("\\$targetNode")
+    [Console]::ResetColor()
+    [Console]::Write("Enter target Samba share name [Vault]: ")
+    $share = [Console]::ReadLine()
+    if ([string]::IsNullOrWhiteSpace($share)) { $share = "Vault" }
 
-            $targetNode = $nodes[0]
+    $remotePath = "\\$targetNode\$share"
+    $mapInitMsg = Get-ScapeLogMsg -Key "NET_MAP_INIT" -MsgArgs @($targetNode)
+    Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $mapInitMsg }
 
-            $usedLetters = (Get-Volume).DriveLetter
-            $driveLetter = $null
-            foreach ($l in ([char]'Z')..([char]'D')) {
-                $letterStr = [char]$l
-                if ($letterStr -notin $usedLetters) {
-                    $driveLetter = "${letterStr}:"
-                    break
-                }
-            }
-
-            if (-not $driveLetter) {
-                Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = "No free drive letters available." }
-                return
-            }
-
-            $share = "Vault"
-            $remotePath = "\\$targetNode\$share"
-
-            $mapInitMsg = Get-ScapeLogMsg -Key "NET_MAP_INIT" -MsgArgs @($targetNode)
-            Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $mapInitMsg }
-
-            $mountOk = New-ScapeNetworkMount -RemoteVault $remotePath -DriveLetter $driveLetter
+    $mountOk = New-ScapeNetworkMount -RemoteVault $remotePath -DriveLetter $driveLetter
+    if ($mountOk) {
+        Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_SUCCESS" -MsgArgs @($driveLetter)) }
+        Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+            ScreenId = "NetworkRadar"
+            TitleKey = "NET_MGR_TITLE"
+            Row = @{ LeftText = "Mapped Drive"; RightText = "$driveLetter -> $remotePath"; Flag = "Success"; RightFlag = "Success" }
+        }
+    } else {
+        if (Get-Command Mount-ScapeNetworkShareWithCredential -ErrorAction SilentlyContinue) {
+            Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_SMB_AUTH_REQUIRED") }
+            $mountOk = Mount-ScapeNetworkShareWithCredential -RemoteVault $remotePath -DriveLetter $driveLetter
             if ($mountOk) {
-                $mapSuccessMsg = Get-ScapeLogMsg -Key "NET_MAP_SUCCESS" -MsgArgs @($driveLetter)
-                Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $mapSuccessMsg }
-
+                Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_SUCCESS" -MsgArgs @($driveLetter)) }
                 Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                     ScreenId = "NetworkRadar"
                     TitleKey = "NET_MGR_TITLE"
                     Row = @{ LeftText = "Mapped Drive"; RightText = "$driveLetter -> $remotePath"; Flag = "Success"; RightFlag = "Success" }
                 }
             } else {
-                $mapFailMsg = Get-ScapeLogMsg -Key "NET_MAP_CANCELLED"
-                Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = $mapFailMsg }
-
+                Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_CANCELLED") }
                 Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                     ScreenId = "NetworkRadar"
                     TitleKey = "NET_MGR_TITLE"
-                    Row = @{ LeftText = "Status"; RightText = "MAPPING FAILED"; Flag = "Failure"; RightFlag = "Failure" }
+                    Row = @{ LeftText = "Status"; RightText = "AUTHENTICATION FAILED"; Flag = "Failure"; RightFlag = "Failure" }
                 }
-            }
-        } elseif ($Task -eq 'UNMOUNT_ALL') {
-            $unmountMsg = Get-ScapeLogMsg -Key "NET_MGR_ALL_REMOVED"
-            $unmountOk = Clear-ScapeNetworkMounts
-            if ($unmountOk) {
-                Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $unmountMsg }
-
-                Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
-                    ScreenId = "NetworkRadar"
-                    TitleKey = "NET_MGR_TITLE"
-                    Rows = @(
-                        @{ LeftText = "Status"; RightText = "ALL DRIVES UNMOUNTED"; Flag = "Warning"; RightFlag = "Warning" }
-                    )
-                }
-            } else {
-                Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = "Failed to clear network mounts." }
             }
         } else {
-            Find-ScapeNetworkNode | Out-Null
+            Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_CANCELLED") }
+            Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+                ScreenId = "NetworkRadar"
+                TitleKey = "NET_MGR_TITLE"
+                Row = @{ LeftText = "Status"; RightText = "MAPPING FAILED"; Flag = "Failure"; RightFlag = "Failure" }
+            }
         }
+    }
+}
+
+function Invoke-ScapeNetworkAction {
+    [CmdletBinding()]
+    param([string]$Task, [string]$Target)
+    
+    if (-not (Get-Command Find-ScapeNetworkNode -ErrorAction SilentlyContinue)) {
+        throw "Not Implemented"
+    }
+
+    if ($Task -eq 'SCAN') {
+        Invoke-ScapeNetworkRadarAction
+    } elseif ($Task -eq 'UNMOUNT_ALL') {
+        $unmountOk = Clear-ScapeNetworkMounts
+        if ($unmountOk) {
+            Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MGR_ALL_REMOVED") }
+            Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+                ScreenId = "NetworkRadar"
+                TitleKey = "NET_MGR_TITLE"
+                Rows = @( @{ LeftText = "Status"; RightText = "ALL DRIVES UNMOUNTED"; Flag = "Warning"; RightFlag = "Warning" } )
+            }
+        } else {
+            Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = "Failed to clear network mounts." }
+        }
+    } else {
+        Find-ScapeNetworkNode | Out-Null
+    }
+}
+
+
+# ==============================================================================
+# ACTION REGISTRY BINDINGS (Pure & Decoupled)
+# ==============================================================================
+
+Register-ScapeActionHandler -Target 'Scape.Forge.Deployer' -Handler {
+    param($Task, $PayloadDef, $Target)
+    if (Get-Command Invoke-ScapeDeployWorkflow -ErrorAction SilentlyContinue) { Invoke-ScapeDeployWorkflow -Task $Task } else { throw "Not Implemented" }
+}
+
+Register-ScapeActionHandler -Target 'Scape.Core.Settings' -Handler {
+    param($Task, $PayloadDef, $Target)
+    if ($Task -eq 'RESET' -and (Get-Command Reset-ScapeSettingToFactory -ErrorAction SilentlyContinue)) { Reset-ScapeSettingToFactory | Out-Null }
+}
+
+Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync.Robocopy' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Start-ScapeRobocopyConfiguration -Task $Task -Target $Target
+}
+
+Register-ScapeActionHandler -Target 'Scape.Analysis.Parser.Core' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Resolve-ScapeActiveTarget | Out-Null
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload $PayloadDef } else { throw "Not Implemented" }
+}
+
+Register-ScapeActionHandler -Target 'Scape.Analysis.Carving.Carver' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Resolve-ScapeActiveTarget | Out-Null
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "CARVING" } } else { throw "Not Implemented" }
+}
+
+Register-ScapeActionHandler -Target 'Scape.Analysis.FS.Abstraction' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Resolve-ScapeActiveTarget | Out-Null
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "FS_ABSTRACTION" } } else { throw "Not Implemented" }
+}
+
+Register-ScapeActionHandler -Target 'Scape.Analysis.FS.NTFS' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Resolve-ScapeActiveTarget | Out-Null
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "NTFS" } } else { throw "Not Implemented" }
+}
+
+Register-ScapeActionHandler -Target 'Scape.Analysis.FS.PartitionTable' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Resolve-ScapeActiveTarget | Out-Null
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "PARTITION_TABLE" } } else { throw "Not Implemented" }
+}
+
+Register-ScapeActionHandler -Target 'Scape.Infrastructure.Telemetry' -Handler {
+    param($Task, $PayloadDef, $Target)
+    if (Get-Command Invoke-ScapeTelemetryWorkflow -ErrorAction SilentlyContinue) {
+        $taskName = if ([string]::IsNullOrWhiteSpace($Task)) { 'TELEMETRY' } else { $Task }
+        Invoke-ScapeTelemetryWorkflow -Task $taskName
     } else { throw "Not Implemented" }
+}
+
+Register-ScapeActionHandler -Target 'Scape.Presentation.KeyBindings' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Invoke-ScapeKeyBindingAction -Task $Task -PayloadDef $PayloadDef -Target $Target
+}
+
+Register-ScapeActionHandler -Target 'Scape.Extensions.Network' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Invoke-ScapeNetworkAction -Task $Task -Target $Target
 }
 
 Register-ScapeActionHandler -Target 'Scape.Presentation.FilePicker' -Handler {
     param($Task, $PayloadDef, $Target)
-    if (Get-Command Invoke-ScapeDirectoryPicker -ErrorAction SilentlyContinue) {
-        Invoke-ScapeDirectoryPicker -Payload $PayloadDef
-    }
-    # Special case: FilePicker handles its own UI completely and typically returns state
+    if (Get-Command Invoke-ScapeDirectoryPicker -ErrorAction SilentlyContinue) { Invoke-ScapeDirectoryPicker -Payload $PayloadDef }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Presentation.Theme' -Handler {
     param($Task, $PayloadDef, $Target)
     if ($Task -eq 'PROCEDURAL') {
         $rand = [Random]::new()
-        $hue = $rand.NextDouble() * 360
-        Set-ScapeSettingMutation -Key "RandomBaseHue" -Value $hue | Out-Null
+        Set-ScapeSettingMutation -Key "RandomBaseHue" -Value ($rand.NextDouble() * 360) | Out-Null
         Set-ScapeSettingMutation -Key "ThemePersona" -Value "RANDOM" | Out-Null
     }
 }
 
+Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "EXPORTING AUDIT LEDGER..." -StatusFlag "INFO"
+    $root = (Get-ScapeColdState)["ROOT"]
+    if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
+    $exportDir = Join-Path $root "Data\Exports"
+    if (-not (Test-Path $exportDir)) { New-Item -ItemType Directory -Path $exportDir -Force | Out-Null }
+    $exportPath = Join-Path $exportDir "AuditLedger_$(Get-Date -f 'yyyyMMdd_HHmmss').json"
+    
+    if (Get-Command Export-ScapeAuditLedger -ErrorAction SilentlyContinue) {
+        $result = Export-ScapeAuditLedger -OutputPath $exportPath -Format "JSON"
+        if ($result.Success) {
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "AUDIT LEDGER EXPORTED SUCCESSFULLY" -StatusFlag "Success"
+        } else {
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "FAILED TO EXPORT AUDIT LEDGER" -StatusFlag "Failure"
+            throw "Audit export failed"
+        }
+    } else {
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "AUDIT MODULE NOT LOADED" -StatusFlag "Failure"
+        throw "Audit module not available."
+    }
+}
 
+Register-ScapeActionHandler -Target 'Scape.Infrastructure.Compliance' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "GENERATING COMPLIANCE REPORT..." -StatusFlag "INFO"
+    $root = (Get-ScapeColdState)["ROOT"]
+    if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
+    $exportDir = Join-Path $root "Data\Exports"
+    if (-not (Test-Path $exportDir)) { New-Item -ItemType Directory -Path $exportDir -Force | Out-Null }
+    $exportPath = Join-Path $exportDir "ComplianceReport_$(Get-Date -f 'yyyyMMdd_HHmmss').json"
+    
+    if (Get-Command Export-ScapeComplianceReport -ErrorAction SilentlyContinue) {
+        $result = Export-ScapeComplianceReport -OutputPath $exportPath
+        if ($result.Success) {
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "COMPLIANCE REPORT GENERATED: $($result.Status)" -StatusFlag "Success"
+        } else {
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "FAILED TO GENERATE COMPLIANCE REPORT" -StatusFlag "Failure"
+            throw "Compliance export failed"
+        }
+    } else {
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "COMPLIANCE MODULE NOT LOADED" -StatusFlag "Failure"
+        throw "Compliance module not available."
+    }
+}
 
 Register-ScapeActionHandler -Target 'Scape.Infrastructure.Pipeline' -Handler {
     param($Task, $PayloadDef, $Target)
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "INITIALIZING PIPELINE..." -StatusFlag "INFO"
-    Start-Sleep -Seconds 1
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "PIPELINE READY" -StatusFlag "Success"
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "INITIALIZING MEMORY PIPELINE..." -StatusFlag "INFO"
+    if (Get-Command Initialize-ScapePipeline -ErrorAction SilentlyContinue) {
+        Initialize-ScapePipeline | Out-Null
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "PIPELINE BUFFER ACTIVE" -StatusFlag "Success"
+    } else {
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "PIPELINE MODULE NOT LOADED" -StatusFlag "Failure"
+        throw "Pipeline module not available."
+    }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Acquisition.Selection' -Handler {
     param($Task, $PayloadDef, $Target)
     if (Get-Command Get-ScapePhysicalTarget -ErrorAction SilentlyContinue) {
-        $targets = @(Get-ScapePhysicalTarget)
-        Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{
-            Key     = "INVENTORY_PHYSICAL_DISKS"
-            Targets = $targets
-        }
+        Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{ Key = "INVENTORY_PHYSICAL_DISKS"; Targets = @(Get-ScapePhysicalTarget) }
     } else { throw "Not Implemented" }
 }
 
@@ -467,14 +604,20 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync' -Handler {
     param($Task, $PayloadDef, $Target)
     Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "RESOLVING CLOUD VAULT ENDPOINT..." -StatusFlag "WARN"
     Start-Sleep -Milliseconds 150
-    if (Get-Command Invoke-ScapeCloudSyncPreparation -ErrorAction SilentlyContinue) {
-        Invoke-ScapeCloudSyncPreparation | Out-Null
-    } else { throw "Not Implemented" }
+    if (Get-Command Invoke-ScapeCloudSyncPreparation -ErrorAction SilentlyContinue) { Invoke-ScapeCloudSyncPreparation | Out-Null } else { throw "Not Implemented" }
     Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "AUTHENTICATING SHA256 KEYS..." -StatusFlag "WARN"
     Start-Sleep -Milliseconds 200
     Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "COMPRESSING COLD ARCHIVES..." -StatusFlag "WARN"
     Start-Sleep -Milliseconds 250
 }
 
-Export-ModuleMember -Function 'Register-ScapeActionHandler', 'Get-ScapeActionHandler', 'Invoke-ScapeActionDispatcher'
-
+Export-ModuleMember -Function 'Register-ScapeActionHandler',
+                              'Get-ScapeActionHandler',
+                              'Invoke-ScapeActionDispatcher',
+                              'Write-ScapeActionProgress',
+                              'Resolve-ScapeActiveTarget',
+                              'Start-ScapeRobocopyConfiguration',
+                              'Invoke-ScapeKeyBindingAction',
+                              'Start-ScapeNetworkScan',
+                              'Invoke-ScapeNetworkRadarAction',
+                              'Invoke-ScapeNetworkAction'

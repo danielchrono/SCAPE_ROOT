@@ -110,47 +110,89 @@ function Initialize-ScapeLogger {
         $Script:Semaphore = [System.Threading.SemaphoreSlim]::new($maxOps, $maxOps)
 
         if (Get-Command "Register-ScapeEventListener" -ErrorAction SilentlyContinue) {
-            $script:LogAction = {
+            # Capture module-scoped state into closure variables for cross-module execution
+            $loggerRef = [ref]$Script:LogStream
+            $semRef = [ref]$Script:Semaphore
+            $configRef = $Script:Config
+            $sevMapRef = $Script:SeverityMap
+            $minSevRef = [ref]$Script:MinSeverityValue
+            $currentFileRef = [ref]$Script:CurrentLogFile
+            $rotCountRef = [ref]$Script:RotationCounter
+
+            $logAction = {
                 param($IncomingEvt)
                 try {
-                    $excludes = $Script:Config.Logger["LOG_EXCLUDE_TYPES"]
-                    if ($null -eq $excludes) { $excludes = @("METRIC_SAMPLE", "TELEMETRY_HEARTBEAT") }
+                    $stream = $loggerRef.Value
+                    $sem = $semRef.Value
+                    if ($null -eq $stream -or $null -eq $sem) { return }
 
-                    # Respect runtime min severity: if TRACE/DEBUG are allowed, don't exclude them by default
-                    try {
-                        if ($Script:MinSeverityValue -le $Script:SeverityMap['TRACE']) { $excludes = $excludes | Where-Object { $_ -ne 'TRACE' } }
-                        if ($Script:MinSeverityValue -le $Script:SeverityMap['DEBUG']) { $excludes = $excludes | Where-Object { $_ -ne 'DEBUG' } }
-                    } catch { }
+                    $excludes = $configRef.Logger["LOG_EXCLUDE_TYPES"]
+                    if ($null -eq $excludes) { $excludes = @("METRIC_SAMPLE", "TELEMETRY_HEARTBEAT") }
 
                     $excludeRegex = if ($excludes.Count -gt 0) { "^($($excludes -join '|'))$" } else { "^$" }
                     if ($IncomingEvt.Type -match $excludeRegex) { return }
 
                     $evtSeverity = $IncomingEvt.Severity -replace '^LOG_', ''
-                    $evtValue = $Script:SeverityMap[$evtSeverity]
+                    $evtValue = $sevMapRef[$evtSeverity]
                     if ($null -eq $evtValue) { $evtValue = 1 }
-                    if ($evtValue -lt $Script:MinSeverityValue) { return }
+                    if ($evtValue -lt $minSevRef.Value) { return }
 
-                    if (-not $Script:Semaphore.Wait(0)) {
+                    if (-not $sem.Wait(0)) {
                         if ($IncomingEvt.Severity -notin @("LOG_ERR", "LOG_FATAL", "COMPLIANCE")) { return }
-                        $timeout = $Script:Config.Limits["CRITICAL_SECTION_TIMEOUT_MS"]
+                        $timeout = $configRef.Limits["CRITICAL_SECTION_TIMEOUT_MS"]
                         if ($null -eq $timeout) { $timeout = 5000 }
-                        if (-not $Script:Semaphore.Wait([int]$timeout)) { return }
+                        if (-not $sem.Wait([int]$timeout)) { return }
                     }
 
                     try {
-                        _RotateLogIfNeeded
-                        Write-ScapeLogRecord -EventFrame $IncomingEvt
+                        # Inline rotation check
+                        $maxSizeMB = $configRef.Logger["MAX_LOG_SIZE_MB"]
+                        if ($null -eq $maxSizeMB) { $maxSizeMB = 10 }
+                        $curFile = $currentFileRef.Value
+                        if ($curFile -and $stream.BaseStream.CanWrite) {
+                            $fi = [System.IO.FileInfo]::new($curFile)
+                            if ($fi.Exists -and $fi.Length -gt ($maxSizeMB * 1MB)) {
+                                $stream.Flush()
+                                $stream.Dispose()
+                                $base = [System.IO.Path]::ChangeExtension($curFile, $null)
+                                $ext = [System.IO.Path]::GetExtension($curFile)
+                                $rotCountRef.Value = [string]([int]$rotCountRef.Value + 1)
+                                $archived = "{0}_{1}{2}" -f $base, $rotCountRef.Value, $ext
+                                [System.IO.File]::Move($curFile, $archived)
+                                $newStream = [System.IO.StreamWriter]::new($curFile, $true, [System.Text.Encoding]::UTF8)
+                                $newStream.AutoFlush = ($configRef.Logger["LOG_IMMEDIATE_FLUSH"] -eq $true)
+                                $loggerRef.Value = $newStream
+                                $stream = $newStream
+                            }
+                        }
+
+                        # Write the log record
+                        if ($stream.BaseStream.CanWrite) {
+                            $timeFormat = $configRef.Logger["TIMESTAMP_FORMAT"]
+                            if ($null -eq $timeFormat) { $timeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ" }
+                            $timestamp = [DateTime]::UtcNow.ToString($timeFormat)
+
+                            $payloadStr = "{}"
+                            if ($IncomingEvt.Payload) {
+                                try { $payloadStr = $IncomingEvt.Payload | ConvertTo-Json -Depth 6 -Compress -ErrorAction Stop }
+                                catch { $payloadStr = '{"Error":"JSON_SERIALIZE_FAILED"}' }
+                            }
+
+                            $source = if ($IncomingEvt.Source) { $IncomingEvt.Source } else { "SYSTEM" }
+                            $logLine = "[{0}] [{1}] [{2}] {3} | {4}" -f $timestamp, $IncomingEvt.Severity, $source, $IncomingEvt.Type, $payloadStr
+                            $stream.WriteLine($logLine)
+                        }
                     }
                     finally {
-                        $null = $Script:Semaphore.Release()
+                        $null = $sem.Release()
                     }
                 }
                 catch {
-                    Write-Verbose "Logger fault suppressed to prevent loop: $($_.Exception.Message)"
+                    # Suppress to prevent loop — logger must never throw into EventBus
                 }
-            }
+            }.GetNewClosure()
 
-            Register-ScapeEventListener -EventMatch "*" -Action $script:LogAction
+            Register-ScapeEventListener -EventMatch "*" -Action $logAction
 
             $stopEvents = $Script:Config.Logger["SHUTDOWN_EVENTS"]
             if ($null -eq $stopEvents) { $stopEvents = @("ROUTER_STOP", "SYSTEM_CRASH", "DEPLOYER_DONE") }

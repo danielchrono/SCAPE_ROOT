@@ -690,6 +690,26 @@
 
     # ─────────────────────────────────────────────────────────────────────   
     # THIRD_PARTY_TOOLS
+    "TOOL_AUTOSPSY" = @{ T = "AUTOSPSY (Third-Party)"; H = "Launch AUTOSPSY forensics tool"; F = "1" }
+    "TOOL_VOLATILITY" = @{ T = "VOLATILITY (Third-Party)"; H = "Launch VOLATILITY forensics tool"; F = "1" }
+    "TOOL_FTKIMAGER" = @{ T = "FTKIMAGER (Third-Party)"; H = "Launch FTKIMAGER forensics tool"; F = "1" }
+    "TOOL_KAPE" = @{ T = "KAPE (Third-Party)"; H = "Launch KAPE forensics tool"; F = "1" }
+    "TOOL_TESTDISK" = @{ T = "TESTDISK (Third-Party)"; H = "Launch TESTDISK forensics tool"; F = "1" }
+    "TOOL_PHOTOREC" = @{ T = "PHOTOREC (Third-Party)"; H = "Launch PHOTOREC forensics tool"; F = "1" }
+    "TOOL_MAGNET" = @{ T = "MAGNET (Third-Party)"; H = "Launch MAGNET forensics tool"; F = "1" }
+    "TOOL_WIRESHARK" = @{ T = "WIRESHARK (Third-Party)"; H = "Launch WIRESHARK forensics tool"; F = "1" }
+    "TOOL_TCPDUMP" = @{ T = "TCPDUMP (Third-Party)"; H = "Launch TCPDUMP forensics tool"; F = "1" }
+    "TOOL_NMAP" = @{ T = "NMAP (Third-Party)"; H = "Launch NMAP forensics tool"; F = "1" }
+    "TOOL_SYSINTERNALS" = @{ T = "SYSINTERNALS (Third-Party)"; H = "Launch SYSINTERNALS forensics tool"; F = "1" }
+    "TOOL_REGCFG" = @{ T = "REGCFG (Third-Party)"; H = "Launch REGCFG forensics tool"; F = "1" }
+    "TOOL_MEMORYZE" = @{ T = "MEMORYZE (Third-Party)"; H = "Launch MEMORYZE forensics tool"; F = "1" }
+    "TOOL_REDLINE" = @{ T = "REDLINE (Third-Party)"; H = "Launch REDLINE forensics tool"; F = "1" }
+    "TOOL_PLASO" = @{ T = "PLASO (Third-Party)"; H = "Launch PLASO forensics tool"; F = "1" }
+    "TOOL_LOG2TIMELINE" = @{ T = "LOG2TIMELINE (Third-Party)"; H = "Launch LOG2TIMELINE forensics tool"; F = "1" }
+    "TOOL_XWAYS" = @{ T = "XWAYS (Third-Party)"; H = "Launch XWAYS forensics tool"; F = "1" }
+    "TOOL_SLEUTHKIT" = @{ T = "SLEUTHKIT (Third-Party)"; H = "Launch SLEUTHKIT forensics tool"; F = "1" }
+    "TOOL_DD" = @{ T = "DD (Third-Party)"; H = "Launch DD forensics tool"; F = "1" }
+
     # ─────────────────────────────────────────────────────────────────────
     "TOOL_DISKPART"                   = @{ T = 'DISKPART (Isolation & Partitioning)'; H = 'Force offline or manage partitions'; F = '1' }
     "TOOL_DISKPART_DESC"              = @{ T = 'Force drive offline to prevent OS interference. WARNING: Disconnects all active sessions.'; H = 'DiskPart warning hint'; F = 'WARN' }
@@ -701,6 +721,16 @@
     "TOOL_FSUTIL_DESC"                = @{ T = 'Parses NTFS USN journal to recover recently deleted file metadata entries.'; H = 'Fsutil hint'; F = 'LOG' }
     "TOOL_STORDIAG"                   = @{ T = 'STORDIAG (Hardware Diagnostics)'; H = 'Generate comprehensive storage health report'; F = '5' }
     "TOOL_STORDIAG_DESC"              = @{ T = 'Runs built-in storage diagnostics. Generates detailed hardware telemetry report.'; H = 'Stordiag hint'; F = 'LOG' }
+    "TOOL_SFC"                        = @{ T = 'SFC (System File Checker)'; H = 'Scan and restore corrupted Windows system files'; F = '6' }
+    "TOOL_DISM"                       = @{ T = 'DISM (Deployment Image Servicing)'; H = 'Repair Windows image and components'; F = '7' }
+    "TOOL_EVENTVWR"                   = @{ T = 'EVENTVWR (Event Viewer)'; H = 'Access system event logs for forensics'; F = '8' }
+    "TOOL_FILEHASH"                   = @{ T = 'FILEHASH (Checksum Generation)'; H = 'Calculate hashes for file integrity'; F = '9' }
+    "TOOL_NATIVE_FORENSICS"           = @{ T = 'NATIVE TOOLS (Windows Built-in)'; H = 'Access built-in system tools'; F = 'N' }
+    "TOOL_THIRDPARTY_FORENSICS"       = @{ T = 'THIRD-PARTY TOOLS (Sysinternals & Externals)'; H = 'Access specialized external forensic utilities'; F = 'T' }
+    "TOOL_WINDIRSTAT"                 = @{ T = 'WINDIRSTAT (Disk Usage & Cleanup)'; H = 'Visual disk usage statistics and cleanup'; F = 'W' }
+    "TOOL_PROCEXP"                    = @{ T = 'PROCESS EXPLORER (Sysinternals)'; H = 'Advanced process management and tracking'; F = 'P' }
+    "TOOL_AUTORUNS"                   = @{ T = 'AUTORUNS (Sysinternals)'; H = 'Manage auto-starting programs and services'; F = 'A' }
+    "TOOL_EVERYTHING"                 = @{ T = 'EVERYTHING (Voidtools)'; H = 'Instant file and folder search engine'; F = 'E' }
 
     # ─────────────────────────────────────────────────────────────────────
     # LOGGING & TELEMETRY

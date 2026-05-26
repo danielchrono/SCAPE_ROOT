@@ -6,6 +6,7 @@
 
 $Script:EventQueue = [System.Collections.Concurrent.ConcurrentQueue[object]]::new()
 $Script:EventSubscribers = [System.Collections.Generic.List[hashtable]]::new()
+$Script:PumpActive = $false
 
 function Publish-ScapeEvent {
     [CmdletBinding()]
@@ -148,29 +149,44 @@ function Invoke-ScapeIdlePump {
     [CmdletBinding()]
     param()
 
-    $eventFrame = $null
-    while ($Script:EventQueue.TryDequeue([ref]$eventFrame)) {
-        foreach ($sub in $Script:EventSubscribers) {
-            $isMatch = $false
-            if ($sub.Match -eq '*') { $isMatch = $true }
-            elseif ($sub.Match -like '*') {
-                try { $isMatch = $eventFrame.Type -like $sub.Match } catch { $isMatch = $false }
-            }
-            else {
-                try { $isMatch = $eventFrame.Type -match $sub.Match } catch { $isMatch = $false }
-            }
+    if ($Script:PumpActive) { return }
+    $Script:PumpActive = $true
 
-            if ($isMatch) {
-                try { & $sub.Action $eventFrame }
-                catch {
-                    if ($_.Exception.Message -eq "SCAPE_HANDOVER") { throw $_ }
-                    Publish-ScapeEvent -Type "LISTENER_FAULT" -Severity "ERROR" -Payload @{
-                        ListenerMatch = $sub.Match
-                        EventType     = $eventFrame.Type
-                        Error         = $_.Exception.Message
+    try {
+        $eventFrame = $null
+        while ($Script:EventQueue.TryDequeue([ref]$eventFrame)) {
+            $subsCopy = $Script:EventSubscribers.ToArray()
+            foreach ($sub in $subsCopy) {
+                $isMatch = $false
+                $pattern = $sub.Match
+
+                if ($pattern -eq '*') {
+                    $isMatch = $true
+                }
+                elseif ($pattern -match '[\^\$\(\)\|\+]') {
+                    # Contains regex metacharacters — use -match
+                    try { $isMatch = $eventFrame.Type -match $pattern } catch { $isMatch = $false }
+                }
+                elseif ($pattern -match '[\*\?]') {
+                    # Contains wildcard chars — use -like
+                    try { $isMatch = $eventFrame.Type -like $pattern } catch { $isMatch = $false }
+                }
+                else {
+                    # Exact string match
+                    $isMatch = $eventFrame.Type -eq $pattern
+                }
+
+                if ($isMatch) {
+                    try { & $sub.Action $eventFrame }
+                    catch {
+                        if ($_.Exception.Message -eq "SCAPE_HANDOVER") { throw $_ }
+                        Write-Verbose "Listener fault [$($sub.Match)] on [$($eventFrame.Type)]: $($_.Exception.Message)"
                     }
                 }
             }
         }
+    }
+    finally {
+        $Script:PumpActive = $false
     }
 }

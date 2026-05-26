@@ -12,8 +12,8 @@ function Invoke-ScapeTargetedParsing {
     [OutputType([void])]
     param([hashtable]$Payload)
     process {
-        $state = Get-ScapeColdState
-        $target = Get-ScapeProperty -Object $state -PropertyName 'ActiveTarget' -Fallback $null
+        $state  = Get-ScapeColdState
+        $target = if ($Payload -and $Payload.ContainsKey('Target')) { $Payload['Target'] } else { Get-ScapeProperty -Object $state -PropertyName 'ActiveTarget' -Fallback $null }
 
         if ($null -eq $target) {
             Publish-ScapeEvent -Type "ERR_DRIVE_SELECTION_NONE" -Severity "ERROR" -Payload @{
@@ -29,38 +29,67 @@ function Invoke-ScapeTargetedParsing {
         }
 
         try {
-            # 1. Preflight
-            $engineMode = Get-ScapeProperty -Object $state -PropertyName 'EngineMode' -Fallback 'STANDARD'
+            $engineMode = if ($Payload -and $Payload.ContainsKey('EngineMode')) { $Payload['EngineMode'] } else { Get-ScapeProperty -Object $state -PropertyName 'EngineMode' -Fallback 'STANDARD' }
             Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{ Key = "PIPE_TRAVERSAL_START"; Target = $target }
 
-            # 2. Inicia barra de progresso transiente
             Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{
-                Stage = "MFT Traversal"
-                Current = 0
-                Total = 100
+                Stage       = "MFT Traversal"
+                Current     = 0
+                Total       = 100
                 ShowPercent = $true
             }
 
-            # =================================================================
-            # AQUI ENTRA O HOOK PARA O SCAPE.ANALYSIS.FS.ABSTRACTION
-            # Ex: $records = Get-ScapeFSMeta -Target $target -Mode $engineMode
-            # =================================================================
+            # --- Real FS pipeline via reader modules ---
+            $records = @()
+            if (Get-Command Get-ScapeFSMeta -ErrorAction SilentlyContinue) {
+                $records = @(Get-ScapeFSMeta -Target $target -Mode $engineMode)
+            }
+            elseif (Get-Command Get-ScapeMFTRecords -ErrorAction SilentlyContinue) {
+                $records = @(Get-ScapeMFTRecords -Target $target)
+            }
 
-            # Simulação de pipeline de leitura (Substitua pela chamada real ao leitor de FS)
-            $totalRecords = 1000 # Mock
-            for ($i = 1; $i -le $totalRecords; $i += 100) {
-                Start-Sleep -Milliseconds 50 # Mock delay
-
-                # Feedback contínuo para o Observer/Renderer
+            $total = $records.Count
+            if ($total -eq 0) {
+                Publish-ScapeEvent -Type "PIPE_NO_RECORDS" -Severity "WARN" -Payload @{
+                    Key    = "PIPE_NO_RECORDS"
+                    Target = $target
+                }
+            }
+            else {
+                $notifyInterval = [Math]::Max(1, [Math]::Floor($total / 20))
+                for ($i = 0; $i -lt $total; $i++) {
+                    $record = $records[$i]
+                    if ($record) {
+                        $evt = [PSCustomObject]@{
+                            Type       = "ARTIFACT_DISCOVERED"
+                            Severity   = "LOG_INFO"
+                            OperatorId = "PARSER_ENGINE"
+                            Payload    = $record
+                        }
+                        if (Get-Command New-ScapeAuditRecord -ErrorAction SilentlyContinue) {
+                            New-ScapeAuditRecord -EventFrame $evt | Out-Null
+                        }
+                        Publish-ScapeEvent -Type "PIPELINE_RECORD_DISCOVERED" -Severity "TRACE" -Payload $record
+                    }
+                    if (($i % $notifyInterval) -eq 0 -or $i -eq ($total - 1)) {
+                        Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{
+                            Stage       = "MFT Traversal"
+                            Current     = $i + 1
+                            Total       = $total
+                            ShowPercent = $true
+                        }
+                        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) {
+                            Invoke-ScapeIdlePump | Out-Null
+                        }
+                    }
+                }
                 Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{
-                    Stage = "MFT Traversal"
-                    Current = $i
-                    Total = $totalRecords
-                    ShowPercent = $true
+                    Stage   = "MFT Traversal"
+                    Current = $total
+                    Total   = $total
                 }
             }
 
-            Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{ Stage = "MFT Traversal"; Current = $totalRecords; Total = $totalRecords }
             Publish-ScapeEvent -Type "PIPE_TRAVERSAL_COMPLETE" -Severity "INFO" -Payload @{
                 Key     = "PIPE_TRAVERSAL_COMPLETE"
                 Message = Get-ScapeLogMsg -Key "PIPE_TRAVERSAL_COMPLETE"
@@ -74,3 +103,5 @@ function Invoke-ScapeTargetedParsing {
         }
     }
 }
+
+Export-ModuleMember -Function 'Invoke-ScapeTargetedParsing'

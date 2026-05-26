@@ -37,6 +37,8 @@ $workspaceDeploy = Join-Path $workspaceRoot $workspaceDeployName
 @($workspaceRoot, $workspaceLogs, $workspaceTemp, $workspaceDeploy) | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { New-Item -ItemType Directory -Path $_ -Force | Out-Null } }
 if (Get-Module PSReadLine -ErrorAction SilentlyContinue) { Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue }
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+# Enable VT100 and graphic mode from parent session or dynamically
+if ([string]::IsNullOrWhiteSpace($env:SCAPE_GRAPHIC_MODE)) { $env:SCAPE_GRAPHIC_MODE = "1" }
 
 $topoPath = Join-Path -Path $Global:AppRoot -ChildPath "Data\Manifests\Topology.psd1"
 $regPath  = Join-Path -Path $Global:AppRoot -ChildPath "Data\Manifests\Registry.psd1"
@@ -93,13 +95,10 @@ if (Get-Command Invoke-ScapeLoadAsset -ErrorAction SilentlyContinue) {
 }
 
 if (Get-Command Initialize-ScapeSetting -ErrorAction SilentlyContinue) { Initialize-ScapeSetting -ForceReset:$false | Out-Null }
-if (Get-Command Initialize-ScapeLogger -ErrorAction SilentlyContinue) { Initialize-ScapeLogger | Out-Null }
 if (Get-Command Initialize-ScapeResolver -ErrorAction SilentlyContinue) { Initialize-ScapeResolver | Out-Null }
+if (Get-Command Initialize-ScapeLogger -ErrorAction SilentlyContinue) { Initialize-ScapeLogger | Out-Null }
 if (Get-Command Initialize-ScapeTheme -ErrorAction SilentlyContinue) { Initialize-ScapeTheme | Out-Null }
-if (Get-Command Sync-ScapeThemeHydration -ErrorAction SilentlyContinue) { Sync-ScapeThemeHydration | Out-Null }
 if (Get-Command Initialize-ScapeRenderer -ErrorAction SilentlyContinue) { Initialize-ScapeRenderer | Out-Null }
-# Enable VT100 and graphic mode from parent session or dynamically
-if ([string]::IsNullOrWhiteSpace($env:SCAPE_GRAPHIC_MODE)) { $env:SCAPE_GRAPHIC_MODE = "1" }
 
 if (Get-Command Resolve-ScapeManifestLayer -ErrorAction SilentlyContinue) { Resolve-ScapeManifestLayer -LayerKey "Presentation" | Out-Null }
 if (Get-Command Invoke-ScapeWakeAssets -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAssets -Domain "Presentation" | Out-Null }
@@ -125,3 +124,4 @@ finally {
     # Close logger only on real exit, not on handover
     if (Get-Command Close-ScapeLogStream -ErrorAction SilentlyContinue) { Close-ScapeLogStream }
 }
+

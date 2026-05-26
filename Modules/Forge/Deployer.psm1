@@ -182,8 +182,8 @@ function Set-MainScript {
 
     # 3. SETTINGS & LOGGER
     [void]$sb.AppendLine('if (Get-Command Initialize-ScapeSetting -ErrorAction SilentlyContinue) { Initialize-ScapeSetting -ForceReset:$false | Out-Null }')
-    [void]$sb.AppendLine('if (Get-Command Initialize-ScapeLogger -ErrorAction SilentlyContinue) { Initialize-ScapeLogger | Out-Null }')
     [void]$sb.AppendLine('if (Get-Command Initialize-ScapeResolver -ErrorAction SilentlyContinue) { Initialize-ScapeResolver | Out-Null }')
+    [void]$sb.AppendLine('if (Get-Command Initialize-ScapeLogger -ErrorAction SilentlyContinue) { Initialize-ScapeLogger | Out-Null }')
     [void]$sb.AppendLine('if (Get-Command Initialize-ScapeTheme -ErrorAction SilentlyContinue) { Initialize-ScapeTheme | Out-Null }')
     [void]$sb.AppendLine('if (Get-Command Initialize-ScapeRenderer -ErrorAction SilentlyContinue) { Initialize-ScapeRenderer | Out-Null }')
     [void]$sb.AppendLine('')

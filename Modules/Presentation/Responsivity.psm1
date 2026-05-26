@@ -72,17 +72,12 @@ function Set-ScapeViewportLocks {
             $curW = $raw.WindowSize.Width
             $curH = $raw.WindowSize.Height
 
-            $needsFix = $false
-            $newW = $curW
-            $newH = $curH
+            $newW = [Math]::Max($curW, $minWidth)
+            $newH = [Math]::Max($curH, $minHeight)
 
-            if ($curW -lt $minWidth) { $newW = $minWidth; $needsFix = $true }
-            if ($curH -lt $minHeight) { $newH = $minHeight; $needsFix = $true }
-
-            if ($needsFix) {
-                $size = New-Object System.Management.Automation.Host.Size($newW, $newH)
-                $raw.WindowSize = $size
-                $raw.BufferSize = New-Object System.Management.Automation.Host.Size($newW, 9000)
+            if ($raw.BufferSize.Height -ne $newH -or $raw.BufferSize.Width -ne $newW) {
+                $raw.WindowSize = New-Object System.Management.Automation.Host.Size($newW, $newH)
+                $raw.BufferSize = New-Object System.Management.Automation.Host.Size($newW, $newH)
             }
         }
         catch { }

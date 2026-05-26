@@ -690,6 +690,26 @@
 
     # ─────────────────────────────────────────────────────────────────────
     # THIRD_PARTY_TOOLS
+    "TOOL_AUTOSPSY" = @{ T = "AUTOSPSY (Terceiros)"; H = "Executar a ferramenta forense AUTOSPSY"; F = "1" }
+    "TOOL_VOLATILITY" = @{ T = "VOLATILITY (Terceiros)"; H = "Executar a ferramenta forense VOLATILITY"; F = "1" }
+    "TOOL_FTKIMAGER" = @{ T = "FTKIMAGER (Terceiros)"; H = "Executar a ferramenta forense FTKIMAGER"; F = "1" }
+    "TOOL_KAPE" = @{ T = "KAPE (Terceiros)"; H = "Executar a ferramenta forense KAPE"; F = "1" }
+    "TOOL_TESTDISK" = @{ T = "TESTDISK (Terceiros)"; H = "Executar a ferramenta forense TESTDISK"; F = "1" }
+    "TOOL_PHOTOREC" = @{ T = "PHOTOREC (Terceiros)"; H = "Executar a ferramenta forense PHOTOREC"; F = "1" }
+    "TOOL_MAGNET" = @{ T = "MAGNET (Terceiros)"; H = "Executar a ferramenta forense MAGNET"; F = "1" }
+    "TOOL_WIRESHARK" = @{ T = "WIRESHARK (Terceiros)"; H = "Executar a ferramenta forense WIRESHARK"; F = "1" }
+    "TOOL_TCPDUMP" = @{ T = "TCPDUMP (Terceiros)"; H = "Executar a ferramenta forense TCPDUMP"; F = "1" }
+    "TOOL_NMAP" = @{ T = "NMAP (Terceiros)"; H = "Executar a ferramenta forense NMAP"; F = "1" }
+    "TOOL_SYSINTERNALS" = @{ T = "SYSINTERNALS (Terceiros)"; H = "Executar a ferramenta forense SYSINTERNALS"; F = "1" }
+    "TOOL_REGCFG" = @{ T = "REGCFG (Terceiros)"; H = "Executar a ferramenta forense REGCFG"; F = "1" }
+    "TOOL_MEMORYZE" = @{ T = "MEMORYZE (Terceiros)"; H = "Executar a ferramenta forense MEMORYZE"; F = "1" }
+    "TOOL_REDLINE" = @{ T = "REDLINE (Terceiros)"; H = "Executar a ferramenta forense REDLINE"; F = "1" }
+    "TOOL_PLASO" = @{ T = "PLASO (Terceiros)"; H = "Executar a ferramenta forense PLASO"; F = "1" }
+    "TOOL_LOG2TIMELINE" = @{ T = "LOG2TIMELINE (Terceiros)"; H = "Executar a ferramenta forense LOG2TIMELINE"; F = "1" }
+    "TOOL_XWAYS" = @{ T = "XWAYS (Terceiros)"; H = "Executar a ferramenta forense XWAYS"; F = "1" }
+    "TOOL_SLEUTHKIT" = @{ T = "SLEUTHKIT (Terceiros)"; H = "Executar a ferramenta forense SLEUTHKIT"; F = "1" }
+    "TOOL_DD" = @{ T = "DD (Terceiros)"; H = "Executar a ferramenta forense DD"; F = "1" }
+
     # ─────────────────────────────────────────────────────────────────────
     "TOOL_DISKPART"                   = @{ T = 'DISKPART (Isolamento & Particionamento)'; H = 'Forçar offline ou gerenciar partições'; F = '1' }
     "TOOL_DISKPART_DESC"              = @{ T = 'Força o drive offline para evitar interferência do SO. AVISO: Desconecta todas as sessões ativas.'; H = 'Dica de aviso DiskPart'; F = 'WARN' }
@@ -701,6 +721,16 @@
     "TOOL_FSUTIL_DESC"                = @{ T = 'Analisa o USN journal do NTFS para recuperar entradas de metadados de arquivos deletados recentemente.'; H = 'Dica Fsutil'; F = 'LOG' }
     "TOOL_STORDIAG"                   = @{ T = 'STORDIAG (Diagnóstico de Hardware)'; H = 'Gerar relatório abrangente de integridade de armazenamento'; F = '5' }
     "TOOL_STORDIAG_DESC"              = @{ T = 'Executa diagnósticos de armazenamento integrados. Gera relatório detalhado de telemetria de hardware.'; H = 'Dica Stordiag'; F = 'LOG' }
+    "TOOL_SFC"                        = @{ T = 'SFC (Verificador de Arquivos do Sistema)'; H = 'Verificar e restaurar arquivos corrompidos do Windows'; F = '6' }
+    "TOOL_DISM"                       = @{ T = 'DISM (Gerenciamento de Imagem de Implantação)'; H = 'Reparar imagem e componentes do Windows'; F = '7' }
+    "TOOL_EVENTVWR"                   = @{ T = 'EVENTVWR (Visualizador de Eventos)'; H = 'Acessar logs de eventos do sistema para forense'; F = '8' }
+    "TOOL_FILEHASH"                   = @{ T = 'FILEHASH (Geração de Checksum)'; H = 'Calcular hashes para integridade de arquivos'; F = '9' }
+    "TOOL_NATIVE_FORENSICS"           = @{ T = 'FERRAMENTAS NATIVAS (Embutidas no Windows)'; H = 'Acessar ferramentas de sistema integradas'; F = 'N' }
+    "TOOL_THIRDPARTY_FORENSICS"       = @{ T = 'FERRAMENTAS DE TERCEIROS (Sysinternals e Externas)'; H = 'Acessar utilitários forenses externos especializados'; F = 'T' }
+    "TOOL_WINDIRSTAT"                 = @{ T = 'WINDIRSTAT (Uso de Disco e Limpeza)'; H = 'Estatísticas visuais de uso de disco e limpeza'; F = 'W' }
+    "TOOL_PROCEXP"                    = @{ T = 'PROCESS EXPLORER (Sysinternals)'; H = 'Gerenciamento e rastreamento avançado de processos'; F = 'P' }
+    "TOOL_AUTORUNS"                   = @{ T = 'AUTORUNS (Sysinternals)'; H = 'Gerenciar programas e serviços de inicialização automática'; F = 'A' }
+    "TOOL_EVERYTHING"                 = @{ T = 'EVERYTHING (Voidtools)'; H = 'Mecanismo de busca instantânea de arquivos e pastas'; F = 'E' }
 
     # ─────────────────────────────────────────────────────────────────────
     # LOGGING & TELEMETRY

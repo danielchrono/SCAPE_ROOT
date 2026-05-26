@@ -17,7 +17,6 @@
             @{ Id = "SETTINGS"; TitleKey = "MENU_MAIN_SETTINGS"; Type = "Warning"; Action = "NAVIGATE"; Target = "SettingsMenu"; Layer = "Core" }
             @{ Id = "LOGISTICS"; TitleKey = "MENU_MAIN_LOGISTICS"; Type = "Special"; Action = "NAVIGATE"; Target = "LogisticsMenu"; Layer = "Extensions" }
             @{ Id = "LABORATORY"; TitleKey = "MENU_MAIN_LAB"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Analysis"; Target = "Scape.Analysis.FS.Abstraction" }; Layer = "Analysis" }
-            @{ Id = "FORGE"; TitleKey = "DEPLOYER_MATRIX_HEADER"; Type = "Highlight"; Action = "NAVIGATE"; Target = "ForgeMenu" }
             @{ Id = "EXIT"; TitleKey = "MENU_MAIN_EXIT"; Type = "Destructive"; Action = "TERMINATE" }
         )
     }
@@ -25,8 +24,30 @@
     ForensicsMenu = @{
         TitleKey = "MENU_MAIN_FORENSICS"
         Items    = @(
-            @{ Id = "NATIVE"; TitleKey = "TOOL_NATIVE_FORENSICS"; Type = "Highlight"; Action = "NAVIGATE"; Target = "NativeForensicsMenu" }
-            @{ Id = "THIRDPARTY"; TitleKey = "TOOL_THIRDPARTY_FORENSICS"; Type = "Warning"; Action = "NAVIGATE"; Target = "ThirdPartyForensicsMenu" }
+            @{ Id = "DISKPART"; TitleKey = "TOOL_DISKPART"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.Native.DiskPart" }; Layer = "Infrastructure" }
+            @{ Id = "CHKDSK"; TitleKey = "TOOL_CHKDSK"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.Native.Chkdsk" }; Layer = "Infrastructure" }
+            @{ Id = "WINFR"; TitleKey = "TOOL_WINFR"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.Native.WinFR" }; Layer = "Infrastructure" }
+            @{ Id = "FSUTIL"; TitleKey = "TOOL_FSUTIL"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.Native.Fsutil" }; Layer = "Infrastructure" }
+            @{ Id = "STORDIAG"; TitleKey = "TOOL_STORDIAG"; Type = "Warning"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.Native.StorDiag" }; Layer = "Infrastructure" }
+            @{ Id = "AUTOSPSY"; TitleKey = "TOOL_AUTOSPSY"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.AUTOSPSY" }; Layer = "Infrastructure" }
+            @{ Id = "VOLATILITY"; TitleKey = "TOOL_VOLATILITY"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.VOLATILITY" }; Layer = "Infrastructure" }
+            @{ Id = "FTKIMAGER"; TitleKey = "TOOL_FTKIMAGER"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.FTKIMAGER" }; Layer = "Infrastructure" }
+            @{ Id = "KAPE"; TitleKey = "TOOL_KAPE"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.KAPE" }; Layer = "Infrastructure" }
+            @{ Id = "TESTDISK"; TitleKey = "TOOL_TESTDISK"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.TESTDISK" }; Layer = "Infrastructure" }
+            @{ Id = "PHOTOREC"; TitleKey = "TOOL_PHOTOREC"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.PHOTOREC" }; Layer = "Infrastructure" }
+            @{ Id = "MAGNET"; TitleKey = "TOOL_MAGNET"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.MAGNET" }; Layer = "Infrastructure" }
+            @{ Id = "WIRESHARK"; TitleKey = "TOOL_WIRESHARK"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.WIRESHARK" }; Layer = "Infrastructure" }
+            @{ Id = "TCPDUMP"; TitleKey = "TOOL_TCPDUMP"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.TCPDUMP" }; Layer = "Infrastructure" }
+            @{ Id = "NMAP"; TitleKey = "TOOL_NMAP"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.NMAP" }; Layer = "Infrastructure" }
+            @{ Id = "SYSINTERNALS"; TitleKey = "TOOL_SYSINTERNALS"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.SYSINTERNALS" }; Layer = "Infrastructure" }
+            @{ Id = "REGCFG"; TitleKey = "TOOL_REGCFG"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.REGCFG" }; Layer = "Infrastructure" }
+            @{ Id = "MEMORYZE"; TitleKey = "TOOL_MEMORYZE"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.MEMORYZE" }; Layer = "Infrastructure" }
+            @{ Id = "REDLINE"; TitleKey = "TOOL_REDLINE"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.REDLINE" }; Layer = "Infrastructure" }
+            @{ Id = "PLASO"; TitleKey = "TOOL_PLASO"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.PLASO" }; Layer = "Infrastructure" }
+            @{ Id = "LOG2TIMELINE"; TitleKey = "TOOL_LOG2TIMELINE"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.LOG2TIMELINE" }; Layer = "Infrastructure" }
+            @{ Id = "XWAYS"; TitleKey = "TOOL_XWAYS"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.XWAYS" }; Layer = "Infrastructure" }
+            @{ Id = "SLEUTHKIT"; TitleKey = "TOOL_SLEUTHKIT"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.SLEUTHKIT" }; Layer = "Infrastructure" }
+            @{ Id = "DD"; TitleKey = "TOOL_DD"; Type = "Normal"; Action = "TRIGGER"; Payload = @{ Domain = "Infrastructure"; Target = "Scape.Forensics.ThirdParty.DD" }; Layer = "Infrastructure" }
             @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
         )
     }

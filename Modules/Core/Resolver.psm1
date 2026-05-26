@@ -91,16 +91,15 @@ function Invoke-ScapeResolveModule {
         $payloadContent = $Global:SCAPE_MEM[$ModuleName]
     }
     else {
-        $modName = if ($modDef -is [hashtable]) { $modDef['Name'] } elseif ($null -ne $modDef.PSObject) { $modDef.Name } else { '' }
         $baseRoot = if ($state.ContainsKey("ROOT") -and $state["ROOT"]) { $state["ROOT"] } else { $PSScriptRoot }
 
         if ($baseRoot -and (Test-Path $baseRoot)) {
-            $exactPath = Resolve-ScapeModuleDiskPath -ModuleName $modName -BaseRoot $baseRoot
+            $exactPath = Resolve-ScapeModuleDiskPath -ModuleName $ModuleName -BaseRoot $baseRoot
             if ($exactPath) {
                 $payloadContent = Get-Content -LiteralPath $exactPath -Raw -Encoding UTF8
             }
             else {
-                $modParts = $modName -split '\.'
+                $modParts = $ModuleName -split '\.'
                 $fileName = ($modParts[-1]) + ".psm1"
                 $domainPath = if ($modParts.Count -ge 2) { Join-ScapePath -Base $baseRoot -Child ("Modules\" + $modParts[1]) } else { Join-ScapePath -Base $baseRoot -Child "Modules" }
                 if ($domainPath -and (Test-Path -LiteralPath $domainPath)) {
@@ -115,6 +114,13 @@ function Invoke-ScapeResolveModule {
         $vital = if ($modDef -is [hashtable]) { $modDef['IsVital'] } elseif ($null -ne $modDef.PSObject) { $modDef.IsVital } else { $false }
         if ($vital) { throw "FATAL_INJECTION_FAILURE: Missing vital module '$ModuleName'" }
         return $false
+    }
+
+    if (Get-Command Test-ScapeModuleIntegrity -ErrorAction SilentlyContinue) {
+        if (-not (Test-ScapeModuleIntegrity -ModuleName $ModuleName -PayloadContent $payloadContent)) {
+            Publish-ScapeEvent -Type "COMPLIANCE_REJECTION" -Severity "FATAL" -Payload "Module '$ModuleName' rejected by compliance validation."
+            throw "COMPLIANCE_REJECTION: Module '$ModuleName' has invalid signature or has been tampered with."
+        }
     }
 
     try {
@@ -236,6 +242,22 @@ function Initialize-ScapeResolver {
     [CmdletBinding()]
     param()
 
+    # --- BOOT: Ensure Infrastructure layer is loaded (Logger, Audit, Compliance, Pipeline) ---
+    # main.ps1 only boot-loads Core modules. Infrastructure must be resolved here
+    # so that Initialize-ScapeLogger (called right after this) can find its functions.
+    $state = Get-ScapeColdState
+    $manifest = if ($state.ContainsKey('MANIFEST')) { $state['MANIFEST'] } else { $null }
+    if ($null -ne $manifest -and $manifest.ContainsKey('Infrastructure')) {
+        $loaded = if ($state.ContainsKey('LoadedLayers')) { $state['LoadedLayers'] } else { @() }
+        $infraMods = $manifest['Infrastructure'] | Sort-Object LoadOrder
+        foreach ($mod in $infraMods) {
+            $mName = if ($mod -is [hashtable]) { $mod['Name'] } else { $mod.Name }
+            if ($mName -notin $loaded) {
+                Invoke-ScapeResolveModule -ModuleName $mName | Out-Null
+            }
+        }
+    }
+
     # --- LISTENER 1: LANG_SWITCH ---
     Register-ScapeEventListener -EventMatch "LANG_SWITCH" -Action {
         param($EventFrame)
@@ -264,7 +286,6 @@ function Initialize-ScapeResolver {
             Key    = "MENU_LANGUAGE_SWITCH"
             Tokens = @($newLang)
         }
-        Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "TRACE" -Payload @{ Reason = "Language changed to $newLang" }
     }
 
     # --- LISTENER 2: MENU_OPEN ---
@@ -327,20 +348,21 @@ function Initialize-ScapeResolver {
         $isFull = ($rawType -eq 'FULL')
 
         if ($menuId -and $isFull) {
-            $navData = Get-ScapeConstant -Path "navigation::$menuId" -Fallback @{}
+            $navData  = Get-ScapeConstant -Path "navigation::$menuId" -Fallback @{}
             $navItems = if ($navData -is [hashtable] -and $navData.ContainsKey('Items')) { @($navData['Items']) }
-            elseif ($null -ne $navData.PSObject -and $navData.PSObject.Properties['Items']) { @($navData.Items) }
-            else { @() }
+                        elseif ($null -ne $navData.PSObject -and $navData.PSObject.Properties['Items']) { @($navData.Items) }
+                        else { @() }
 
-            $Layers = @($navItems | ForEach-Object {
-                    $val = if ($_ -is [hashtable]) { $_['Layer'] } elseif ($null -ne $_.PSObject) { $_.Layer } else { $null }
-                } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
+            $domains = @($navItems | ForEach-Object {
+                $val = if ($_ -is [hashtable]) { $_['Layer'] } elseif ($null -ne $_.PSObject) { $_.Layer } else { $null }
+                $val
+            } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
 
-            foreach ($domain in $Layers) {
+            foreach ($domain in $domains) {
                 Invoke-ScapeWakeAssets -Domain $domain | Out-Null
             }
 
-            Publish-ScapeEvent -Type "RESOLVER_REDRAW_SYNC" -Severity "TRACE" -Payload @{ Menu = $menuId; Domains = @($Layers) }
+            Publish-ScapeEvent -Type "RESOLVER_REDRAW_SYNC" -Severity "TRACE" -Payload @{ Menu = $menuId; Domains = @($domains) }
         }
     }
 }

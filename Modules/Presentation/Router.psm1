@@ -107,6 +107,8 @@ function Invoke-ScapeRouterReducer {
                 $State.RouteStack.RemoveAt($State.RouteStack.Count - 1)
                 $State.CurrentMenu = $State.RouteStack[-1]
                 $State.NeedsFullRedraw = $true
+            } else {
+                $State.IsRunning = $false
             }
             return $State
         }
@@ -136,10 +138,11 @@ function Start-ScapeRouter {
             RouteStack = New-Object 'System.Collections.Generic.List[string]'
             Cursor = 0; NeedsFullRedraw = $true; NeedsCursorUpdate = $false
             RawOptions = @(); LastCursor = -1; TitleKey = ""
+            LastLang = if (Get-Command Get-ScapeColdState -ErrorAction SilentlyContinue) { (Get-ScapeColdState)["CurrentLanguage"] } else { "" }
         }
         $State.RouteStack.Add($InitialMenu)
 
-        Clear-ScapeInputBuffer
+        Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
 
         try {
             while ($State.IsRunning) {
@@ -149,7 +152,16 @@ function Start-ScapeRouter {
                 if (Get-Command Test-ScapeViewportChanged -ErrorAction SilentlyContinue) {
                     if (Test-ScapeViewportChanged -ViewportState $ViewportState) {
                         $State.NeedsFullRedraw = $true
-                        Clear-ScapeInputBuffer # Limpa input fantasma gerado pelo redimensionamento no Windows
+                        Clear-ScapeInputBuffer -ErrorAction SilentlyContinue # Limpa input fantasma gerado pelo redimensionamento no Windows
+                    }
+                }
+
+                # PLUG DE I18N: Checa mudança de idioma
+                if (Get-Command Get-ScapeColdState -ErrorAction SilentlyContinue) {
+                    $currLang = (Get-ScapeColdState)["CurrentLanguage"]
+                    if (-not [string]::IsNullOrWhiteSpace($currLang) -and $State.LastLang -ne $currLang) {
+                        $State.NeedsFullRedraw = $true
+                        $State.LastLang = $currLang
                     }
                 }
 
@@ -167,7 +179,6 @@ function Start-ScapeRouter {
 
                     $__rrType = $(if ($State.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' })
                     Request-ScapeRedraw -MenuId $State.CurrentMenu -Type $__rrType -RouterState $State -TitleKey $State.TitleKey
-                    Invoke-ScapeIdlePump | Out-Null
 
                     $State.NeedsFullRedraw = $false
                     $State.NeedsCursorUpdate = $false
@@ -176,7 +187,7 @@ function Start-ScapeRouter {
                 $intent = Get-ScapeInputIntent -CurrentMenuState $State
                 if ($intent -ne 'IDLE') {
                     $State = Invoke-ScapeRouterReducer -State $State -Intent $intent
-                    Clear-ScapeInputBuffer
+                    Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
                 }
                 Start-Sleep -Milliseconds 15
             }

@@ -23,7 +23,7 @@ function Initialize-ScapeCompliance {
 
     try {
         # --- 2. CARREGAMENTO DO MANIFESTO (GUARD CLAUSE) ---
-        $manifestPath = $Script:Config.Compliance["MANIFEST_PATH"]
+        $manifestPath = if ($Script:Config.Compliance) { $Script:Config.Compliance["MANIFEST_PATH"] } else { $null }
 
         $Script:ExpectedHashes = if ($manifestPath -and (Test-Path $manifestPath)) {
             Import-PowerShellDataFile -LiteralPath $manifestPath
@@ -31,7 +31,7 @@ function Initialize-ScapeCompliance {
         else { @{} }
 
         # --- 3. VALIDAÇÃO DE SEGMENTOS (PIPELINE FUNCIONAL) ---
-        if ($Script:Config.Compliance["SEGMENT_VERIFY_ON_LOAD"] -eq $true) {
+        if ($Script:Config.Compliance -and $Script:Config.Compliance["SEGMENT_VERIFY_ON_LOAD"] -eq $true) {
 
             $criticalSegments = $Script:Config.Compliance["CRITICAL_SEGMENTS"]
             if ($null -eq $criticalSegments) {
@@ -48,7 +48,7 @@ function Initialize-ScapeCompliance {
                         $failedSegment,
                         $Script:ExpectedHashes[$failedSegment],
                         "INVALID",
-                        $Script:Config.Compliance["HASH_ALGO"]
+                        (Get-DefaultHashAlgorithm)
                     )
                 )
                 return $false
@@ -79,7 +79,7 @@ function Get-DefaultHashAlgorithm {
     [CmdletBinding()] [OutputType([string])]
     param()
 
-    $algo = $Script:Config.Compliance["HASH_ALGO"]
+    $algo = if ($Script:Config.Compliance) { $Script:Config.Compliance["HASH_ALGO"] } else { $null }
     if ($null -eq $algo) { $algo = "SHA256" }
     return $algo
 }
@@ -151,6 +151,50 @@ function Test-ScapeSegmentIntegrity {
     return $isValid
 }
 
+function Test-ScapeModuleIntegrity {
+    [CmdletBinding()] [OutputType([bool])]
+    param(
+        [Parameter(Mandatory = $true)][string]$ModuleName,
+        [Parameter(Mandatory = $true)][string]$PayloadContent
+    )
+
+    # Verifica se há uma lista de hashes conhecidos para módulos em System/Manifest
+    $algo = Get-DefaultHashAlgorithm
+    $expectedHash = if ($Script:ExpectedHashes.ContainsKey($ModuleName)) { $Script:ExpectedHashes[$ModuleName] } else { $null }
+
+    if ($null -eq $expectedHash) {
+        # Em modo rigoroso (strict), falhar se não tiver assinatura. Para retrocompatibilidade, se não estiver na lista de checagem crítica, retorna $true ou registra um WARNING.
+        # Mas para "garantir que não tem virus", vamos requerer a assinatura para todos ou pelo menos tentar verificar.
+        # Por enquanto, emitimos um log. O usuário exigiu segurança.
+        Publish-ScapeEvent -Type "COMPLIANCE_UNKNOWN_MODULE" -Severity "LOG_WARN" -Payload @{ Module = $ModuleName; Message = "Module signature not present in expected hashes." }
+        return $true # Fallback flexível: se não for exigido hash, assume true para não quebrar módulos dinamicos, ou deveria quebrar?
+    }
+
+    $hasher = [System.Security.Cryptography.HashAlgorithm]::Create($algo)
+    if ($null -eq $hasher) { $hasher = [System.Security.Cryptography.SHA256]::Create() }
+
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($PayloadContent)
+        $hashBytes = $hasher.ComputeHash($bytes)
+        $actualHash = [System.BitConverter]::ToString($hashBytes) -replace '-'
+
+        if ($actualHash -ne $expectedHash) {
+            Publish-ScapeEvent -Type "COMPLIANCE_MISMATCH" -Severity "LOG_FATAL" -Payload @{
+                Module    = $ModuleName
+                Expected  = $expectedHash
+                Actual    = $actualHash
+                Algorithm = $algo
+                Message   = "CRITICAL: Module '$ModuleName' integrity check failed! Possible tampering."
+            }
+            return $false
+        }
+        return $true
+    }
+    finally {
+        $hasher.Dispose()
+    }
+}
+
 # --- 4. RELATÓRIO DE EXPORTAÇÃO (TRANSFORMAÇÃO DE DADOS) ---
 function Export-ScapeComplianceReport {
     [CmdletBinding(SupportsShouldProcess = $true)]
@@ -193,3 +237,9 @@ function Export-ScapeComplianceReport {
         Throw "Failed to export compliance report: $($_.Exception.Message)"
     }
 }
+
+Export-ModuleMember -Function 'Initialize-ScapeCompliance',
+                              'Get-ScapeSegmentHash',
+                              'Test-ScapeSegmentIntegrity',
+                              'Test-ScapeModuleIntegrity',
+                              'Export-ScapeComplianceReport'

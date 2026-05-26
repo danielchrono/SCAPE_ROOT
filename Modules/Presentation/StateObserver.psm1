@@ -70,6 +70,31 @@ function Invoke-ScapeTreeUpdateEvent {
     Write-ScapeTreeView -RenderConfig $renderConfig -FrameStyle $frameStyle
 }
 
+function Invoke-ScapeActionScreenEvent {
+    [CmdletBinding()]
+    param($IncomingEventData)
+
+    if ($IncomingEventData.Type -ne 'ACTION_SCREEN_UPDATE') { return }
+
+    $payload = $IncomingEventData.Payload
+
+    $renderConfig = @{
+        Type         = 'ActionScreen'
+        ShouldRender = $true
+        Config       = @{
+            TitleKey = $payload['TitleKey']
+            Rows     = $payload['Rows']
+        }
+    }
+
+    $vmStateSnapshot = Get-ScapeColdState
+    $frameStyle = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('FrameStyle')) { [string]$vmStateSnapshot['FrameStyle'] } else { $null }
+
+    if (Get-Command Write-ScapeActionScreen -ErrorAction SilentlyContinue) {
+        Write-ScapeActionScreen -RenderConfig $renderConfig -FrameStyle $frameStyle
+    }
+}
+
 function Invoke-ScapeRedrawRequestEvent {
     [CmdletBinding()]
     param($IncomingEventData)
@@ -117,26 +142,7 @@ function Invoke-ScapeRedrawRequestEvent {
     $cursorIdx = if ($null -ne $routerState.Cursor) { $routerState.Cursor } else { 0 }
     $lastIdx = if ($null -ne $routerState.LastCursor) { $routerState.LastCursor } else { -1 }
 
-    # LAZY HYDRATION
-    try {
-        $navData = Get-ScapeConstant -Path "navigation::$menuId" -Fallback @{}
-        $navItems = if ($navData -is [hashtable] -and $navData.ContainsKey('Items')) { @($navData['Items']) }
-        elseif ($null -ne $navData.PSObject -and $navData.PSObject.Properties['Items']) { @($navData.Items) }
-        else { @() }
-
-        $layers = @($navItems | ForEach-Object {
-                if ($_ -is [hashtable]) { $_['Layer'] }
-                elseif ($null -ne $_.PSObject) { $_.Layer }
-                else { $null }
-            } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
-
-        foreach ($domain in $layers) {
-            if (Get-Command Invoke-ScapeWakeAssets -ErrorAction SilentlyContinue) {
-                Invoke-ScapeWakeAssets -Domain $domain | Out-Null
-            }
-        }
-    }
-    catch { }
+    # Lazy hydration delegated to Resolver listener (SRP)
 
     # Supressão de Duplicatas
     $dupKey = "${menuId}|${cursorIdx}|${lastIdx}|${rawOpts.Count}"
@@ -160,7 +166,7 @@ function Invoke-ScapeTransientEvent {
     [CmdletBinding()]
     param($IncomingEventData)
 
-    if ($IncomingEventData.Type -match '^(UI_REDRAW_REQUEST|RENDER_OBSERVED|ROUTER_STOP|SYSTEM_CRASH|TREE_UPDATE)$') { return }
+    if ($IncomingEventData.Type -match '^(UI_REDRAW_REQUEST|RENDER_OBSERVED|ROUTER_STOP|SYSTEM_CRASH|TREE_UPDATE|ACTION_SCREEN_UPDATE|LISTENER_FAULT|LOGGER_INITIALIZED|MODULE_LOADED|ASSET_READY|RESOLVER_REDRAW_SYNC|LAYER_IGNITION|CAPABILITY_FAULT|COMPLIANCE_REJECTION|LOG_ROTATED|LOGGER_HANDOVER_CHILD|LOGGER_HANDOVER_FALLBACK|LANG_SWITCH|LANG_FLUSHED|LANG_SWITCH_FAILED|MENU_LANGUAGE_SWITCH|PIPELINE_DROPPED|SYSTEM_READY|MODULE_WAKED)$') { return }
 
     $shouldFilter = $false
     try {
@@ -206,6 +212,7 @@ function Invoke-ScapeTransientEvent {
                 $holdMs = Get-ScapeConstant -Path "ui::Feedback::TransientActionHoldMs" -Fallback 1800
                 $Script:TransientState.HoldUntil = $now.AddMilliseconds([int]$holdMs)
             }
+            $processed.RenderConfig.HoldUntil = $Script:TransientState.HoldUntil
             Write-ScapeTransientView -RenderConfig $processed.RenderConfig
         }
     }
@@ -229,226 +236,7 @@ function Get-ScapePayloadField {
     return $Fallback
 }
 
-function Invoke-ScapeCloudSyncPreparation {
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param()
 
-    $state = Get-ScapeColdState
-    if ($null -eq $state) { return $false }
-
-    $flagKeys = @($state.Keys | Where-Object { $_ -match '^RC_' } | Sort-Object)
-    $flags = @{}
-    foreach ($flagKey in $flagKeys) {
-        $flags[$flagKey] = $state[$flagKey]
-    }
-
-    Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{
-        Key   = "RC_DEFAULTS_TITLE"
-        Flags = $flags
-        Count = $flags.Count
-    }
-    return $true
-}
-
-function Resolve-ScapeActiveTarget {
-    [CmdletBinding()]
-    [OutputType([string])]
-    param()
-
-    $state = Get-ScapeColdState
-    if ($state -and $state.ContainsKey('ActiveTarget') -and -not [string]::IsNullOrWhiteSpace([string]$state['ActiveTarget'])) {
-        return [string]$state['ActiveTarget']
-    }
-
-    $resolvedTarget = $null
-
-    if (Get-Command Get-ScapePhysicalTarget -ErrorAction SilentlyContinue) {
-        $physicalTargets = @(Get-ScapePhysicalTarget)
-        if ($physicalTargets.Count -gt 0 -and -not [string]::IsNullOrWhiteSpace([string]$physicalTargets[0].DeviceID)) {
-            $resolvedTarget = [string]$physicalTargets[0].DeviceID
-        }
-    }
-
-    if ([string]::IsNullOrWhiteSpace($resolvedTarget)) {
-        try {
-            $volume = Get-Volume | Where-Object DriveLetter | Select-Object -First 1
-            if ($volume -and $volume.DriveLetter) {
-                $resolvedTarget = ('{0}:\' -f $volume.DriveLetter)
-            }
-        }
-        catch { }
-    }
-
-    if ([string]::IsNullOrWhiteSpace($resolvedTarget) -and $state -and $state.ContainsKey('ROOT')) {
-        $resolvedTarget = [string]$state['ROOT']
-    }
-
-    if (-not [string]::IsNullOrWhiteSpace($resolvedTarget)) {
-        Update-ScapeColdState -NewProperties @{ ActiveTarget = $resolvedTarget } | Out-Null
-        Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{
-            Key    = "MENU_DRIVE_TARGET_LABEL"
-            Tokens = @($resolvedTarget)
-        }
-    }
-
-    return $resolvedTarget
-}
-
-function Invoke-ScapeSelectionTriggerAction {
-    [CmdletBinding()]
-    [OutputType([bool])]
-    param(
-        [Parameter(Mandatory = $true)][string]$Target,
-        [string]$Task,
-        [hashtable]$PayloadDef,
-        [string]$MenuId
-    )
-
-    switch ($Target) {
-        'Scape.Forge.Deployer' {
-            if (Get-Command Invoke-ScapeDeployWorkflow -ErrorAction SilentlyContinue) {
-                Invoke-ScapeDeployWorkflow -Task $Task
-                return $true
-            }
-            break
-        }
-        'Scape.Core.Settings' {
-            if ($Task -eq 'RESET' -and (Get-Command Reset-ScapeSettingToFactory -ErrorAction SilentlyContinue)) {
-                Reset-ScapeSettingToFactory | Out-Null
-                return $true
-            }
-            break
-        }
-        'Scape.Analysis.Parser.Core' {
-            Resolve-ScapeActiveTarget | Out-Null
-            if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) {
-                Invoke-ScapeTargetedParsing -Payload $PayloadDef
-                return $true
-            }
-            break
-        }
-        'Scape.Analysis.Carving.Carver' {
-            Resolve-ScapeActiveTarget | Out-Null
-            if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) {
-                Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "CARVING" }
-                return $true
-            }
-            break
-        }
-        'Scape.Analysis.FS.Abstraction' {
-            Resolve-ScapeActiveTarget | Out-Null
-            if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) {
-                Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "FS_ABSTRACTION" }
-                return $true
-            }
-            break
-        }
-        'Scape.Analysis.FS.NTFS' {
-            Resolve-ScapeActiveTarget | Out-Null
-            if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) {
-                Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "NTFS" }
-                return $true
-            }
-            break
-        }
-        'Scape.Analysis.FS.PartitionTable' {
-            Resolve-ScapeActiveTarget | Out-Null
-            if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) {
-                Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "PARTITION_TABLE" }
-                return $true
-            }
-            break
-        }
-        'Scape.Infrastructure.Telemetry' {
-            if (Get-Command Invoke-ScapeTelemetryWorkflow -ErrorAction SilentlyContinue) {
-                $taskName = if ([string]::IsNullOrWhiteSpace($Task)) { 'TELEMETRY' } else { $Task }
-                Invoke-ScapeTelemetryWorkflow -Task $taskName
-                return $true
-            }
-            break
-        }
-        'Scape.Extensions.Network' {
-            if (Get-Command Find-ScapeNetworkNode -ErrorAction SilentlyContinue) {
-                Find-ScapeNetworkNode | Out-Null
-                return $true
-            }
-            break
-        }
-        'Scape.Presentation.FilePicker' {
-            if (Get-Command Invoke-ScapeDirectoryPicker -ErrorAction SilentlyContinue) {
-                Invoke-ScapeDirectoryPicker -Payload $PayloadDef
-                return $true
-            }
-            break
-        }
-        'Scape.Presentation.Theme' {
-            if ($Task -eq 'PROCEDURAL' -and (Get-Command Invoke-ScapeProceduralTheme -ErrorAction SilentlyContinue)) {
-                Invoke-ScapeProceduralTheme
-                # Preserve current cursor position instead of resetting to 0
-                $cursorIdx = if ($p -is [hashtable]) { $p['Cursor'] } elseif ($null -ne $p.PSObject) { $p.Cursor } else { 0 }
-                if ($null -eq $cursorIdx) { $cursorIdx = 0 }
-                $menuOpts = Get-ScapeConstant -Path "navigation::$MenuId"
-                $menuTitle = if ($menuOpts -and $menuOpts.Items) { $menuOpts.TitleKey } else { $MenuId }
-                $menuItems = if ($menuOpts -and $menuOpts.Items) { @($menuOpts.Items) } else { @() }
-                Request-ScapeRedraw -MenuId $MenuId -Type 'FULL' -RouterState @{ Cursor = [int]$cursorIdx; LastCursor = -1; RawOptions = $menuItems } -TitleKey $menuTitle
-                return $true
-            }
-            break
-        }
-        'Scape.Infrastructure.Audit' {
-            if (Get-Command Initialize-ScapeAudit -ErrorAction SilentlyContinue) {
-                Initialize-ScapeAudit | Out-Null
-                return $true
-            }
-            break
-        }
-        'Scape.Infrastructure.Compliance' {
-            if (Get-Command Initialize-ScapeCompliance -ErrorAction SilentlyContinue) {
-                Initialize-ScapeCompliance | Out-Null
-                return $true
-            }
-            break
-        }
-        'Scape.Infrastructure.Pipeline' {
-            if (Get-Command Initialize-ScapePipeline -ErrorAction SilentlyContinue) {
-                Initialize-ScapePipeline | Out-Null
-                return $true
-            }
-            break
-        }
-        'Scape.Acquisition.Selection' {
-            if (Get-Command Get-ScapePhysicalTarget -ErrorAction SilentlyContinue) {
-                $targets = @(Get-ScapePhysicalTarget)
-                Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{
-                    Key     = "INVENTORY_PHYSICAL_DISKS"
-                    Targets = $targets
-                }
-                return $true
-            }
-            break
-        }
-        'Scape.Acquisition.Resilience' {
-            $targetId = Resolve-ScapeActiveTarget
-            if (-not [string]::IsNullOrWhiteSpace($targetId)) {
-                return $true
-            }
-            break
-        }
-        'Scape.Extensions.CloudSync' {
-            if (Get-Command Invoke-ScapeCloudSyncPreparation -ErrorAction SilentlyContinue) {
-                return (Invoke-ScapeCloudSyncPreparation)
-            }
-            break
-        }
-    }
-
-    Publish-ScapeEvent -Type "SYSTEM_WARN" -Severity "WARN" -Payload @{
-        Key    = "ORCH_MISSING_BINDING"
-        Tokens = @($Target)
-    }
-    return $false
-}
 
 function Invoke-ScapeSelectionEvent {
     [CmdletBinding()]
@@ -459,9 +247,11 @@ function Invoke-ScapeSelectionEvent {
     $p = $IncomingEventData.Payload
     if ($null -eq $p) { return }
 
-    $action = if ($p -is [hashtable]) { $p['Action'] } elseif ($null -ne $p.PSObject) { $p.Action } else { $null }
-    $menuId = if ($p -is [hashtable]) { $p['MenuId'] } elseif ($null -ne $p.PSObject) { $p.MenuId } else { $null }
-    $selId = if ($p -is [hashtable]) { $p['SelectionId'] } elseif ($null -ne $p.PSObject) { $p.SelectionId } else { $null }
+    $action    = if ($p -is [hashtable]) { $p['Action'] }      elseif ($null -ne $p.PSObject) { $p.Action }      else { $null }
+    $menuId    = if ($p -is [hashtable]) { $p['MenuId'] }      elseif ($null -ne $p.PSObject) { $p.MenuId }      else { $null }
+    $selId     = if ($p -is [hashtable]) { $p['SelectionId'] } elseif ($null -ne $p.PSObject) { $p.SelectionId } else { $null }
+    $cursorIdx = if ($p -is [hashtable]) { $p['Cursor'] }      elseif ($null -ne $p.PSObject) { $p.Cursor }      else { 0 }
+    if ($null -eq $cursorIdx) { $cursorIdx = 0 }
 
     $menuOpts = Get-ScapeConstant -Path "navigation::$menuId"
     $routeDef = $null
@@ -475,23 +265,20 @@ function Invoke-ScapeSelectionEvent {
 
     if ($action -eq 'TRIGGER' -and $routeDef) {
         $payloadDef = if ($routeDef -is [hashtable]) { $routeDef['Payload'] } else { $routeDef.Payload }
-        $target = Get-ScapePayloadField -Payload $payloadDef -Key 'Target'
-        $task = Get-ScapePayloadField -Payload $payloadDef -Key 'Task'
+        $target     = Get-ScapePayloadField -Payload $payloadDef -Key 'Target'
+        $task       = Get-ScapePayloadField -Payload $payloadDef -Key 'Task'
+
         if (-not [string]::IsNullOrWhiteSpace($target)) {
-            Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{
-                TriggerTarget = $target
-                TriggerTask   = $task
-                SelectionId   = $selId
+            # MVVM/SRP: delegate to ActionManager — single dispatch path
+            if (Get-Command Invoke-ScapeActionDispatcher -ErrorAction SilentlyContinue) {
+                Invoke-ScapeActionDispatcher -Target $target -Task $task -PayloadDef $payloadDef -MenuId $menuId -Cursor ([int]$cursorIdx) | Out-Null
             }
-            Invoke-ScapeSelectionTriggerAction -Target $target -Task $task -PayloadDef $payloadDef -MenuId $menuId | Out-Null
         }
     }
     elseif ($action -eq 'MUTATE' -and $routeDef) {
-        $payloadDef = if ($routeDef -is [hashtable]) { $routeDef['Payload'] } else { $routeDef.Payload }
+        $payloadDef       = if ($routeDef -is [hashtable]) { $routeDef['Payload'] } else { $routeDef.Payload }
         $mutationDirection = if ($p -is [hashtable]) { $p['MutationDirection'] } elseif ($null -ne $p.PSObject) { $p.MutationDirection } else { $null }
-        $cursorIdx = if ($p -is [hashtable]) { $p['Cursor'] } elseif ($null -ne $p.PSObject) { $p.Cursor } else { 0 }
         if ([string]::IsNullOrWhiteSpace($mutationDirection)) { $mutationDirection = 'NEXT' }
-        if ($null -eq $cursorIdx) { $cursorIdx = 0 }
 
         if (Get-Command Invoke-ScapeStateMutation -ErrorAction SilentlyContinue) {
             $mutated = Invoke-ScapeStateMutation -MenuId $menuId -SelectionId $selId -Payload $payloadDef -Direction $mutationDirection
@@ -500,10 +287,6 @@ function Invoke-ScapeSelectionEvent {
                 Publish-ScapeEvent -Type "STATE_MUTATED" -Severity "INFO" -Payload @{
                     MenuId = $menuId; SelectionId = $selId; Timestamp = [DateTime]::Now
                 }
-
-                $menuTitle = if ($menuOpts -and $menuOpts.Items) { $menuOpts.TitleKey } else { $menuId }
-                $menuItems = if ($menuOpts -and $menuOpts.Items) { @($menuOpts.Items) } else { @() }
-                Request-ScapeRedraw -MenuId $menuId -Type 'FULL' -RouterState @{ Cursor = [int]$cursorIdx; LastCursor = -1; RawOptions = $menuItems } -TitleKey $menuTitle
             }
         }
     }
@@ -589,10 +372,11 @@ function Initialize-ScapeStateObserver {
                 $reg2 = Register-ScapeEventListener -EventMatch "UI_REDRAW_REQUEST" -Action { Invoke-ScapeRedrawRequestEvent -IncomingEventData $args[0] }
                 $reg3 = Register-ScapeEventListener -EventMatch "^(PROGRESS|SYSTEM|SYSTEM_.*|SYS_CORE|LAZY_WAKEUP|HINT|UI_HINT|INFO|WARN|ERROR|FATAL|ROUTER_FATAL|STATE_MUTATED|UI_SELECTION)$" -Action { Invoke-ScapeTransientEvent -IncomingEventData $args[0] }
                 $reg4 = Register-ScapeEventListener -EventMatch "UI_SELECTION" -Action { Invoke-ScapeSelectionEvent -IncomingEventData $args[0] }
+                $reg5 = Register-ScapeEventListener -EventMatch "ACTION_SCREEN_UPDATE" -Action { Invoke-ScapeActionScreenEvent -IncomingEventData $args[0] }
 
                 $config.IsActive = $true
                 $Script:ObserverInitialized = $true
-                $config.RegisteredHandlers += $reg1, $reg2, $reg3, $reg4
+                $config.RegisteredHandlers += $reg1, $reg2, $reg3, $reg4, $reg5
             }
             return $config
         }

@@ -26,9 +26,11 @@ function Get-ScapeConsoleDimension {
         if ($elapsed -lt $Script:ConsoleCache.TTL_MS -and $Script:ConsoleCache.Width -gt 0) {
             $layout = Get-ScapeConstant -Path "ui::Layout"
             $m = if ($WithMargins) { $layout.Margin * 2 } else { 0 }
+            $maxW = if ($layout.MaxWidth -gt 0) { $layout.MaxWidth } else { 9999 }
+            $maxH = if ($layout.MaxHeight -gt 0) { $layout.MaxHeight } else { 9999 }
             return @{
-                Width  = [Math]::Max($layout.MinWidth, [Math]::Min($Script:ConsoleCache.Width - $m, $layout.MaxWidth))
-                Height = [Math]::Max($layout.MinHeight, $Script:ConsoleCache.Height - $layout.HeaderHeight)
+                Width  = [Math]::Max($layout.MinWidth, [Math]::Min($Script:ConsoleCache.Width - $m, $maxW))
+                Height = [Math]::Max($layout.MinHeight, [Math]::Min($Script:ConsoleCache.Height - $layout.HeaderHeight, $maxH))
             }
         }
 
@@ -48,10 +50,12 @@ function Get-ScapeConsoleDimension {
 
         $layout = Get-ScapeConstant -Path "ui::Layout"
         $m = if ($WithMargins) { $layout.Margin * 2 } else { 0 }
+        $maxW = if ($layout.MaxWidth -gt 0) { $layout.MaxWidth } else { 9999 }
+        $maxH = if ($layout.MaxHeight -gt 0) { $layout.MaxHeight } else { 9999 }
 
         return @{
-            Width  = [Math]::Max($layout.MinWidth, [Math]::Min($Script:ConsoleCache.Width - $m, $layout.MaxWidth))
-            Height = [Math]::Max($layout.MinHeight, $Script:ConsoleCache.Height - $layout.HeaderHeight)
+            Width  = [Math]::Max($layout.MinWidth, [Math]::Min($Script:ConsoleCache.Width - $m, $maxW))
+            Height = [Math]::Max($layout.MinHeight, [Math]::Min($Script:ConsoleCache.Height - $layout.HeaderHeight, $maxH))
         }
     }
 }
@@ -63,10 +67,13 @@ function Set-ScapeCursorPosition {
     process {
         if ($PSCmdlet.ShouldProcess("Console Cursor", "Set Position to X:$Left Y:$Top")) {
             try {
-                $d = Get-ScapeConsoleDimension
+                # Clamp against REAL console window size, not derived layout dimensions.
+                # Get-ScapeConsoleDimension subtracts HeaderHeight, which misaligns cursor placement.
+                $realW = [Console]::WindowWidth
+                $realH = [Console]::WindowHeight
                 [Console]::SetCursorPosition(
-                    [Math]::Max(0, [Math]::Min($Left, $d.Width - 1)),
-                    [Math]::Max(0, [Math]::Min($Top, $d.Height - 1))
+                    [Math]::Max(0, [Math]::Min($Left, $realW - 1)),
+                    [Math]::Max(0, [Math]::Min($Top, $realH - 1))
                 )
             }
             catch { $null = $_ }
@@ -90,34 +97,36 @@ function Read-ScapeKeyPress {
     [OutputType([string])]
     param([int]$TimeoutMilliseconds)
     process {
-        $vKeyMap = Get-ScapeConstant -Path "ui::Input::VirtualKeyMap" -Fallback @{}
+        $oldEap = $ErrorActionPreference
+        $ErrorActionPreference = 'SilentlyContinue'
+        try {
+            $vKeyMap = Get-ScapeConstant -Path "ui::Input::VirtualKeyMap" -Fallback @{}
 
-        # Unifica input via [Console] apenas (evita conflito Host.UI.RawUI)
-        $start = [DateTime]::Now
-        $timeout = [TimeSpan]::FromMilliseconds($TimeoutMilliseconds)
+            $start = [DateTime]::Now
+            $timeout = [TimeSpan]::FromMilliseconds($TimeoutMilliseconds)
 
-        while (([DateTime]::Now - $start) -lt $timeout) {
-            if ([Console]::KeyAvailable) {
+            while (([DateTime]::Now - $start) -lt $timeout) {
                 try {
-                    $keyInfo = [Console]::ReadKey($true)
-                    $keyCode = $keyInfo.Key
+                    if ($Host.UI.RawUI.KeyAvailable) {
+                        $keyInfo = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+                        $keyCode = $keyInfo.VirtualKeyCode
 
-                    # Tenta match por nome (string) primeiro, depois por valor (int)
-                    $mapped = $vKeyMap[$keyCode.ToString()]
-                    if ($null -eq $mapped) {
-                        $mapped = $vKeyMap[[int]$keyCode]
+                        $mapped = $vKeyMap[$keyCode.ToString()]
+                        if ($null -eq $mapped) {
+                            $mapped = $vKeyMap[[int]$keyCode]
+                        }
+                        if ($null -ne $mapped) { return [string]$mapped }
+
+                        if ($keyInfo.Character -ne 0) { return $keyInfo.Character.ToString() }
+                        return $keyCode.ToString()
                     }
-                    if ($null -ne $mapped) { return [string]$mapped }
-
-                    # Fallback: retorna caractere ou nome da tecla
-                    if ($keyInfo.KeyChar -ne 0) { return $keyInfo.KeyChar.ToString() }
-                    return $keyCode.ToString()
-                }
-                catch { return $null }
+                } catch { return $null }
+                Start-Sleep -Milliseconds 10
             }
-            Start-Sleep -Milliseconds 10  # Polling curto para responsividade
+            return $null
+        } finally {
+            $ErrorActionPreference = $oldEap
         }
-        return $null
     }
 }
 
@@ -126,9 +135,16 @@ function Clear-ScapeInputBuffer {
     [OutputType([void])]
     param()
     process {
+        $oldEap = $ErrorActionPreference
+        $ErrorActionPreference = 'SilentlyContinue'
         try {
-            while ([Console]::KeyAvailable) { $null = [Console]::ReadKey($true) }
+            if ($Host.UI.RawUI.KeyAvailable) {
+                $Host.UI.RawUI.FlushInputBuffer()
+            }
         }
-        catch { $null = $_ }
+        catch { }
+        finally {
+            $ErrorActionPreference = $oldEap
+        }
     }
 }

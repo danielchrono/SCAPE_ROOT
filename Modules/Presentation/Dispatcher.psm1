@@ -211,3 +211,9 @@ function Convert-ScapeTreeToRender {
         }
     }
 }
+
+Export-ModuleMember -Function 'Test-ScapeUiEventCategory',
+                              'Format-ScapeProgressBar',
+                              'Format-ScapeTransientMessage',
+                              'Convert-ScapeEventDataToRender',
+                              'Convert-ScapeTreeToRender'

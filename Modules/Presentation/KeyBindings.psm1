@@ -219,7 +219,7 @@ function Resolve-ScapeInputToAction {
     }
 }
 
-function Rebind-ScapeKey {
+function Set-ScapeKeyBinding {
     [CmdletBinding()]
     [OutputType([bool])]
     param(
@@ -240,7 +240,7 @@ function Rebind-ScapeKey {
     }
 }
 
-function Save-ScapeKeyBindingsToFile {
+function Export-ScapeKeyBindings {
     [CmdletBinding()]
     [OutputType([bool])]
     param([string]$Path)
@@ -284,7 +284,7 @@ function Save-ScapeKeyBindingsToFile {
     }
 }
 
-function Load-ScapeKeyBindingsFromFile {
+function Import-ScapeKeyBindings {
     [CmdletBinding()]
     [OutputType([bool])]
     param([string]$Path)
@@ -333,6 +333,6 @@ Export-ModuleMember -Function 'Initialize-ScapeKeyBindings',
                               'Set-ScapeKeyBindingProfile',
                               'Invoke-ScapeChordDetection',
                               'Resolve-ScapeInputToAction',
-                              'Rebind-ScapeKey',
-                              'Save-ScapeKeyBindingsToFile',
-                              'Load-ScapeKeyBindingsFromFile'
+                              'Set-ScapeKeyBinding',
+                              'Export-ScapeKeyBindings',
+                              'Import-ScapeKeyBindings'
