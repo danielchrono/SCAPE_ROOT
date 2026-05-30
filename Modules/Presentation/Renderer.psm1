@@ -693,11 +693,12 @@ function Format-ScapeGridLayout {
     param(
         [Parameter(Mandatory = $true)][array]$GridRows,
         [int]$Columns = 2,
-        [int]$ColumnWidth = 30,
+        [int]$ColumnWidth = 0,
         [string]$FrameStyle = 'Classic',
         [switch]$WithBorder
     )
     process {
+        if ($ColumnWidth -le 0) { $ColumnWidth = Get-ScapeConstant -Path "ui::Config::DefaultColumnWidth" -Fallback 30 }
         if ($null -eq $GridRows -or $GridRows.Count -eq 0) { return "" }
 
         $ESC = Get-ScapeConstant -Path "ui::ANSI::ESC"

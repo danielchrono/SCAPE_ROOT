@@ -1,11 +1,5 @@
 *.db
 *.log
-UserSettings.json
-SCAPE_Deploy/
-temp/
-tests/
-.github/
 .vscode/
-openswarm/
+scratch/
 Workspace/
-Output/

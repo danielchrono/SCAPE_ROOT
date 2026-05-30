@@ -20,106 +20,6 @@ function Initialize-ScapeTheme {
 
     # 1. Carregamento Seguro (Prevenção contra "Cannot index into a null array")
     $Script:ThemeCache = Get-ScapeConstant -Path "theme" -Fallback @{}
-    $Script:UICache = Get-ScapeConstant -Path "ui" -Fallback @{}
-    $Script:IconCache = Get-ScapeConstant -Path "ui::Icons" -Fallback @{}
-
-    # 2. Detecção de Terminal
-    if ($env:WT_SESSION -or $env:TERM_PROGRAM -eq "vscode" -or $env:ConEmuPID -or $env:COLORTERM -eq "truecolor") {
-        $Script:ColorMode = "TrueColor"
-    }
-
-    # 3. População do LiveFlagMap (Segura e Resiliente)
-    $Script:LiveFlagMap = @{}
-    if ($Script:ThemeCache.Contains("FlagMap")) {
-        $baseMap = $Script:ThemeCache["FlagMap"]
-        foreach ($key in $baseMap.Keys) {
-            $Script:LiveFlagMap[$key] = @{
-                RGB      = $baseMap[$key].RGB
-                Priority = $baseMap[$key].Priority
-            }
-        }
-    }
-    $Script:ActivePaletteName = "Default"
-    $Script:ActivePaletteMap = @{}
-
-    # 4. Aplicação de Persona e Modo de Cor do Estado (Se houver)
-    # MVVM estrito: Theme apenas inicializa constantes/dados puros.
-    # A leitura de ColdState e aplicação (Set-ScapePersona/ColorMode) devem ser
-    # coordenadas pela camada superior, não na inicialização pura da Theme.
-}
-
-# --- GESTÃO DE ÍCONES (Resolvendo o $icons perdido) ---
-
-function Get-ScapeIcon {
-    [CmdletBinding()]
-    param([Parameter(Mandatory = $true)][string]$IconName)
-    process {
-        if ($null -eq $Script:IconCache) { Initialize-ScapeTheme }
-
-        # Resolve o nível atual (0=Graphic, 1=Unicode, 2=ASCII)
-        # O Fallback aqui é o seu detector automático se o ColdState falhar
-        $level = Get-ScapeConstant -Path "IconLevel" -Fallback (Get-ScapeDefaultIconLevel)
-
-        if ($Script:IconCache.Contains($IconName)) {
-            return $Script:IconCache[$IconName][$level]
-        }
-        return ""
-    }
-}
-
-# --- MATEMÁTICA DE COR E CONVERSÃO ---
-
-function Get-ScapeClamp {
-    param([double]$Value, [double]$Min, [double]$Max)
-    return [Math]::Max($Min, [Math]::Min($Max, $Value))
-}
-
-function Get-ScapeLuminance {
-    param([int]$R, [int]$G, [int]$B)
-    return (0.299 * $R) + (0.587 * $G) + (0.114 * $B)
-}
-
-function Convert-ScapeHSLToRGB {
-    param([double]$H, [double]$S, [double]$L)
-    if ($S -eq 0) {
-        $v = [int][Math]::Round($L * 255)
-        return @($v, $v, $v)
-    }
-    $q = if ($L -lt 0.5) { $L * (1 + $S) } else { $L + $S - ($L * $S) }
-    $p = 2 * $L - $q
-    $hk = $H / 360.0
-    $t = @( ($hk + 1.0 / 3.0), $hk, ($hk - 1.0 / 3.0) )
-    $rgb = @(0, 0, 0)
-    for ($i = 0; $i -lt 3; $i++) {
-        if ($t[$i] -lt 0) { $t[$i] += 1.0 }
-        if ($t[$i] -gt 1) { $t[$i] -= 1.0 }
-        if ($t[$i] -lt (1.0 / 6.0)) { $rgb[$i] = $p + (($q - $p) * 6.0 * $t[$i]) }
-        elseif ($t[$i] -lt (1.0 / 2.0)) { $rgb[$i] = $q }
-        elseif ($t[$i] -lt (2.0 / 3.0)) { $rgb[$i] = $p + (($q - $p) * ((2.0 / 3.0) - $t[$i]) * 6.0) }
-        else { $rgb[$i] = $p }
-        $rgb[$i] = [int][Math]::Round($rgb[$i] * 255)
-<#
-.SYNOPSIS
-    Domain: Presentation\Theme
-    Module: Scape.Presentation.Theme
-    Architecture: Pure Math | HSL Trigonometry | Adaptive Contrast | Immutable Origin
-#>
-
-# --- REGISTRY E ESTADO DO SCRIPT ---
-$Script:ThemeCache = $null
-$Script:UICache = $null
-$Script:IconCache = $null
-$Script:ColorMode = "ANSI16"
-$Script:LiveFlagMap = @{}
-$Script:ActivePaletteName = ""
-$Script:ActivePaletteMap = @{}
-
-function Initialize-ScapeTheme {
-    [CmdletBinding()]
-    param()
-
-    # 1. Carregamento Seguro (Prevenção contra "Cannot index into a null array")
-    $Script:ThemeCache = Get-ScapeConstant -Path "theme" -Fallback @{}
 
     # 2. Detecção de Terminal
     if ($env:WT_SESSION -or $env:TERM_PROGRAM -eq "vscode" -or $env:ConEmuPID -or $env:COLORTERM -eq "truecolor") {
@@ -288,30 +188,30 @@ function Set-ScapePersona {
     
     $result = @{}
     
-        if (-not $Script:ThemeCache) { Initialize-ScapeTheme }
-        $persona = $Script:ThemeCache.Persona[$Name]
-        if ($persona) {
-            # Apply Palette
-            $paletteName = $persona.Palette
-            if ($paletteName -and $Script:ThemeCache.Base[$paletteName]) {
-                $Script:ActivePaletteName = [string]$paletteName
-                $Script:ActivePaletteMap = $Script:ThemeCache.Base[$paletteName]
-                $baseMap = $Script:ThemeCache.FlagMap
-                foreach ($key in $baseMap.Keys) {
-                    $rgbRef = $baseMap[$key].RGB
-                    if ($rgbRef -is [string] -and $rgbRef -match '^Base\.(\w+)') {
-                        $colorName = $matches[1]
-                        $newRGB = Resolve-ScapeRawRGB -RawValue $rgbRef
-                        if ($newRGB) { $Script:LiveFlagMap[$key].RGB = $newRGB }
-                    }
+    if (-not $Script:ThemeCache) { Initialize-ScapeTheme }
+    $persona = $Script:ThemeCache.Persona[$Name]
+    if ($persona) {
+        # Apply Palette
+        $paletteName = $persona.Palette
+        if ($paletteName -and $Script:ThemeCache.Base[$paletteName]) {
+            $Script:ActivePaletteName = [string]$paletteName
+            $Script:ActivePaletteMap = $Script:ThemeCache.Base[$paletteName]
+            $baseMap = $Script:ThemeCache.FlagMap
+            foreach ($key in $baseMap.Keys) {
+                $rgbRef = $baseMap[$key].RGB
+                if ($rgbRef -is [string] -and $rgbRef -match '^Base\.(\w+)') {
+                    $colorName = $matches[1]
+                    $newRGB = Resolve-ScapeRawRGB -RawValue $rgbRef
+                    if ($newRGB) { $Script:LiveFlagMap[$key].RGB = $newRGB }
                 }
             }
+        }
             
-            if ($persona.Frame) { $result["FrameStyle"] = $persona.Frame }
-            if ($persona.Progress) { $result["ProgressStyle"] = $persona.Progress }
-            if ($null -ne $persona.Animation) { $result["AnimationEnabled"] = [bool]$persona.Animation }
-            if ($persona.Contrast) { $result["ContrastMode"] = $persona.Contrast }
-        }return $result
+        if ($persona.Frame) { $result["FrameStyle"] = $persona.Frame }
+        if ($persona.Progress) { $result["ProgressStyle"] = $persona.Progress }
+        if ($null -ne $persona.Animation) { $result["AnimationEnabled"] = [bool]$persona.Animation }
+        if ($persona.Contrast) { $result["ContrastMode"] = $persona.Contrast }
+    }return $result
 }
 
 function Set-ScapeColorMode {
@@ -380,22 +280,22 @@ function Get-ScapeAnsi16SequenceForFlag {
 
     $token = if ($fallbackMap.Contains($colorRef)) { [string]$fallbackMap[$colorRef] } else { "FG.White" }
     $ansiByToken = @{
-        "FG.Black" = Get-ScapeConstant -Path "ui::ANSI::FG::Black" -Fallback "`e[30m"
-        "FG.Red" = Get-ScapeConstant -Path "ui::ANSI::FG::Red" -Fallback "`e[31m"
-        "FG.Green" = Get-ScapeConstant -Path "ui::ANSI::FG::Green" -Fallback "`e[32m"
-        "FG.Yellow" = Get-ScapeConstant -Path "ui::ANSI::FG::Yellow" -Fallback "`e[33m"
-        "FG.Blue" = Get-ScapeConstant -Path "ui::ANSI::FG::Blue" -Fallback "`e[34m"
-        "FG.Magenta" = Get-ScapeConstant -Path "ui::ANSI::FG::Magenta" -Fallback "`e[35m"
-        "FG.Cyan" = Get-ScapeConstant -Path "ui::ANSI::FG::Cyan" -Fallback "`e[36m"
-        "FG.White" = Get-ScapeConstant -Path "ui::ANSI::FG::White" -Fallback "`e[37m"
-        "FG.BrightBlack" = Get-ScapeConstant -Path "ui::ANSI::FG::BrightBlack" -Fallback "`e[90m"
-        "FG.BrightRed" = Get-ScapeConstant -Path "ui::ANSI::FG::BrightRed" -Fallback "`e[91m"
-        "FG.BrightGreen" = Get-ScapeConstant -Path "ui::ANSI::FG::BrightGreen" -Fallback "`e[92m"
-        "FG.BrightYellow" = Get-ScapeConstant -Path "ui::ANSI::FG::BrightYellow" -Fallback "`e[93m"
-        "FG.BrightBlue" = Get-ScapeConstant -Path "ui::ANSI::FG::BrightBlue" -Fallback "`e[94m"
+        "FG.Black"         = Get-ScapeConstant -Path "ui::ANSI::FG::Black" -Fallback "`e[30m"
+        "FG.Red"           = Get-ScapeConstant -Path "ui::ANSI::FG::Red" -Fallback "`e[31m"
+        "FG.Green"         = Get-ScapeConstant -Path "ui::ANSI::FG::Green" -Fallback "`e[32m"
+        "FG.Yellow"        = Get-ScapeConstant -Path "ui::ANSI::FG::Yellow" -Fallback "`e[33m"
+        "FG.Blue"          = Get-ScapeConstant -Path "ui::ANSI::FG::Blue" -Fallback "`e[34m"
+        "FG.Magenta"       = Get-ScapeConstant -Path "ui::ANSI::FG::Magenta" -Fallback "`e[35m"
+        "FG.Cyan"          = Get-ScapeConstant -Path "ui::ANSI::FG::Cyan" -Fallback "`e[36m"
+        "FG.White"         = Get-ScapeConstant -Path "ui::ANSI::FG::White" -Fallback "`e[37m"
+        "FG.BrightBlack"   = Get-ScapeConstant -Path "ui::ANSI::FG::BrightBlack" -Fallback "`e[90m"
+        "FG.BrightRed"     = Get-ScapeConstant -Path "ui::ANSI::FG::BrightRed" -Fallback "`e[91m"
+        "FG.BrightGreen"   = Get-ScapeConstant -Path "ui::ANSI::FG::BrightGreen" -Fallback "`e[92m"
+        "FG.BrightYellow"  = Get-ScapeConstant -Path "ui::ANSI::FG::BrightYellow" -Fallback "`e[93m"
+        "FG.BrightBlue"    = Get-ScapeConstant -Path "ui::ANSI::FG::BrightBlue" -Fallback "`e[94m"
         "FG.BrightMagenta" = Get-ScapeConstant -Path "ui::ANSI::FG::BrightMagenta" -Fallback "`e[95m"
-        "FG.BrightCyan" = Get-ScapeConstant -Path "ui::ANSI::FG::BrightCyan" -Fallback "`e[96m"
-        "FG.BrightWhite" = Get-ScapeConstant -Path "ui::ANSI::FG::BrightWhite" -Fallback "`e[97m"
+        "FG.BrightCyan"    = Get-ScapeConstant -Path "ui::ANSI::FG::BrightCyan" -Fallback "`e[96m"
+        "FG.BrightWhite"   = Get-ScapeConstant -Path "ui::ANSI::FG::BrightWhite" -Fallback "`e[97m"
     }
     if ($ansiByToken.ContainsKey($token)) { return $ansiByToken[$token] }
     return Get-ScapeConstant -Path "ui::ANSI::FG::White" -Fallback "`e[37m"
@@ -455,7 +355,7 @@ function Get-ScapeResolvedIcon {
 
         # MVVM estrito: IconLevel deve ser input read-only
         $level = if ($IconLevel -lt 0) { 0 } else { [int]$IconLevel }
-        if ($level -ge $iconArr.Count) { $level = $iconArr.Count -1 }
+        if ($level -ge $iconArr.Count) { $level = $iconArr.Count - 1 }
 
         return [string]$iconArr[$level]
     }
@@ -472,7 +372,8 @@ function Format-ScapeANSIHighlight {
         $bgAnsi = Convert-ScapeRGBToAnsi -RGB $rgb -IsBackground $true
         $fgAnsi = Get-ScapeConstant -Path "ui::ANSI::FG::Black" -Fallback "`e[30m"
         return "${bgAnsi}${fgAnsi}${Text}${reset}"
-    } else {
+    }
+    else {
         $fgAnsi16 = Get-ScapeAnsi16SequenceForFlag -Flag $Flag
         $bgAnsi16 = $fgAnsi16 -replace '\[3', '[4' -replace '\[9', '[10'
         $blackText = Get-ScapeConstant -Path "ui::ANSI::FG::Black" -Fallback "`e[30m"
@@ -480,4 +381,4 @@ function Format-ScapeANSIHighlight {
     }
 }
 
-Export-ModuleMember -Function Format-ScapeANSIHighlight
+Export-ModuleMember -Function *

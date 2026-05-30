@@ -51,8 +51,9 @@ function Test-ScapeUiEventCategory {
 function Format-ScapeProgressBar {
     [CmdletBinding()]
     [OutputType([string])]
-    param([hashtable]$Payload, [int]$BarWidth = 30)
+    param([hashtable]$Payload, [int]$BarWidth = 0)
     process {
+        if ($BarWidth -le 0) { $BarWidth = Get-ScapeConstant -Path "ui::Config::DefaultBarWidth" -Fallback 30 }
         $stage = $Payload['Stage']
         $cur = [double]($Payload['Current'] -replace ',', '.')
         $tot = [double]($Payload['Total'] -replace ',', '.')

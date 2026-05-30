@@ -122,7 +122,7 @@ function Initialize-ScapeLogger {
                     if (-not $sem.Wait(0)) {
                         if ($IncomingEvt.Severity -notin @("LOG_ERR", "LOG_FATAL", "COMPLIANCE")) { return }
                         $timeout = $configRef.Limits["CRITICAL_SECTION_TIMEOUT_MS"]
-                        if ($null -eq $timeout) { $timeout = 5000 }
+                        if ($null -eq $timeout) { $timeout = Get-ScapeConstant -Path "system::Limits::CRITICAL_SECTION_TIMEOUT_MS" -Fallback 5000 }
                         $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
                         $timeToWait = [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds
                         

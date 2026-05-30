@@ -74,7 +74,7 @@ function Initialize-ScapeAudit {
                     if ($IncomingEvt.Severity -notin @("LOG_ERR", "LOG_FATAL", "COMPLIANCE")) { return }
 
                     $timeout = $Script:C.Audit["BACKPRESSURE_TIMEOUT_MS"]
-                    if ($null -eq $timeout) { $timeout = 5000 } # <<< PRESERVADO
+                    if ($null -eq $timeout) { $timeout = Get-ScapeConstant -Path "system::Limits::CRITICAL_SECTION_TIMEOUT_MS" -Fallback 5000 } # <<< PRESERVADO
 
                     $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
                     $timeToWait = [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds

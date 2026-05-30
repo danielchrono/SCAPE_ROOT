@@ -23,7 +23,7 @@ function Get-ScapeMenuLayout {
     [CmdletBinding()]
     [OutputType([psobject])]
     param(
-        [Parameter(Mandatory = $true)][int]$MaxContentWidth,
+        [Parameter(Mandatory = $false)][int]$MaxContentWidth = 0,
         [Parameter(Mandatory = $true)][int]$ItemCount,
         [Parameter(Mandatory = $true)][int]$ConsoleWidth,
         [Parameter(Mandatory = $true)][int]$ConsoleHeight,
@@ -31,6 +31,10 @@ function Get-ScapeMenuLayout {
     )
     process {
         $layout = Get-ScapeConstant -Path "ui::Layout"
+
+        if ($MaxContentWidth -le 0) {
+            $MaxContentWidth = Get-ScapeConstant -Path "ui::Config::DefaultWidth" -Fallback 80
+        }
 
         # Expand box width slightly to safely accommodate icons and 3 columns
         $minBoxW = [Math]::Max($layout.MinWidth, $MaxContentWidth + ($layout.Padding * 2) + ($layout.Margin * 2))
@@ -186,7 +190,7 @@ function Get-ScapeVisualWidth {
         
         $len = $clean.Length
         # Match wide characters in common CJK ranges and others
-        $wideCount = [regex]::Matches($clean, '[\x{2E80}-\x{9FFF}\x{AC00}-\x{D7AF}\x{F900}-\x{FAFF}]').Count
+        $wideCount = [regex]::Matches($clean, '[\u2E80-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]').Count
         return $len + $wideCount
     }
 }

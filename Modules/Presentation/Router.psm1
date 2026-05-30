@@ -98,9 +98,9 @@ function Invoke-ScapeRouterReducer {
 
         if ($selAction -or $selId) {
             $ns.EventToPublish = @{
-                Type = "UI_SELECTION"
+                Type     = "UI_SELECTION"
                 Severity = "INFO"
-                Payload = @{
+                Payload  = @{
                     MenuId = $ns.CurrentMenu; SelectionId = $selId; Action = $selAction
                     Target = $selTarget; Payload = $selPayload; ActionPayload = $selPayload; Layer = $selWake; MutationDirection = $mutationDirection
                     Cursor = $ns.Cursor
@@ -113,7 +113,10 @@ function Invoke-ScapeRouterReducer {
                 $ns.RouteStack = @($ns.RouteStack[0..($ns.RouteStack.Count - 2)])
                 $ns.CurrentMenu = $ns.RouteStack[-1]
                 $ns.NeedsFullRedraw = $true
-            } else {
+                $ns.RawOptions = @()
+                $ns.TitleKey = ""
+            }
+            else {
                 $ns.IsRunning = $false
             }
             return $ns
@@ -122,6 +125,8 @@ function Invoke-ScapeRouterReducer {
             $ns.RouteStack = @($ns.RouteStack) + $selTarget
             $ns.CurrentMenu = $selTarget
             $ns.NeedsFullRedraw = $true
+            $ns.RawOptions = @()
+            $ns.TitleKey = ""
         }
         return $ns
     }
@@ -154,14 +159,14 @@ function Start-ScapeRouter {
             $inputPs = [powershell]::Create()
             $inputPs.Runspace = $inputRs
             $inputPs.AddScript({
-                while($true) {
-                    if (Test-ScapeKeyAvailable) {
-                        $key = Read-ScapeRawKey
-                        New-Event -SourceIdentifier "KEY_PRESSED" -MessageData $key | Out-Null
+                    while ($true) {
+                        if (Test-ScapeKeyAvailable) {
+                            $key = Read-ScapeRawKey
+                            New-Event -SourceIdentifier "KEY_PRESSED" -MessageData $key | Out-Null
+                        }
+                        [System.Threading.Thread]::Sleep((Get-ScapeConstant -Path "ui::Feedback::RouterSleepMs" -Fallback 20))
                     }
-                    [System.Threading.Thread]::Sleep(20)
-                }
-            }) | Out-Null
+                }) | Out-Null
             $inputAsync = $inputPs.BeginInvoke()
 
             while ($State.IsRunning) {
@@ -171,41 +176,50 @@ function Start-ScapeRouter {
                     Remove-Event -SourceIdentifier $evt.SourceIdentifier
                 }
 
+                $ns = $State.Clone()
+                
+                if ([string]::IsNullOrWhiteSpace($ns.TitleKey) -or $ns.RawOptions.Count -eq 0) {
+                    $menuData = Get-ScapeMenuData -MenuId $ns.CurrentMenu
+                    if ($menuData) {
+                        $ns.RawOptions = @($menuData.Items)
+                        $ns.TitleKey = $menuData.TitleKey
+                    }
+                }
+                
                 $resizeCheck = Test-ScapeViewportChanged -LastWidth $ViewportState.LastWidth -LastHeight $ViewportState.LastHeight
                 if ($resizeCheck.HasResized) {
                     $ViewportState.LastWidth = $resizeCheck.NewWidth
                     $ViewportState.LastHeight = $resizeCheck.NewHeight
                     $ViewportState.HasResized = $true
-                    $ns = $State.Clone()
                     $ns.NeedsFullRedraw = $true
-                    $State = $ns
                     Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
-                } else {
+                }
+                else {
                     $ViewportState.HasResized = $false
                 }
 
-                    }
-
-                    $__rrType = $(if ($State.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' })
-                    Request-ScapeRedraw -MenuId $State.CurrentMenu -Type $__rrType -RouterState $ns -TitleKey $ns.TitleKey
+                if ($ns.NeedsFullRedraw -or $ns.NeedsCursorUpdate) {
+                    $__rrType = $(if ($ns.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' })
+                    Request-ScapeRedraw -MenuId $ns.CurrentMenu -Type $__rrType -RouterState $ns -TitleKey $ns.TitleKey
 
                     $ns.NeedsFullRedraw = $false
                     $ns.NeedsCursorUpdate = $false
-                    $State = $ns
                 }
-
-                $intent = Get-ScapeInputIntent -CurrentMenuState $State
-                if ($intent -ne 'IDLE') {
-                    $State = Invoke-ScapeRouterReducer -State $State -Intent $intent
-                    if ($State.EventToPublish) {
-                        Publish-ScapeEvent -Type $State.EventToPublish.Type -Severity $State.EventToPublish.Severity -Payload $State.EventToPublish.Payload
-                        $ns2 = $State.Clone()
-                        $ns2.EventToPublish = $null
-                        $State = $ns2
-                    }
-                    Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
-                }
+                $State = $ns
             }
+
+            $intent = Get-ScapeInputIntent -CurrentMenuState $State
+            if ($intent -ne 'IDLE') {
+                $State = Invoke-ScapeRouterReducer -State $State -Intent $intent
+                if ($State.EventToPublish) {
+                    Publish-ScapeEvent -Type $State.EventToPublish.Type -Severity $State.EventToPublish.Severity -Payload $State.EventToPublish.Payload
+                    $ns2 = $State.Clone()
+                    $ns2.EventToPublish = $null
+                    $State = $ns2
+                }
+                Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
+            }
+            
         }
         finally {
             Close-ScapeRenderer

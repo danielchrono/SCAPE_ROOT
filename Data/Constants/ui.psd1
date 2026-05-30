@@ -155,6 +155,8 @@
                 DefaultWidth    = 120
                 DefaultHeight   = 30
                 DefaultEventPriority = 99
+                DefaultBarWidth = 30
+                DefaultColumnWidth = 30
         }
         Layout               = @{
                 MinWidth     = 70       # Aumentei um pouco para dar respiro aos submenus
@@ -276,6 +278,7 @@
         }
         Feedback             = @{
                 TransientActionHoldMs = 1800
+                RouterSleepMs         = 20
         }
         ScrollBar            = @{
                 TrackChar = "░"; ThumbChar = "█"; Width = 1; HideWhenFull = $true
