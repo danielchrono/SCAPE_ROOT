@@ -158,6 +158,8 @@
                 TitlePadding = 2
                 HeaderHeight = 5    # Altura do banner (importante bater com o tamanho da logo)
                 FooterHeight = 3
+                SafeZoneWidth = 10
+                IconColumnWidth = 5
         }
 
         # ===========================================================================

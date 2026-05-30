@@ -12,14 +12,15 @@ function Add-ScapeDisplayList {
 
 function Add-ScapeDisplayListAt {
     param([int]$X, [int]$Y, [string]$Text)
-    # ANSI Cursor Position is 1-indexed (Y;X)
-    $Script:DisplayList.Append("$([char]27)[$($Y + 1);$($X + 1)H") | Out-Null
+    $posFormat = Get-ScapeConstant -Path "ui::ANSI::Cursor::Position"
+    if (-not $posFormat) { $posFormat = "$([char]27)[{0};{1}H" }
+    $Script:DisplayList.Append(($posFormat -f ($Y + 1), ($X + 1))) | Out-Null
     $Script:DisplayList.Append($Text) | Out-Null
 }
 
 function Flush-ScapeDisplayList {
     if ($Script:DisplayList.Length -gt 0) {
-        [Console]::Write($Script:DisplayList.ToString())
+        Write-Host $Script:DisplayList.ToString() -NoNewline
         $Script:DisplayList.Clear() | Out-Null
     }
 }
@@ -33,10 +34,10 @@ function Flush-ScapeDisplayList {
           tree view scrolling, icon cache, transient view ANSI-safe measurement, etc.
     [REFACTOR] Decomposed Write-ScapeMenuBuffer into specialized SRP functions.
 #>
-[CmdletBinding()] param()
+[CmdletBinding()]
 
 # ANSI strip pattern — definido uma vez, reusado em todo o módulo (DRY)
-$Script:AnsiStrip = [regex]"$([char]27)\[[0-9;]*[a-zA-Z]"
+$Script:AnsiStrip = [regex]"(?:\x1B)\[[0-9;]*[a-zA-Z]"
 
 $Script:IconResolveCache = @{}
 $Script:MenuLineCache = @{}
@@ -65,7 +66,8 @@ function Initialize-ScapeRenderer {
         try {
             [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
             [Console]::CursorVisible = $false
-        } catch {}
+        }
+        catch {}
 
         try { Initialize-ScapeGeometry | Out-Null }
         catch { Write-Verbose "Geometry init failed: $_" }
@@ -124,10 +126,11 @@ function Close-ScapeRenderer {
         try {
             [Console]::CursorVisible = $true
             [Console]::Clear()
-        } catch {}
-       if ($Script:RenderCache) {
-        $Script:RenderCache.LastTransientConfig = $null
-    }
+        }
+        catch {}
+        if ($Script:RenderCache) {
+            $Script:RenderCache.LastTransientConfig = $null
+        }
         $Script:IconResolveCache.Clear()
         $Script:MenuLineCache.Clear()
         $Script:RenderCache.LastMenuHash = ""
@@ -191,8 +194,10 @@ function Write-ScapeScrollIndicator {
 
 
         $arrow = if ($Direction -eq 'up') { '▲' } else { '▼' }
-        $dimPrefix = Get-ScapeConstant -Path "ui::ANSI::Text::Dim" -Fallback "$([char]27)[2m"
-        $resetSeq  = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset" -Fallback "$([char]27)[0m"
+        $dimPrefix = Get-ScapeConstant -Path "ui::ANSI::Text::Dim"
+        $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
+        if (-not $dimPrefix) { $dimPrefix = "`e[2m" }
+        if (-not $resetSeq) { $resetSeq = "`e[0m" }
         Set-ScapeCursorPosition -Left $X -Top $Y
         $formatted = Format-ScapeANSIMessage -Text $arrow -Flag $Flag
         Add-ScapeDisplayList -Text "${dimPrefix}${formatted}${resetSeq}"
@@ -214,7 +219,7 @@ function Write-ScapeMenuLayout {
     )
 
     $clearSeq = Get-ScapeConstant -Path "ui::ANSI::Screen::ClearFull"
-    if ($clearSeq) { Add-ScapeDisplayList -Text $clearSeq } else { Add-ScapeDisplayList -Text "$([char]27)[H$([char]27)[2J" }
+    if ($clearSeq) { Add-ScapeDisplayList -Text $clearSeq } else { Add-ScapeDisplayList -Text "`e[H`e[2J" }
 
     $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $Dims.Height -ItemCount $ItemCount -HeaderHeight $HeaderHeight
 
@@ -357,13 +362,15 @@ function Write-ScapeMenuRows {
                     $bgAnsi = Convert-ScapeRGBToAnsi -RGB $rgb -IsBackground
                     $fgAnsi = (Get-ScapeConstant -Path "ui::ANSI::Colors::FgBlack" -Fallback "$([char]27)[30m")
                     $fullLine = "${bgAnsi}${fgAnsi}${cleanLineWithEndPadding}${ESC}[0m"
-                } else {
+                }
+                else {
                     $fgAnsi16 = Get-ScapeAnsi16SequenceForFlag -Flag $flag
                     $bgAnsi16 = $fgAnsi16 -replace '\[3', '[4' -replace '\[9', '[10'
                     $blackText = (Get-ScapeConstant -Path "ui::ANSI::Colors::FgBlack" -Fallback "$([char]27)[30m")
                     $fullLine = "${bgAnsi16}${blackText}${cleanLineWithEndPadding}${ESC}[0m"
                 }
-            } else {
+            }
+            else {
                 $fmtSel = Format-ScapeANSIMessage -Text $strSel -Flag $flag
                 $fmtIcon = Format-ScapeANSIMessage -Text $strIcon -Flag $flag
                 $fmtText = Format-ScapeANSIMessage -Text $clippedText -Flag $flag
@@ -371,7 +378,8 @@ function Write-ScapeMenuRows {
                 $fullLine = "${fmtSel}$(" " * $padIcon)${fmtIcon}$(" " * $padTextSpace)${fmtText}$(" " * $padText)${fmtDyn}$(" " * $padEnd)"
             }
 
-            $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset" -Fallback "$([char]27)[0m"
+            $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
+            if (-not $resetSeq) { $resetSeq = "`e[0m" }
             Add-ScapeDisplayListAt -X $coords.SelectorX -Y $coords.Y -Text "${resetSeq}$fullLine"
 
             if ($isCurrent -and $hintStr) {
@@ -424,7 +432,8 @@ function Write-ScapeMenuBuffer {
         if ($FullRedraw) {
             $box = Write-ScapeMenuLayout -Dims $safeDims -ItemCount $itemCount -VisibleItems $visibleItems -TitleKey $TitleKey -FrameStyle $FrameStyle -HeaderHeight $layout.HeaderHeight
 
-        } else {
+        }
+        else {
             $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight
             $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $safeDims.Width
             $y = 1 + $banner.Count
@@ -714,7 +723,8 @@ function Format-ScapeGridLayout {
 
             $formatted = if ($item.PSObject.Properties['ThemeFlag']) {
                 Format-ScapeANSIMessage -Text $padded -Flag $item.ThemeFlag
-            } else {
+            }
+            else {
                 Format-ScapeANSIMessage -Text $padded -Flag 'MENU'
             }
 
@@ -796,10 +806,57 @@ function Format-ScapeThemifiedMenuBuffer {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeRenderer',
-                              'Close-ScapeRenderer',
-                              'Write-ScapeMenuBuffer',
-                              'Write-ScapeTransientView',
-                              'Write-ScapeTreeView',
-                              'Write-ScapeActionScreen',
-                              'Format-ScapeGridLayout',
-                              'Format-ScapeThemifiedMenuBuffer'
+'Close-ScapeRenderer',
+'Write-ScapeMenuBuffer',
+'Write-ScapeTransientView',
+'Write-ScapeTreeView',
+'Write-ScapeActionScreen',
+'Format-ScapeGridLayout',
+'Format-ScapeThemifiedMenuBuffer'
+
+
+$Script:LocalI18N = @(
+    "UI_ABORT_CONFIRM_CRITICAL",
+    "UI_BTN_BACK",
+    "UI_BreadcrumbRoot",
+    "UI_CANCEL_OP",
+    "UI_COMPLIANCE_DISCLAIMER",
+    "UI_CONFIRM_ABORT",
+    "UI_CONFIRM_PROCEED",
+    "UI_ConfirmExtract",
+    "UI_Cursor",
+    "UI_DIRTY_DISCARD",
+    "UI_DestinationPrompt",
+    "UI_DirIcon",
+    "UI_EmptyFolder",
+    "UI_ExplorerTitle",
+    "UI_ExtractComplete",
+    "UI_Extracting",
+    "UI_FileIcon",
+    "UI_LOCKDOWN_ACTIVE",
+    "UI_LoadError",
+    "UI_MarkRecursiveHint",
+    "UI_Marked",
+    "UI_NATIVE_DIAG_FAIL",
+    "UI_NATIVE_HYBRID_RUNNING",
+    "UI_NavHelp",
+    "UI_SELECT_DIR_FALLBACK",
+    "UI_SELECT_DIR_PROMPT",
+    "UI_SelectFolder",
+    "UI_StagingFolderPrompt",
+    "UI_Unmarked"
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+$Script:LocalI18N = @(
+    "THEME_APPLIED"
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+$Script:LocalI18N = @(
+    "STATUS_BUSY",
+    "STATUS_SUCCESS"
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+

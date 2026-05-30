@@ -123,7 +123,11 @@ function Initialize-ScapeLogger {
                         if ($IncomingEvt.Severity -notin @("LOG_ERR", "LOG_FATAL", "COMPLIANCE")) { return }
                         $timeout = $configRef.Limits["CRITICAL_SECTION_TIMEOUT_MS"]
                         if ($null -eq $timeout) { $timeout = 5000 }
-                        if (-not $sem.Wait([int]$timeout)) { return }
+                        $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
+                        while ($sem.CurrentCount -eq 0 -and [DateTime]::UtcNow -lt $deadline) {
+                            if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+                        }
+                        if (-not $sem.Wait(0)) { return }
                     }
 
                     try {
@@ -333,3 +337,26 @@ try {
     Register-EngineEvent -SourceIdentifier PowerShell.OnExit -Action { Close-ScapeLogStream } -SupportEvent -ErrorAction SilentlyContinue
 }
 catch { }
+
+$Script:LocalI18N = @(
+    "LOG_METRIC",
+    "LOG_SYSTEM",
+    "LOG_TRACE",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+$Script:LocalI18N = @(
+    "ERR_ADMIN_REQUIRED",
+    "ERR_BOOT_SECTOR_READ",
+    "ERR_DEPENDENCY_FAIL",
+    "ERR_DISK_FULL",
+    "ERR_DRIVE_LETTERS_EXHAUSTED",
+    "ERR_INTEGRITY_CHECK",
+    "ERR_NO_ITEMS_SELECTED",
+    "ERR_NO_STAGING",
+    "ERR_PATH_INVALID",
+    "ERR_SUPERBLOCK_READ",
+    "ERR_SYSTEM_DRIVE_LOCK",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+

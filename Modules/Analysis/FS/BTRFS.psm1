@@ -6,11 +6,7 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline Ready
 #>
 
-$Script:C = $null
 
-function Initialize-ScapeBTRFSParser {
-    $Script:C = @{
-        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
@@ -29,18 +25,18 @@ function Get-ScapeBTRFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    if (-not $Script:C) { Initialize-ScapeBTRFSParser }
+    
 
     # 1. Validação de Offset do Superblock
-    $sbOffset = $Script:C.FS.BTRFS.SB_OFFSET
+    $sbOffset = (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_OFFSET
     if ($Offset -ne $sbOffset) { return $null }
 
     # 2. Safety Check: Tamanho mínimo do Buffer
     if ($Buffer.Length -lt ($sbOffset + 0x100)) { return $null }
 
     # 3. Extração e Validação da Assinatura (Magic Number)
-    $magic = [System.Text.Encoding]::ASCII.GetString($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_MAGIC_OFF, 8)
-    $expectedMagic = $Script:C.FS.BTRFS.MAGIC_STRING # "_BHRfS_M"
+    $magic = [System.Text.Encoding]::ASCII.GetString($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_MAGIC_OFF, 8)
+    $expectedMagic = (Get-ScapeConstant -Path "storage::FS").BTRFS.MAGIC_STRING # "_BHRfS_M"
 
     if ($magic -ne $expectedMagic) {
         Publish-ScapeEvent -Type "FS_CORRUPTION_DETECTED" -Payload @{
@@ -53,23 +49,23 @@ function Get-ScapeBTRFSMeta {
     }
 
     # 4. Parsing de Metadados (Offsets via Constants)
-    $uuid = [System.BitConverter]::ToString($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_UUID_OFF, 16) -replace '-', ''
-    $fsid = [System.BitConverter]::ToString($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_FSID_OFF, 16) -replace '-', ''
-    $csumType = $Buffer[$sbOffset + $Script:C.FS.BTRFS.SB_CSUMTYPE_OFF]
-    $nodesize = [System.BitConverter]::ToUInt32($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_NODESIZE_OFF)
-    $sectorsize = [System.BitConverter]::ToUInt32($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_SECTORSIZE_OFF)
-    $totalBytes = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_TOTALBYTES_OFF)
-    $rootDirId = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_ROOTDIR_OFF)
-    $generation = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_GENERATION_OFF)
-    $chunkRootGen = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + $Script:C.FS.BTRFS.SB_CHUNKROOT_OFF)
-    $rootLevel = $Buffer[$sbOffset + $Script:C.FS.BTRFS.SB_ROOTLEVEL_OFF]
+    $uuid = [System.BitConverter]::ToString($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_UUID_OFF, 16) -replace '-', ''
+    $fsid = [System.BitConverter]::ToString($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_FSID_OFF, 16) -replace '-', ''
+    $csumType = $Buffer[$sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_CSUMTYPE_OFF]
+    $nodesize = [System.BitConverter]::ToUInt32($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_NODESIZE_OFF)
+    $sectorsize = [System.BitConverter]::ToUInt32($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_SECTORSIZE_OFF)
+    $totalBytes = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_TOTALBYTES_OFF)
+    $rootDirId = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_ROOTDIR_OFF)
+    $generation = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_GENERATION_OFF)
+    $chunkRootGen = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_CHUNKROOT_OFF)
+    $rootLevel = $Buffer[$sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_ROOTLEVEL_OFF]
 
     # 5. Construção do Objeto de Diagnóstico
     $inode = [PSCustomObject]@{
         VolumeSerial   = $VolumeSerial
         FSType         = "FS_BTRFS"
         FSMagic        = $magic
-        Status         = $Script:C.DB["STATUS_DISC"]
+        Status         = (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"]
         InodeNumber    = $rootDirId
         FileName       = "<ROOT>"
         RealSize       = $totalBytes

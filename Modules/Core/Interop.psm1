@@ -139,28 +139,6 @@ namespace Scape.Core.Native
 # =============================================================================
 # INICIALIZAÇÃO (Compila UMA vez no AppDomain)
 # =============================================================================
-function Initialize-ScapeInterop {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param()
-    process {
-        # Compila apenas se ainda não estiver no AppDomain
-        if (-not ("Scape.Core.Native.Win32DiskBridge" -as [type])) {
-            try {
-                Add-Type -TypeDefinition $Script:InteropSignature -Language CSharp -ErrorAction Stop
-            }
-            catch {
-                Publish-ScapeFault -ErrorRecord $_ -Context "Interop_Init" -Message "Failed to load Win32 Interop definitions"
-                return @{ Success = $false; Data = $null; Error = $_ }
-            }
-        }
-
-        # Habilita VT100 (console moderno)
-        try { [Scape.Core.Native.VT100Enabler]::Enable() } catch { }
-
-        return @{ Success = $true; Data = "Interop.Ready"; Error = $null }
-    }
-}
 
 function Enable-ScapeVT100 {
     [CmdletBinding()]
@@ -179,3 +157,22 @@ function Enable-ScapeVT100 {
 
 Export-ModuleMember -Function 'Initialize-ScapeInterop',
                               'Enable-ScapeVT100'
+
+$Script:LocalI18N = @(
+    "NATIVE_JOURNAL_EXPORTED",
+    "NATIVE_LINUX_DIAG",
+    "NATIVE_LINUX_ISOLATE",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+$Script:LocalI18N = @(
+    "INT_CHECKPOINT_CREATED",
+    "INT_CONVERSION_AUTH",
+    "INT_CONVERSION_OK",
+    "INT_FALLBACK_ABORT",
+    "INT_MFT_MIRROR_DIV",
+    "INT_MODE_CONFLICT",
+    "INT_SQLITE_CORRUPT",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+

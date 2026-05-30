@@ -6,11 +6,7 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline Ready
 #>
 
-$Script:C = $null
 
-function Initialize-ScapeUDFParser {
-    $Script:C = @{
-        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
@@ -29,23 +25,23 @@ function Get-ScapeUDFMeta {
         [string]$VolumeSerial = ""
     )
 
-    if (-not $Script:C) { Initialize-ScapeUDFParser }
+    
 
-    $anchorOff = $Script:C.FS.UDF.ANCHOR_OFF
+    $anchorOff = (Get-ScapeConstant -Path "storage::FS").UDF.ANCHOR_OFF
     if ($Buffer.Length -lt ($Offset + $anchorOff + 0x200)) { return $null }
 
     $vrsSig = [System.Text.Encoding]::ASCII.GetString($Buffer, $Offset + $anchorOff, 5)
     if ($vrsSig -ne "BEA01") { return $null }
 
     $pvdOff = $anchorOff + 0x200
-    $volId = [System.Text.Encoding]::ASCII.GetString($Buffer, $Offset + $pvdOff + $Script:C.FS.UDF.PVD_VOLNAME_OFF, 32).Trim()
-    $blockSize = [System.BitConverter]::ToUInt32($Buffer, $Offset + $pvdOff + $Script:C.FS.UDF.PVD_BLOCKSIZE_OFF)
-    $volSize = [System.BitConverter]::ToUInt32($Buffer, $Offset + $pvdOff + $Script:C.FS.UDF.PVD_VOLSPACE_OFF)
+    $volId = [System.Text.Encoding]::ASCII.GetString($Buffer, $Offset + $pvdOff + (Get-ScapeConstant -Path "storage::FS").UDF.PVD_VOLNAME_OFF, 32).Trim()
+    $blockSize = [System.BitConverter]::ToUInt32($Buffer, $Offset + $pvdOff + (Get-ScapeConstant -Path "storage::FS").UDF.PVD_BLOCKSIZE_OFF)
+    $volSize = [System.BitConverter]::ToUInt32($Buffer, $Offset + $pvdOff + (Get-ScapeConstant -Path "storage::FS").UDF.PVD_VOLSPACE_OFF)
 
     $result = [PSCustomObject]@{
         VolumeSerial   = $VolumeSerial
         FSType         = "UDF"
-        Status         = $Script:C.DB["STATUS_DISC"]
+        Status         = (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"]
         InodeNumber    = 0
         FileName       = $volId
         RealSize       = $volSize * $blockSize

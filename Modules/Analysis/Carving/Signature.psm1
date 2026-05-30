@@ -8,57 +8,6 @@
 $Script:SignatureIndex = $null
 $Script:MaxHeaderLength = 0
 
-function Initialize-ScapeSignatureEngine {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param()
-
-    Publish-ScapeEvent -Type "SYS_CORE" -Payload @{ Action = "LogLine"; Key = "CARVING_ENGINE_INIT" }
-
-    $state = Get-ScapeColdState
-    if (-not $state["SYS_ASSETS_DIR"].ContainsKey("carving")) {
-        throw "CARVING_ASSETS_NOT_LOADED"
-    }
-
-    $rawDefs = $state["SYS_ASSETS_DIR"]["carving"]["SIGNATURES"]
-    $index = [System.Collections.Generic.Dictionary[byte, System.Collections.Generic.List[PSCustomObject]]]::new()
-    $localMax = 0
-
-    foreach ($key in $rawDefs.Keys) {
-        $def = $rawDefs[$key]
-
-        $headerBytes = Convert-ScapeHexToByte -Hex $def.Header
-
-        if ($null -eq $headerBytes -or $headerBytes.Length -eq 0) { continue }
-
-        $firstByte = $headerBytes[0]
-        if (-not $index.ContainsKey($firstByte)) {
-            $index[$firstByte] = [System.Collections.Generic.List[PSCustomObject]]::new()
-        }
-
-        if ($headerBytes.Length -gt $localMax) { $localMax = $headerBytes.Length }
-
-        $compiledSig = [PSCustomObject]@{
-            Id               = $key
-            Category         = $def.Category
-            Extension        = $def.Extension
-            HeaderBytes      = $headerBytes
-            HeaderOffset     = [int]$def.HeaderOffset
-            FooterBytes      = Convert-ScapeHexToByte -Hex $def.Footer
-            ValidationBytes  = Convert-ScapeHexToByte -Hex $def.ValidationBytes
-            ValidationOffset = if ($null -ne $def.ValidationOffset) { [int]$def.ValidationOffset } else { 0 }
-            MaxSize          = [long]$def.MaxSize
-            RequireExact     = [bool]$def.RequireExact
-        }
-
-        $index[$firstByte].Add($compiledSig)
-    }
-
-    $Script:SignatureIndex = $index
-    $Script:MaxHeaderLength = $localMax
-
-    Publish-ScapeEvent -Type "SYS_CORE" -Payload @{ Action = "LogLine"; Message = "Carving Engine: Compiled $($rawDefs.Count) signatures. Max depth: $localMax bytes." }
-}
 
 function Find-ScapeSignatureAtOffset {
     [CmdletBinding()]

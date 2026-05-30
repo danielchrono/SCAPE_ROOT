@@ -41,6 +41,9 @@
     # MAIN MENU
     # ─────────────────────────────────────────────────────────────────────
     "MENU_MAIN_TITLE"                 = @{ T = 'SYSTEM SETTINGS & ENVIRONMENT CONFIGURATION'; H = 'Main menu header title'; F = $null }
+    "MENU_MAIN_TARGET"                = @{ T = 'SELECT TARGET DRIVE/IMAGE'; H = 'Main menu target selection'; F = $null }
+    "TREE_DEFAULT_TITLE"              = @{ T = 'FILE SYSTEM TREE'; H = 'Default title for tree view'; F = $null }
+    "ERR_NOT_IMPLEMENTED"             = @{ T = 'Not Implemented'; H = 'Error for unimplemented feature'; F = 'ERR' }
     "MENU_MAIN_SCAN"                  = @{ T = 'FULL SCAN & INVENTORY TOPOLOGY'; H = 'Hardware audit and disk topology inventory.'; F = '1' }
     "MENU_MAIN_PARSING"               = @{ T = 'TARGETED RECOVERY (Plan A - MFT/Inode)'; H = 'Deterministic MFT/Inode record recovery.'; F = '2' }
     "MENU_MAIN_ARCHAEOLOGY"           = @{ T = 'ARCHAEOLOGY MODE (Plan B - Raw Carving)'; H = 'Deep hexadecimal signature carving (Plan B).'; F = '3' }

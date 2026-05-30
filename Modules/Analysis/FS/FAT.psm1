@@ -5,13 +5,7 @@
 #>
 #Requires -Version 5.1
 
-$Script:C = $null
 
-function Initialize-ScapeFATParser {
-    [CmdletBinding()]
-    param()
-    $Script:C = @{
-        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
@@ -26,22 +20,22 @@ function Get-ScapeFATDirectoryEntry {
         [Parameter(Mandatory = $true)][byte[]]$Buffer,
         [Parameter(Mandatory = $true)][int]$Offset
     )
-    $dirSize = [int]$Script:C.FS.FAT.DIR_SIZE
+    $dirSize = [int](Get-ScapeConstant -Path "storage::FS").FAT.DIR_SIZE
     if (($Offset + $dirSize) -gt $Buffer.Length) { return $null }
 
     $delSig = $Buffer[$Offset]
     if ($delSig -eq 0x00) { return $null }
-    $isDeleted = ($delSig -eq $Script:C.FS.FAT.DEL_SIG)
+    $isDeleted = ($delSig -eq (Get-ScapeConstant -Path "storage::FS").FAT.DEL_SIG)
 
-    $nameRaw = Read-ScapeAsciiString -Buf $Buffer -Off ($Offset + $Script:C.FS.FAT.DIR_NAME_OFF) -Len 8
-    $extRaw = Read-ScapeAsciiString -Buf $Buffer -Off ($Offset + $Script:C.FS.FAT.DIR_NAME_OFF + 8) -Len 3
+    $nameRaw = Read-ScapeAsciiString -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").FAT.DIR_NAME_OFF) -Len 8
+    $extRaw = Read-ScapeAsciiString -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").FAT.DIR_NAME_OFF + 8) -Len 3
     $fileName = if ($extRaw) { "$nameRaw.$extRaw" } else { $nameRaw }
 
-    $attr = $Buffer[$Offset + $Script:C.FS.FAT.DIR_ATTR_OFF]
-    $timeRaw = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + $Script:C.FS.FAT.DIR_TIME_OFF)
-    $dateRaw = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + $Script:C.FS.FAT.DIR_DATE_OFF)
-    $startClus = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + $Script:C.FS.FAT.DIR_STARTCLU_OFF)
-    $size = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.FAT.DIR_SIZE_OFF)
+    $attr = $Buffer[$Offset + (Get-ScapeConstant -Path "storage::FS").FAT.DIR_ATTR_OFF]
+    $timeRaw = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").FAT.DIR_TIME_OFF)
+    $dateRaw = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").FAT.DIR_DATE_OFF)
+    $startClus = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").FAT.DIR_STARTCLU_OFF)
+    $size = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").FAT.DIR_SIZE_OFF)
 
     return [PSCustomObject]@{
         FileName = $fileName.Trim(); Attributes = $attr
@@ -91,12 +85,12 @@ function Restore-ScapeDeletedFATEntry {
         [Parameter()][int]$StartOffset = 0,
         [Parameter()][int]$MaxEntries = 100
     )
-    $dirSize = [int]$Script:C.FS.FAT.DIR_SIZE
+    $dirSize = [int](Get-ScapeConstant -Path "storage::FS").FAT.DIR_SIZE
     $recovered = New-Object System.Collections.Generic.List[PSCustomObject]
     $count = 0
 
     for ($i = $StartOffset; $i -lt ($Buffer.Length - $dirSize) -and $count -lt $MaxEntries; $i += $dirSize) {
-        if ($Buffer[$i] -eq $Script:C.FS.FAT.DEL_SIG) {
+        if ($Buffer[$i] -eq (Get-ScapeConstant -Path "storage::FS").FAT.DEL_SIG) {
             # CORREÇÃO: Get-ScapeFATDirectoryEntry
             $entry = Get-ScapeFATDirectoryEntry -Buffer $Buffer -Offset $i
             if ($entry -and -not [string]::IsNullOrWhiteSpace($entry.FileName)) {
@@ -115,14 +109,14 @@ function Get-ScapeExFATStreamExtension {
         [Parameter(Mandatory = $true)][int]$Offset
     )
     $type = $Buffer[$Offset]
-    if ($type -ne $Script:C.FS.FAT.EXFAT_STRM_SIG) { return $null }
+    if ($type -ne (Get-ScapeConstant -Path "storage::FS").FAT.EXFAT_STRM_SIG) { return $null }
 
-    $flags = $Buffer[$Offset + $Script:C.FS.FAT.EXFAT_FLAGS_OFF]
-    $nameLen = $Buffer[$Offset + $Script:C.FS.FAT.EXFAT_NAMELEN_OFF]
-    $nameHash = [BitConverter]::ToUInt16($Buffer, $Offset + $Script:C.FS.FAT.EXFAT_NAMEHASH_OFF)
-    $validLen = [BitConverter]::ToUInt32($Buffer, $Offset + $Script:C.FS.FAT.EXFAT_VALIDLEN_OFF)
-    $allocLen = [BitConverter]::ToUInt32($Buffer, $Offset + $Script:C.FS.FAT.EXFAT_ALLOCLEN_OFF)
-    $firstClus = [BitConverter]::ToUInt32($Buffer, $Offset + $Script:C.FS.FAT.EXFAT_FIRSTCLU_OFF)
+    $flags = $Buffer[$Offset + (Get-ScapeConstant -Path "storage::FS").FAT.EXFAT_FLAGS_OFF]
+    $nameLen = $Buffer[$Offset + (Get-ScapeConstant -Path "storage::FS").FAT.EXFAT_NAMELEN_OFF]
+    $nameHash = [BitConverter]::ToUInt16($Buffer, $Offset + (Get-ScapeConstant -Path "storage::FS").FAT.EXFAT_NAMEHASH_OFF)
+    $validLen = [BitConverter]::ToUInt32($Buffer, $Offset + (Get-ScapeConstant -Path "storage::FS").FAT.EXFAT_VALIDLEN_OFF)
+    $allocLen = [BitConverter]::ToUInt32($Buffer, $Offset + (Get-ScapeConstant -Path "storage::FS").FAT.EXFAT_ALLOCLEN_OFF)
+    $firstClus = [BitConverter]::ToUInt32($Buffer, $Offset + (Get-ScapeConstant -Path "storage::FS").FAT.EXFAT_FIRSTCLU_OFF)
 
     return [PSCustomObject]@{
         Type = "EXFAT_STREAM"; Flags = $flags; NameLength = $nameLen; NameHash = $nameHash
@@ -138,14 +132,14 @@ function Get-ScapeFATMeta {
         [Parameter(Mandatory = $true)][int]$Offset,
         [string]$VolumeSerial = ""
     )
-    if (-not $Script:C) { Initialize-ScapeFATParser }
+    
 
     # CORREÇÃO: Get-ScapeFATDirectoryEntry
     $entry = Get-ScapeFATDirectoryEntry -Buffer $Buffer -Offset $Offset
     if ($entry) {
         $entry | Add-Member -NotePropertyName "VolumeSerial" -NotePropertyValue $VolumeSerial -Force
         $entry | Add-Member -NotePropertyName "FSType" -NotePropertyValue "FAT32" -Force
-        $entry | Add-Member -NotePropertyName "Status" -NotePropertyValue $Script:C.DB["STATUS_DISC"] -Force
+        $entry | Add-Member -NotePropertyName "Status" -NotePropertyValue (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"] -Force
         return $entry
     }
 
@@ -154,7 +148,7 @@ function Get-ScapeFATMeta {
     if ($exfat) {
         $exfat | Add-Member -NotePropertyName "VolumeSerial" -NotePropertyValue $VolumeSerial -Force
         $exfat | Add-Member -NotePropertyName "FSType" -NotePropertyValue "exFAT" -Force
-        $exfat | Add-Member -NotePropertyName "Status" -NotePropertyValue $Script:C.DB["STATUS_DISC"] -Force
+        $exfat | Add-Member -NotePropertyName "Status" -NotePropertyValue (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"] -Force
         return $exfat
     }
     return $null

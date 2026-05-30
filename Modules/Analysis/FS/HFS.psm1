@@ -6,11 +6,7 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline Ready
 #>
 
-$Script:C = $null
 
-function Initialize-ScapeHFSParser {
-    $Script:C = @{
-        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
@@ -29,29 +25,29 @@ function Get-ScapeHFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    if (-not $Script:C) { Initialize-ScapeHFSParser }
+    
 
-    $vhOff = $Script:C.FS.HFS.VOLUME_HEADER_OFF
+    $vhOff = (Get-ScapeConstant -Path "storage::FS").HFS.VOLUME_HEADER_OFF
     if ($Buffer.Length -lt ($Offset + $vhOff + 0x200)) { return $null }
 
     $sig = [System.BitConverter]::ToUInt16($Buffer, $Offset + $vhOff)
-    $isHFSPlus = ($sig -eq $Script:C.FS.HFS.PLUS_SIG -or $sig -eq $Script:C.FS.HFS.HFSX_SIG)
-    if (-not $isHFSPlus -and $sig -ne $Script:C.FS.HFS.SIG) { return $null }
+    $isHFSPlus = ($sig -eq (Get-ScapeConstant -Path "storage::FS").HFS.PLUS_SIG -or $sig -eq (Get-ScapeConstant -Path "storage::FS").HFS.HFSX_SIG)
+    if (-not $isHFSPlus -and $sig -ne (Get-ScapeConstant -Path "storage::FS").HFS.SIG) { return $null }
 
-    if ($sig -eq $Script:C.FS.HFS.SIG) {
-        $blockSize = [System.BitConverter]::ToUInt16($Buffer, $Offset + $vhOff + $Script:C.FS.HFS.VH_BLOCKSIZE_OFF)
+    if ($sig -eq (Get-ScapeConstant -Path "storage::FS").HFS.SIG) {
+        $blockSize = [System.BitConverter]::ToUInt16($Buffer, $Offset + $vhOff + (Get-ScapeConstant -Path "storage::FS").HFS.VH_BLOCKSIZE_OFF)
     }
     else {
-        $blockSize = [System.BitConverter]::ToUInt32($Buffer, $Offset + $vhOff + $Script:C.FS.HFS.VH_BLOCKSIZE_OFF)
+        $blockSize = [System.BitConverter]::ToUInt32($Buffer, $Offset + $vhOff + (Get-ScapeConstant -Path "storage::FS").HFS.VH_BLOCKSIZE_OFF)
     }
-    $totalBlocks = [System.BitConverter]::ToUInt32($Buffer, $Offset + $vhOff + $Script:C.FS.HFS.VH_TOTALBLOCKS_OFF)
-    $rootDirCNID = [System.BitConverter]::ToUInt32($Buffer, $Offset + $vhOff + $Script:C.FS.HFS.VH_ROOTDIR_OFF)
-    $volumeName = [System.Text.Encoding]::ASCII.GetString($Buffer, $Offset + $vhOff + $Script:C.FS.HFS.VH_VOLNAME_OFF, 32).Trim()
+    $totalBlocks = [System.BitConverter]::ToUInt32($Buffer, $Offset + $vhOff + (Get-ScapeConstant -Path "storage::FS").HFS.VH_TOTALBLOCKS_OFF)
+    $rootDirCNID = [System.BitConverter]::ToUInt32($Buffer, $Offset + $vhOff + (Get-ScapeConstant -Path "storage::FS").HFS.VH_ROOTDIR_OFF)
+    $volumeName = [System.Text.Encoding]::ASCII.GetString($Buffer, $Offset + $vhOff + (Get-ScapeConstant -Path "storage::FS").HFS.VH_VOLNAME_OFF, 32).Trim()
 
     $result = [PSCustomObject]@{
         VolumeSerial   = $VolumeSerial
-        FSType         = if ($sig -eq $Script:C.FS.HFS.PLUS_SIG) { "HFS_PLUS" } elseif ($sig -eq $Script:C.FS.HFS.HFSX_SIG) { "HFSX" } else { "HFS" }
-        Status         = $Script:C.DB["STATUS_DISC"]
+        FSType         = if ($sig -eq (Get-ScapeConstant -Path "storage::FS").HFS.PLUS_SIG) { "HFS_PLUS" } elseif ($sig -eq (Get-ScapeConstant -Path "storage::FS").HFS.HFSX_SIG) { "HFSX" } else { "HFS" }
+        Status         = (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"]
         InodeNumber    = $rootDirCNID
         FileName       = $volumeName
         RealSize       = $totalBlocks * $blockSize

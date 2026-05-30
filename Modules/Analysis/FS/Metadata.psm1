@@ -9,21 +9,6 @@ $Script:FSConstants = $null
 $Script:DBConstants = $null
 $Script:Limits = $null
 
-function Initialize-ScapeFSMetadataEngine {
-    [CmdletBinding()]
-    param()
-    $Script:FSConstants = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
-    $Script:DBConstants = Get-ScapeConstant -Path "network::DB" -Fallback @{}
-    $Script:Limits = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
-
-    # Emissão segura usando o padrão EventBus
-    if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
-        Publish-ScapeEvent -Type "SYSTEM_READY" -Severity "LOG_INFO" -Payload @{
-            Action = "LogLine"
-            Key = "DOMAIN_PARSING"
-        }
-    }
-}
 
 # Helper functions com parâmetros tipados para evitar PSReviewUnusedParameter
 function Read-ScapeUInt16LE {
@@ -313,3 +298,14 @@ function Test-ScapeMetadataIntegrity {
     }
     return $validYear
 }
+
+$Script:LocalI18N = @(
+    "META_ACCESSED",
+    "META_CREATED",
+    "META_FILENAME",
+    "META_MFT_CHANGED",
+    "META_MODIFIED",
+    "META_OFFSET",
+    "META_PID",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+

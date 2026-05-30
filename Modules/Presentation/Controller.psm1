@@ -135,7 +135,8 @@ function Update-ScapeMenuViewModel {
                 }
             }
 
-            $ansiStripPattern = if ($null -ne $Script:AnsiStrip) { $Script:AnsiStrip } else { [regex]"$([char]27)\[[0-9;]*[a-zA-Z]" }
+            $esc = Get-ScapeConstant -Path "ui::ANSI::ESC" -Fallback "$([char]27)"
+            $ansiStripPattern = if ($null -ne $Script:AnsiStrip) { $Script:AnsiStrip } else { [regex]"$esc\[[0-9;]*[a-zA-Z]" }
             $cleanStr = if ($finalText) { $ansiStripPattern.Replace($finalText, '') } else { '' }
             $cleanDyn = if ($formattedDynText) { $ansiStripPattern.Replace($formattedDynText, '') } else { '' }
 

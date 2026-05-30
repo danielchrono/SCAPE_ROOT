@@ -6,11 +6,7 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline Ready
 #>
 
-$Script:C = $null
 
-function Initialize-ScapeZFSParser {
-    $Script:C = @{
-        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
@@ -29,18 +25,18 @@ function Get-ScapeZFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    if (-not $Script:C) { Initialize-ScapeZFSParser }
+    
 
     $uberMagic = [System.BitConverter]::ToUInt32($Buffer, $Offset)
-    if ($uberMagic -eq $Script:C.FS.ZFS.UBER_SIG) {
-        $txg = [System.BitConverter]::ToUInt64($Buffer, $Offset + $Script:C.FS.ZFS.UBER_TXG_OFF)
-        $timestamp = [System.BitConverter]::ToUInt64($Buffer, $Offset + $Script:C.FS.ZFS.UBER_TIMESTAMP_OFF)
-        $rootbp = [System.BitConverter]::ToUInt64($Buffer, $Offset + $Script:C.FS.ZFS.UBER_ROOTBP_OFF)
+    if ($uberMagic -eq (Get-ScapeConstant -Path "storage::FS").ZFS.UBER_SIG) {
+        $txg = [System.BitConverter]::ToUInt64($Buffer, $Offset + (Get-ScapeConstant -Path "storage::FS").ZFS.UBER_TXG_OFF)
+        $timestamp = [System.BitConverter]::ToUInt64($Buffer, $Offset + (Get-ScapeConstant -Path "storage::FS").ZFS.UBER_TIMESTAMP_OFF)
+        $rootbp = [System.BitConverter]::ToUInt64($Buffer, $Offset + (Get-ScapeConstant -Path "storage::FS").ZFS.UBER_ROOTBP_OFF)
 
         $result = [PSCustomObject]@{
             VolumeSerial   = $VolumeSerial
             FSType         = "FS_ZFS"
-            Status         = $Script:C.DB["STATUS_DISC"]
+            Status         = (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"]
             InodeNumber    = 0
             FileName       = "<UBERBLOCK>"
             RealSize       = 0
@@ -60,7 +56,7 @@ function Get-ScapeZFSMeta {
         $result = [PSCustomObject]@{
             VolumeSerial   = $VolumeSerial
             FSType         = "FS_ZFS"
-            Status         = $Script:C.DB["STATUS_DISC"]
+            Status         = (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"]
             InodeNumber    = 0
             FileName       = "<LABEL>"
             RealSize       = 0

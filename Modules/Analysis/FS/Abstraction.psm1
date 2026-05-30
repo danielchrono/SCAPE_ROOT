@@ -6,51 +6,43 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline | Lazy-Load Parsers
 #>
 
-$Script:C = $null
 $Script:LoadedParsers = @{}
 $Script:DetectionCache = @{}
 
-function Initialize-ScapeAbstraction {
-    $Script:C = @{
-        FS      = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
+
+function Get-ScapeAbstractionConfig {
+    $fs = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
+    return @{
+        FS = $fs
         CARVING = Get-ScapeConstant -Path "storage::SIGNATURES" -Fallback @{}
-        HW      = Get-ScapeConstant -Path "system::PROFILES" -Fallback @{}
-        LIMITS  = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
-    }
-
-    $Script:C.FS_SIGS = @{
-        NTFS_MFT   = Convert-ScapeHexToByte -Hex ($Script:C.FS["NTFS_MFT_SIG"].ToString("X8"))
-        NTFS_BOOT  = Convert-ScapeHexToByte -Hex "4E54465320202020"
-        FAT_BOOT   = [BitConverter]::GetBytes($Script:C.FS["FAT_BOOT_SIG"])
-        EXFAT_VBR  = Convert-ScapeHexToByte -Hex ($Script:C.FS["EXFAT_VBR_SIG"].ToString("X16"))
-        EXT_SB     = [BitConverter]::GetBytes($Script:C.FS["EXT4_SB_SIG"])
-        BTRFS_SB   = Convert-ScapeHexToByte -Hex ($Script:C.FS["BTRFS_SB_SIG"].ToString("X16"))
-        XFS_SB     = Convert-ScapeHexToByte -Hex ($Script:C.FS["XFS_SB_SIG"].ToString("X8"))
-        ZFS_UBER   = [BitConverter]::GetBytes($Script:C.FS["ZFS_UBER_SIG"])
-        ZFS_LABEL  = Convert-ScapeHexToByte -Hex ($Script:C.FS["ZFS_LABEL_SIG"].ToString("X16"))
-        APFS_SB    = Convert-ScapeHexToByte -Hex ($Script:C.FS["APFS_SB_SIG"].ToString("X8"))
-        REFS_SB    = Convert-ScapeHexToByte -Hex ($Script:C.FS["REFS_SIG"].ToString("X8"))
-        HFS_PLUS   = [BitConverter]::GetBytes($Script:C.FS["HFS_PLUS_SIG"])
-        HFSX       = [BitConverter]::GetBytes($Script:C.FS["HFSX_SIG"])
-        UDF_VRS    = Convert-ScapeHexToByte -Hex ($Script:C.FS["UDF_SIG"].ToString("X8"))
-        F2FS_SB    = [BitConverter]::GetBytes($Script:C.FS["F2FS_SB_SIG"])
-        JFS_SUPER  = Convert-ScapeHexToByte -Hex ($Script:C.FS["JFS_SUPER_SIG"].ToString("X8"))
-
-        VMDK       = Convert-ScapeHexToByte -Hex "4B444D56"
-        VHD        = Convert-ScapeHexToByte -Hex "636F6E6563746978"
-        VHDX       = Convert-ScapeHexToByte -Hex "7668647866696C65"
-        QCOW2      = Convert-ScapeHexToByte -Hex "514649FB"
-        DMG        = Convert-ScapeHexToByte -Hex "7801730D626260"
-        ISO9660    = Convert-ScapeHexToByte -Hex "4344303031"
-        GPT_HEADER = Convert-ScapeHexToByte -Hex "4546492050415254"
-        MBR_SIG    = [BitConverter]::GetBytes([uint16]0xAA55)
-    }
-
-    Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
-        Action   = "LogLine"
-        Key      = "FS_ABSTRACTION_INITIALIZED"
-        Args     = @("Detected $($Script:C.FS_SIGS.Count) signature patterns")
-        Severity = "LOG_INFO"
+        HW = Get-ScapeConstant -Path "system::PROFILES" -Fallback @{}
+        LIMITS = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
+        FS_SIGS = @{
+            NTFS_MFT = Convert-ScapeHexToByte -Hex ($fs["NTFS_MFT_SIG"].ToString("X8"))
+            NTFS_BOOT = Convert-ScapeHexToByte -Hex "4E54465320202020"
+            FAT_BOOT = [BitConverter]::GetBytes($fs["FAT_BOOT_SIG"])
+            EXFAT_VBR = Convert-ScapeHexToByte -Hex ($fs["EXFAT_VBR_SIG"].ToString("X16"))
+            EXT_SB = [BitConverter]::GetBytes($fs["EXT4_SB_SIG"])
+            BTRFS_SB = Convert-ScapeHexToByte -Hex ($fs["BTRFS_SB_SIG"].ToString("X16"))
+            XFS_SB = Convert-ScapeHexToByte -Hex ($fs["XFS_SB_SIG"].ToString("X8"))
+            ZFS_UBER = [BitConverter]::GetBytes($fs["ZFS_UBER_SIG"])
+            ZFS_LABEL = Convert-ScapeHexToByte -Hex ($fs["ZFS_LABEL_SIG"].ToString("X16"))
+            APFS_SB = Convert-ScapeHexToByte -Hex ($fs["APFS_SB_SIG"].ToString("X8"))
+            REFS_SB = Convert-ScapeHexToByte -Hex ($fs["REFS_SIG"].ToString("X8"))
+            HFS_PLUS = [BitConverter]::GetBytes($fs["HFS_PLUS_SIG"])
+            HFSX = [BitConverter]::GetBytes($fs["HFSX_SIG"])
+            UDF_VRS = Convert-ScapeHexToByte -Hex ($fs["UDF_SIG"].ToString("X8"))
+            F2FS_SB = [BitConverter]::GetBytes($fs["F2FS_SB_SIG"])
+            JFS_SUPER = Convert-ScapeHexToByte -Hex ($fs["JFS_SUPER_SIG"].ToString("X8"))
+            VMDK = Convert-ScapeHexToByte -Hex "4B444D56"
+            VHD = Convert-ScapeHexToByte -Hex "636F6E6563746978"
+            VHDX = Convert-ScapeHexToByte -Hex "7668647866696C65"
+            QCOW2 = Convert-ScapeHexToByte -Hex "514649FB"
+            DMG = Convert-ScapeHexToByte -Hex "7801730D626260"
+            ISO9660 = Convert-ScapeHexToByte -Hex "4344303031"
+            GPT_HEADER = Convert-ScapeHexToByte -Hex "4546492050415254"
+            MBR_SIG = [BitConverter]::GetBytes([uint16]0xAA55)
+        }
     }
 }
 
@@ -99,7 +91,7 @@ function Resolve-ScapeFSType {
         [Parameter()][switch]$ForceRescan
     )
 
-    if (-not $Script:C) { Initialize-ScapeAbstraction }
+    
     if ($Buffer.Length -lt 512) { return "STATE_UNKNOWN" }
 
     $cacheKey = "${VolumeSerial}_${Offset}_${Buffer.Length}"
@@ -109,67 +101,67 @@ function Resolve-ScapeFSType {
 
     $result = "STATE_UNKNOWN"
 
-    if (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.NTFS_MFT) { $result = "NTFS_MFT" }
-    elseif ($Buffer.Length -ge ($Offset + 11) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 3) -Pattern $Script:C.FS_SIGS.NTFS_BOOT)) { $result = "NTFS_BOOT" }
-    elseif ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.REFS_SB)) { $result = "FS_REFS" }
+    if (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.NTFS_MFT) { $result = "NTFS_MFT" }
+    elseif ($Buffer.Length -ge ($Offset + 11) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 3) -Pattern $c.FS_SIGS.NTFS_BOOT)) { $result = "NTFS_BOOT" }
+    elseif ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.REFS_SB)) { $result = "FS_REFS" }
     elseif ($Buffer.Length -ge ($Offset + 512)) {
         $bootSig = _ReadUInt16LE -Buf $Buffer -Off ($Offset + 510)
-        $fatBootSig = $Script:C.FS["FAT_BOOT_SIG"]
+        $fatBootSig = $c.FS["FAT_BOOT_SIG"]
         if ($fatBootSig -and $bootSig -eq $fatBootSig) {
             $oem = [System.Text.Encoding]::ASCII.GetString($Buffer, ($Offset + 3), 8).Trim()
             if ($oem -match 'FAT32|MSWIN|MSDOS') { $result = "FAT32" }
             elseif ($oem -match 'EXFAT|exFAT') { $result = "EXFAT" }
         }
     }
-    elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.EXFAT_VBR)) { $result = "EXFAT" }
+    elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.EXFAT_VBR)) { $result = "EXFAT" }
 
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 0x43A)) {
         $extMagic = _ReadUInt16LE -Buf $Buffer -Off ($Offset + 0x438)
-        $extSig = $Script:C.FS["EXT4_SB_SIG"]
+        $extSig = $c.FS["EXT4_SB_SIG"]
         if ($extSig -and $extMagic -eq $extSig) { $result = "EXT4" }
     }
-    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.XFS_SB)) { $result = "XFS" }
-    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 72) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 0x40) -Pattern $Script:C.FS_SIGS.BTRFS_SB)) { $result = "FS_BTRFS" }
+    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.XFS_SB)) { $result = "XFS" }
+    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 72) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 0x40) -Pattern $c.FS_SIGS.BTRFS_SB)) { $result = "FS_BTRFS" }
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 0x404)) {
         $f2fsMagic = _ReadUInt32LE -Buf $Buffer -Off ($Offset + 0x400)
-        $f2fsSig = $Script:C.FS["F2FS_SB_SIG"]
+        $f2fsSig = $c.FS["F2FS_SB_SIG"]
         if ($f2fsSig -and $f2fsMagic -eq $f2fsSig) { $result = "F2FS" }
     }
-    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.JFS_SUPER)) { $result = "JFS" }
+    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.JFS_SUPER)) { $result = "JFS" }
 
-    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 36) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 0x20) -Pattern $Script:C.FS_SIGS.APFS_SB)) { $result = "FS_APFS" }
+    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 36) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 0x20) -Pattern $c.FS_SIGS.APFS_SB)) { $result = "FS_APFS" }
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 1026)) {
         $hfsSig = _ReadUInt16LE -Buf $Buffer -Off ($Offset + 1024)
-        $hfsPlusSig = $Script:C.FS["HFS_PLUS_SIG"]
-        $hfsxSig = $Script:C.FS["HFSX_SIG"]
+        $hfsPlusSig = $c.FS["HFS_PLUS_SIG"]
+        $hfsxSig = $c.FS["HFSX_SIG"]
         if ($hfsPlusSig -and $hfsSig -eq $hfsPlusSig) { $result = "HFS_PLUS" }
         elseif ($hfsxSig -and $hfsSig -eq $hfsxSig) { $result = "HFSX" }
     }
 
     if ($result -eq "STATE_UNKNOWN") {
-        if ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.ZFS_LABEL)) { $result = "ZFS_LABEL" }
+        if ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.ZFS_LABEL)) { $result = "ZFS_LABEL" }
         elseif ($Buffer.Length -ge ($Offset + 4)) {
             $uberMagic = _ReadUInt32LE -Buf $Buffer -Off $Offset
-            $uberSig = $Script:C.FS["ZFS_UBER_SIG"]
+            $uberSig = $c.FS["ZFS_UBER_SIG"]
             if ($uberSig -and $uberMagic -eq $uberSig) { $result = "ZFS_UBER" }
         }
     }
 
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 0x8005)) {
-        if (_BytesMatch -Buf $Buffer -Off ($Offset + 0x8000) -Pattern $Script:C.FS_SIGS.UDF_VRS) { $result = "UDF" }
+        if (_BytesMatch -Buf $Buffer -Off ($Offset + 0x8000) -Pattern $c.FS_SIGS.UDF_VRS) { $result = "UDF" }
     }
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 0x8006)) {
-        if (_BytesMatch -Buf $Buffer -Off ($Offset + 0x8001) -Pattern $Script:C.FS_SIGS.ISO9660) { $result = "ISO9660" }
+        if (_BytesMatch -Buf $Buffer -Off ($Offset + 0x8001) -Pattern $c.FS_SIGS.ISO9660) { $result = "ISO9660" }
     }
 
     if ($result -eq "STATE_UNKNOWN") {
-        if ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.VMDK)) { $result = "VMDK" }
-        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.VHD)) { $result = "VHD" }
-        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.VHDX)) { $result = "VHDX" }
-        elseif ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.QCOW2)) { $result = "QCOW2" }
-        elseif ($Buffer.Length -ge ($Offset + 7) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.DMG)) { $result = "DMG" }
-        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $Script:C.FS_SIGS.GPT_HEADER)) { $result = "GPT" }
-        elseif ($Buffer.Length -ge ($Offset + 512) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 510) -Pattern $Script:C.FS_SIGS.MBR_SIG)) { $result = "MBR" }
+        if ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VMDK)) { $result = "VMDK" }
+        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VHD)) { $result = "VHD" }
+        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VHDX)) { $result = "VHDX" }
+        elseif ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.QCOW2)) { $result = "QCOW2" }
+        elseif ($Buffer.Length -ge ($Offset + 7) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.DMG)) { $result = "DMG" }
+        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.GPT_HEADER)) { $result = "GPT" }
+        elseif ($Buffer.Length -ge ($Offset + 512) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 510) -Pattern $c.FS_SIGS.MBR_SIG)) { $result = "MBR" }
     }
 
     $Script:DetectionCache[$cacheKey] = $result
@@ -282,7 +274,7 @@ function Invoke-ScapeFSParser {
         [Parameter()][hashtable]$Context = @{}
     )
 
-    if (-not $Script:C) { Initialize-ScapeAbstraction }
+    
 
     if (-not (_LoadParserModule -FSType $FSType)) {
         Publish-ScapeEvent -Type "LOG_WARN" -Payload @{ Action = "LogLine"; Key = "PARSER_NOT_AVAILABLE"; Args = @($FSType); Severity = "WARN" }
@@ -342,7 +334,7 @@ function Invoke-ScapeBatchFSAnalysis {
         [Parameter()][switch]$EnableParallelism
     )
 
-    if (-not $Script:C) { Initialize-ScapeAbstraction }
+    
 
     $maxParallel = 1
     if ($EnableParallelism) {
@@ -375,7 +367,10 @@ function Invoke-ScapeBatchFSAnalysis {
     $tasks = New-Object System.Collections.Generic.List[System.Threading.Tasks.Task]
 
     for ($i = 0; $i -lt $SectorBatch.Count; $i++) {
-        $throttle.Wait() | Out-Null
+        while (-not $throttle.Wait(0)) {
+            if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+            else { [System.Threading.Thread]::Sleep(1) }
+        }
 
         # Isolando escopo local para o Linter e para o ThreadJob injetar com `$using:`
         $localBuf = $SectorBatch[$i]
@@ -461,3 +456,43 @@ function Invoke-ScapeContainerParser {
 
     if ($innerResults.Count -gt 0) { return $innerResults.ToArray() } else { return $null }
 }
+
+$Script:LocalI18N = @(
+    "FS_DISK_IMAGE",
+    "FS_EXFAT",
+    "FS_EXT4",
+    "FS_F2FS",
+    "FS_FAT32",
+    "FS_HFS",
+    "FS_HFSX",
+    "FS_ISO9660",
+    "FS_JFS",
+    "FS_PART_TABLE",
+    "FS_UDF",
+    "FS_XFS",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+$Script:LocalI18N = @(
+    "VOLUME_ACCESS_DENIED",
+    "VOLUME_NO_TARGETS",
+    "VOLUME_SELECTION_INDEX",
+    "VOLUME_SELECTION_PROMPT",
+    "VOLUME_TYPE_APFS",
+    "VOLUME_TYPE_BTRFS",
+    "VOLUME_TYPE_EXFAT",
+    "VOLUME_TYPE_EXT4",
+    "VOLUME_TYPE_FAT32",
+    "VOLUME_TYPE_NTFS",
+    "VOLUME_TYPE_UNKNOWN",
+    "VOLUME_TYPE_XFS",
+    "VOLUME_TYPE_ZFS",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+$Script:LocalI18N = @(
+    "INVENTORY_LOGICAL_VOLUMES",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+

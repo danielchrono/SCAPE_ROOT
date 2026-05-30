@@ -6,25 +6,8 @@
     Architecture: FP Strict | Zero Hardcode | Event-Pipeline | Backpressure-Aware
 #>
 
-$Script:C = $null
-$Script:Stats = @{ Processed = 0; Carved = 0; Errors = 0 }
+$Script:Stats = @{ Processed = 0; Carved = 0; Errors = 0 } # Deprecated in favor of FP
 
-function Initialize-ScapeCarver {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param()
-
-    $Script:C = @{
-        ENGINE = Get-ScapeConstant -Path "storage::ENGINE" -Fallback @{}
-        HW     = Get-ScapeConstant -Path "hardware" -Fallback @{}
-        LIMITS = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
-    }
-
-    $hwProfile = Get-ScapeActiveProfile
-    $Script:C.ACTIVE = $hwProfile
-
-    Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{ Action = "LogLine"; Key = "CARVER_INITIALIZED"; Args = @("Profile: $($Script:C.ACTIVE)", "Batch: $($hwProfile.CARVING_BATCH_SIZE)"); Severity = "LOG_INFO" }
-}
 
 function Invoke-ScapeRawCarving {
     [CmdletBinding()]
@@ -36,7 +19,7 @@ function Invoke-ScapeRawCarving {
         [switch]$EnableBackpressure
     )
 
-    if (-not $Script:C) { Initialize-ScapeCarver }
+    
 
     $hwProfile = $Script:C.ACTIVE
     $sectorSize = [int]$Script:C.ENGINE["SECTOR_ALIGNMENT"]
@@ -45,17 +28,24 @@ function Invoke-ScapeRawCarving {
 
     $i = 0
     $carvedBatch = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $localStats = @{ Processed = 0; Carved = 0; Errors = 0 }
 
     while ($i -lt ($bufferLen - $sectorSize)) {
         if ($EnableBackpressure) {
             $pressure = Test-ScapeResourcePressure -Resource "RAM"
             if ($pressure.Critical) {
                 Publish-ScapeEvent -Type "LOG_WARN" -Payload @{ Action = "LogLine"; Key = "CARVING_BACKPRESSURE_CRITICAL"; Severity = "WARN" }
-                Start-Sleep -Milliseconds $Script:C.HW.SAFEGUARDS.BACKOFF_MAX_MS
+                $deadline = [DateTime]::UtcNow.AddMilliseconds((Get-ScapeConstant -Path "system::PROFILES").SAFEGUARDS.BACKOFF_MAX_MS)
+                while ([DateTime]::UtcNow -lt $deadline) {
+                    if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+                }
                 continue
             }
             elseif ($pressure.Warning) {
-                Start-Sleep -Milliseconds $Script:C.HW.SAFEGUARDS.BACKOFF_BASE_MS
+                $deadline = [DateTime]::UtcNow.AddMilliseconds((Get-ScapeConstant -Path "system::PROFILES").SAFEGUARDS.BACKOFF_BASE_MS)
+                while ([DateTime]::UtcNow -lt $deadline) {
+                    if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+                }
             }
         }
 
@@ -79,7 +69,7 @@ function Invoke-ScapeRawCarving {
             }
 
             $carvedBatch.Add($artifact)
-            $Script:Stats.Carved++
+            $localStats.Carved++
 
             if ($carvedBatch.Count -ge $batchSize) {
                 _FlushCarvedBatch -Batch $carvedBatch
@@ -90,16 +80,16 @@ function Invoke-ScapeRawCarving {
         else {
             $i += $sectorSize
         }
-        $Script:Stats.Processed++
+        $localStats.Processed++
     }
 
     if ($carvedBatch.Count -gt 0) {
         _FlushCarvedBatch -Batch $carvedBatch
     }
 
-    Publish-ScapeEvent -Type "METRIC" -Payload @{ Action = "LogLine"; Key = "CARVING_STATS"; Args = @("Processed: $($Script:Stats.Processed)", "Carved: $($Script:Stats.Carved)", "Errors: $($Script:Stats.Errors)"); Severity = "LOG_DEBUG" }
+    Publish-ScapeEvent -Type "METRIC" -Payload @{ Action = "LogLine"; Key = "CARVING_STATS"; Args = @("Processed: $($localStats.Processed)", "Carved: $($localStats.Carved)", "Errors: $($localStats.Errors)"); Severity = "LOG_DEBUG" }
 
-    return @{ Processed = $Script:Stats.Processed; Carved = $Script:Stats.Carved }
+    return @{ Processed = $localStats.Processed; Carved = $localStats.Carved }
 }
 
 function _FlushCarvedBatch {

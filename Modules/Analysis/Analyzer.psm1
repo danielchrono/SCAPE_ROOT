@@ -6,33 +6,8 @@
     Architecture: FP Strict | Zero Hardcode | Event-Pipeline | Hardware-Aware | TreeView-Ready
 #>
 
-$Script:C = $null
 $Script:Initialized = $false
 
-function Initialize-ScapeAnalyzer {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param()
-    process {
-        if ($Script:Initialized) { return }
-
-        $Script:C = @{
-            LIMITS = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
-            HW     = Get-ScapeConstant -Path "hardware" -Fallback @{}
-        }
-
-        if (Get-Command "Initialize-ScapeAbstraction" -ErrorAction SilentlyContinue) {
-            Initialize-ScapeAbstraction | Out-Null
-        }
-        if (Get-Command "Initialize-ScapeCarver" -ErrorAction SilentlyContinue) {
-            Initialize-ScapeCarver | Out-Null
-        }
-
-        $Script:Initialized = $true
-
-        Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{ Action = "LogLine"; Key = "ANALYZER_INITIALIZED"; Severity = "LOG_INFO" }
-    }
-}
 
 function Start-ScapeAnalysisStream {
     [CmdletBinding(SupportsShouldProcess = $true)]
@@ -154,3 +129,30 @@ function Invoke-ScapeBatchAnalysis {
         return [System.Object[]]$results.ToArray()
     }
 }
+
+$Script:LocalI18N = @(
+    "TOPOLOGY_TITLE",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+$Script:LocalI18N = @(
+    "PIPE_ARCHAEOLOGY_COMPLETE",
+    "PIPE_ARCHAEOLOGY_START",
+    "PIPE_CARVING_PROGRESS",
+    "PIPE_EXTRACTION_PHASE",
+    "PIPE_EXTRACT_COUNTER",
+    "PIPE_FALLBACK_COUNTDOWN",
+    "PIPE_FALLBACK_ENGAGED",
+    "PIPE_FALLBACK_IMMINENT",
+    "PIPE_FALLBACK_WARNING",
+    "PIPE_STREAMING_DATA",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+$Script:LocalI18N = @(
+    "FOR_EXT_WALK",
+    "FOR_MFT_WALK",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+

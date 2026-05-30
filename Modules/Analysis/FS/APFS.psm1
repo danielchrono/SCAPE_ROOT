@@ -6,11 +6,7 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline Ready
 #>
 
-$Script:C = $null
 
-function Initialize-ScapeAPFSParser {
-    $Script:C = @{
-        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
@@ -29,22 +25,22 @@ function Get-ScapeAPFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    if (-not $Script:C) { Initialize-ScapeAPFSParser }
+    
 
-    $magicOff = $Script:C.FS.APFS.MAGIC_OFFSET
+    $magicOff = (Get-ScapeConstant -Path "storage::FS").APFS.MAGIC_OFFSET
     if ($Buffer.Length -lt ($Offset + $magicOff + 4)) { return $null }
     $magic = [System.Text.Encoding]::ASCII.GetString($Buffer, $Offset + $magicOff, 4)
     if ($magic -ne "NXSB") { return $null }
 
-    $blockSize = [System.BitConverter]::ToUInt32($Buffer, $Offset + $magicOff + $Script:C.FS.APFS.SB_BLOCKSIZE_OFF)
-    $containerSize = [System.BitConverter]::ToUInt64($Buffer, $Offset + $magicOff + $Script:C.FS.APFS.SB_CONTAINERSIZE_OFF)
-    $nxVersion = [System.BitConverter]::ToUInt32($Buffer, $Offset + $magicOff + $Script:C.FS.APFS.SB_VERSION_OFF)
-    $checkpointDescAddr = [System.BitConverter]::ToUInt64($Buffer, $Offset + $magicOff + $Script:C.FS.APFS.SB_CHECKPOINT_DESC_OFF)
+    $blockSize = [System.BitConverter]::ToUInt32($Buffer, $Offset + $magicOff + (Get-ScapeConstant -Path "storage::FS").APFS.SB_BLOCKSIZE_OFF)
+    $containerSize = [System.BitConverter]::ToUInt64($Buffer, $Offset + $magicOff + (Get-ScapeConstant -Path "storage::FS").APFS.SB_CONTAINERSIZE_OFF)
+    $nxVersion = [System.BitConverter]::ToUInt32($Buffer, $Offset + $magicOff + (Get-ScapeConstant -Path "storage::FS").APFS.SB_VERSION_OFF)
+    $checkpointDescAddr = [System.BitConverter]::ToUInt64($Buffer, $Offset + $magicOff + (Get-ScapeConstant -Path "storage::FS").APFS.SB_CHECKPOINT_DESC_OFF)
 
     $result = [PSCustomObject]@{
         VolumeSerial   = $VolumeSerial
         FSType         = "FS_APFS"
-        Status         = $Script:C.DB["STATUS_DISC"]
+        Status         = (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"]
         InodeNumber    = 2
         FileName       = "<ROOT>"
         RealSize       = $containerSize

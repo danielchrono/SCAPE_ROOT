@@ -6,15 +6,7 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline Ready
 #>
 
-$Script:C = $null
 
-function Initialize-ScapeNTFSParser {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param()
-    process {
-        $Script:C = @{
-            FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
             DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
         }
         Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
@@ -33,16 +25,16 @@ function Get-ScapeNTFSAttributeList {
         [Parameter()][int]$BaseOffset = 0
     )
     process {
-        if (-not $Script:C) { Initialize-ScapeNTFSParser }
+        
 
         $attrEnd = 0xFFFFFFFF
-        if ($Script:C.FS.ContainsKey("NTFS_ATTR_END")) {
-            $attrEnd = $Script:C.FS["NTFS_ATTR_END"]
+        if ((Get-ScapeConstant -Path "storage::FS").ContainsKey("NTFS_ATTR_END")) {
+            $attrEnd = (Get-ScapeConstant -Path "storage::FS")["NTFS_ATTR_END"]
         }
 
         $attrOffOff = 20
-        if ($Script:C.FS.ContainsKey("NTFS_MFT_ATTR_OFF")) {
-            $attrOffOff = $Script:C.FS["NTFS_MFT_ATTR_OFF"]
+        if ((Get-ScapeConstant -Path "storage::FS").ContainsKey("NTFS_MFT_ATTR_OFF")) {
+            $attrOffOff = (Get-ScapeConstant -Path "storage::FS")["NTFS_MFT_ATTR_OFF"]
         }
 
         $attributes = New-Object System.Collections.Generic.List[PSCustomObject]
@@ -101,11 +93,11 @@ function Get-ScapeNTFSDataRun {
         [Parameter()][int]$BaseOffset = 0
     )
     process {
-        if (-not $Script:C) { Initialize-ScapeNTFSParser }
+        
 
         $attrList = Get-ScapeNTFSAttributeList -Record $Record -BaseOffset $BaseOffset
         $targetType = 0x80
-        if ($Script:C.FS.ContainsKey("NTFS_ATTR_DATA")) { $targetType = $Script:C.FS["NTFS_ATTR_DATA"] }
+        if ((Get-ScapeConstant -Path "storage::FS").ContainsKey("NTFS_ATTR_DATA")) { $targetType = (Get-ScapeConstant -Path "storage::FS")["NTFS_ATTR_DATA"] }
 
         $dataAttr = $attrList | Where-Object { $_.Type -eq $targetType } | Select-Object -First 1
         if (-not $dataAttr -or $dataAttr.NonResident -eq $false) { return [System.Object[]]@() }
@@ -169,7 +161,7 @@ function Resolve-ScapeNTFSHardLink {
 
         if (Get-Command "Invoke-ScapeDBQuery" -ErrorAction SilentlyContinue) {
             $tbl = "ShadowMFT"
-            if ($Script:C.DB.ContainsKey("TABLE_MFT")) { $tbl = $Script:C.DB["TABLE_MFT"] }
+            if ((Get-ScapeConstant -Path "network::DB").ContainsKey("TABLE_MFT")) { $tbl = (Get-ScapeConstant -Path "network::DB")["TABLE_MFT"] }
 
             $query = "SELECT FileName, ParentFRN FROM {0} WHERE FRN = @frn AND VolumeSerial = @vs" -f $tbl
             $results = Invoke-ScapeDBQuery -Table $tbl -Query $query -Params @{ frn = $FRN; vs = $VolumeSerial }
@@ -212,7 +204,7 @@ function Get-ScapeNTFSMeta {
         [Parameter()][string]$VolumeSerial = ""
     )
     process {
-        if (-not $Script:C) { Initialize-ScapeNTFSParser }
+        
 
         if (Get-Command "Set-ScapeFSMeta" -ErrorAction SilentlyContinue) {
             $base = Set-ScapeFSMeta -Buffer $Buffer -Offset $Offset -FSType "FS_NTFS" -VolumeSerial $VolumeSerial

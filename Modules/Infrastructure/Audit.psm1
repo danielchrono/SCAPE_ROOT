@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Audit
     Description: Immutable forensic ledger for extracted artifacts â€“ chain-of-custody with hash chaining.
@@ -76,7 +76,11 @@ function Initialize-ScapeAudit {
                     $timeout = $Script:C.Audit["BACKPRESSURE_TIMEOUT_MS"]
                     if ($null -eq $timeout) { $timeout = 5000 } # <<< PRESERVADO
 
-                    if (-not $Script:Semaphore.Wait([int]$timeout)) { return }
+                    $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
+                    while ($Script:Semaphore.CurrentCount -eq 0 -and [DateTime]::UtcNow -lt $deadline) {
+                        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+                    }
+                    if (-not $Script:Semaphore.Wait(0)) { return }
                 }
                 try {
                     $record = New-ScapeAuditRecord -EventFrame $IncomingEvt
@@ -226,7 +230,18 @@ function Export-ScapeAuditLedger {
             }
 
             if ($Format -eq "CSV") {
-                $csv = $report.Records | ConvertTo-Csv -NoTypeInformation
+                $mappedRecords = $report.Records | Select-Object `
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_ID'); E={$_.SequenceId}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_NAME'); E={$_.EventType}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_SIZE'); E={if ($_.Details -match '"SizeBytes":(\d+)') { $matches[1] } else { 0 }}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_TYPE'); E={$_.Operator}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_STATUS'); E={$_.Severity}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_CATEGORY'); E={""}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_HASH'); E={$_.PreviousHash}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_SCORE'); E={$_.Integrity}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_OFFSET'); E={""}},
+                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_LENGTH'); E={""}}
+                $csv = $mappedRecords | ConvertTo-Csv -NoTypeInformation
                 [System.IO.File]::WriteAllLines($OutputPath, $csv)
             }
             else {

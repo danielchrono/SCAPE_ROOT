@@ -526,4 +526,5 @@ Write-Monolith -OutFile $OutputPath -ModulePayloads $modulePayloads -DataAssets 
 Write-Host "`n[+] $(Get-Msg 'DEPLOYER_SUCCESS') -> $OutputPath" -ForegroundColor (Get-Clr 'Base.Green')
 Write-Host "[>] Monolith compilation complete." -ForegroundColor (Get-Clr 'Base.Amber')
 
-Start-Sleep -Milliseconds 400
+$deadline = [DateTime]::UtcNow.AddMilliseconds(400)
+while ([DateTime]::UtcNow -lt $deadline) { if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null } }

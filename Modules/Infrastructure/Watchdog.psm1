@@ -54,7 +54,7 @@ function Initialize-ScapeWatchdog {
             param($interval, $timeout, $queue)
 
             while ($true) {
-                Start-Sleep -Milliseconds $interval
+                [System.Threading.Thread]::Sleep($interval)
 
                 $idleTime = ([DateTime]::UtcNow - $ScapeHeartbeat).TotalSeconds
 
@@ -110,3 +110,9 @@ function Update-ScapeHeartbeat {
         }
     }
 }
+
+$Script:LocalI18N = @(
+    "SYNC_RESUME",
+    "SYNC_SUSPEND",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+

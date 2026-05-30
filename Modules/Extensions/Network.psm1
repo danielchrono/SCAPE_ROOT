@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.Network
     Architecture: SMB/CIFS Network Discovery and Mounting
@@ -24,7 +24,14 @@ function Find-ScapeNetworkNode {
         Start-Job -ScriptBlock {
             param($tIP, $tPort, $tTime)
             $client = [System.Net.Sockets.TcpClient]::new()
-            try { $asyncTask = $client.ConnectAsync($tIP, $tPort); if ($asyncTask.Wait($tTime)); if ($client.Connected) { return $tIP } } catch {} finally { $client.Close() }
+            try { 
+                $asyncTask = $client.ConnectAsync($tIP, $tPort)
+                $deadline = [DateTime]::UtcNow.AddMilliseconds($tTime)
+                while (-not $asyncTask.IsCompleted -and [DateTime]::UtcNow -lt $deadline) {
+                    if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+                }
+                if ($client.Connected) { return $tIP } 
+            } catch {} finally { $client.Close() }
         } -ArgumentList $ip, $port, $timeout
     }
 

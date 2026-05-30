@@ -6,20 +6,8 @@
     Architecture: FP Strict | Zero Hardcode | Heuristic-Driven | Event-Pipeline Ready
 #>
 
-$Script:C = $null
 $Script:Stats = @{ Repaired = 0; Stitched = 0; Validated = 0; Failed = 0 }
 
-function Initialize-ScapeHealer {
-    [CmdletBinding()]
-    [OutputType([void])]
-    param()
-    $Script:C = @{
-        CARVING = Get-ScapeConstant -Path "storage::SIGNATURES" -Fallback @{}
-        ENGINE  = Get-ScapeConstant -Path "storage::ENGINE" -Fallback @{}
-        FS      = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
-    }
-    Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{ Action = "LogLine"; Key = "HEALER_INITIALIZED"; Severity = "LOG_INFO" }
-}
 
 function Repair-ScapeCarvedHeader {
     [CmdletBinding()]
@@ -29,7 +17,7 @@ function Repair-ScapeCarvedHeader {
         [Parameter(Mandatory = $true)][string]$SignatureId
     )
 
-    $sig = $Script:C.CARVING[$SignatureId]
+    $sig = (Get-ScapeConstant -Path "storage::SIGNATURES")[$SignatureId]
     if (-not $sig) { return @{ Success = $false; Reason = "SIGNATURE_NOT_FOUND" } }
 
     $expected = Convert-ScapeHexToByte -Hex $sig.Header
@@ -67,7 +55,7 @@ function Repair-ScapeTruncatedFooter {
         [Parameter()][long]$ExpectedSize = 0
     )
 
-    $sig = $Script:C.CARVING[$SignatureId]
+    $sig = (Get-ScapeConstant -Path "storage::SIGNATURES")[$SignatureId]
     if (-not $sig -or -not $sig.Footer) {
         return @{ Success = $false; Reason = "NO_FOOTER_DEF" }
     }
@@ -120,7 +108,7 @@ function Repair-ScapeFragmentedRecord {
     }
 
     $gapThreshold = if ($MaxGapBytes -gt 0) { $MaxGapBytes } else { $Script:C.ENGINE["MAX_ORPHAN_GAP_KB"] * 1024 }
-    $sig = $Script:C.CARVING[$SignatureId]
+    $sig = (Get-ScapeConstant -Path "storage::SIGNATURES")[$SignatureId]
 
     $sorted = $Fragments | Sort-Object { $_.Offset }
     $stitched = [System.Collections.Generic.List[byte]]::new()
@@ -165,7 +153,7 @@ function Test-ScapeCarvedIntegrity {
         [Parameter()][switch]$StrictMode
     )
 
-    $sig = $Script:C.CARVING[$SignatureId]
+    $sig = (Get-ScapeConstant -Path "storage::SIGNATURES")[$SignatureId]
     if (-not $sig) { return @{ Valid = $false; Reason = "SIGNATURE_NOT_FOUND" } }
 
     if ($sig.Header) {

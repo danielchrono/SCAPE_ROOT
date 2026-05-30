@@ -6,13 +6,7 @@
 #>
 #Requires -Version 5.1
 
-$Script:C = $null
 
-function Initialize-ScapeEXTParser {
-    [CmdletBinding()]
-    param()
-    $Script:C = @{
-        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{
@@ -28,19 +22,19 @@ function Get-ScapeEXTInode {
         [Parameter(Mandatory = $true)][int]$Offset
     )
 
-    $inodeSize = [int]$Script:C.FS.EXT.INODE_SIZE
+    $inodeSize = [int](Get-ScapeConstant -Path "storage::FS").EXT.INODE_SIZE
     if (($Offset + $inodeSize) -gt $Buffer.Length) { return $null }
 
-    $mode = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_MODE_OFF)
-    $uid = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_UID_OFF)
-    $sizeLow = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_SIZE_LOW_OFF)
-    $sizeHigh = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_SIZE_HIGH_OFF)
-    $atime = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_ATIME_OFF)
-    $mtime = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_MTIME_OFF)
-    $ctime = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_CTIME_OFF)
-    $links = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_LINKS_OFF)
-    $blocks = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_BLOCKS_OFF)
-    $flags = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + $Script:C.FS.EXT.INODE_FLAGS_OFF)
+    $mode = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_MODE_OFF)
+    $uid = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_UID_OFF)
+    $sizeLow = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_SIZE_LOW_OFF)
+    $sizeHigh = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_SIZE_HIGH_OFF)
+    $atime = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_ATIME_OFF)
+    $mtime = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_MTIME_OFF)
+    $ctime = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_CTIME_OFF)
+    $links = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_LINKS_OFF)
+    $blocks = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_BLOCKS_OFF)
+    $flags = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + (Get-ScapeConstant -Path "storage::FS").EXT.INODE_FLAGS_OFF)
 
     $realSize = [int64]$sizeLow + ([int64]$sizeHigh -shl 32)
     $isDir = ($mode -band 0x4000) -ne 0
@@ -69,10 +63,10 @@ function Resolve-ScapeEXTIndirectBlock {
 
     $pointers = New-Object System.Collections.Generic.List[long]
     for ($i = 0; $i -lt 12; $i++) {
-        $ptr = Read-ScapeUInt32LE -Buf $InodeBuffer -Off ($Script:C.FS.EXT.INODE_PTRS_START + ($i * 4))
+        $ptr = Read-ScapeUInt32LE -Buf $InodeBuffer -Off ((Get-ScapeConstant -Path "storage::FS").EXT.INODE_PTRS_START + ($i * 4))
         if ($ptr -gt 0) { $pointers.Add($ptr) }
     }
-    $single = Read-ScapeUInt32LE -Buf $InodeBuffer -Off ($Script:C.FS.EXT.INODE_PTRS_START + 48)
+    $single = Read-ScapeUInt32LE -Buf $InodeBuffer -Off ((Get-ScapeConstant -Path "storage::FS").EXT.INODE_PTRS_START + 48)
     if ($single -gt 0) { $pointers.Add($single) }
     return $pointers.ToArray()
 }
@@ -86,7 +80,7 @@ function Restore-ScapeEXTDeletedInode {
         [Parameter()][int]$MaxInodes = 100
     )
 
-    $inodeSize = [int]$Script:C.FS.EXT.INODE_SIZE
+    $inodeSize = [int](Get-ScapeConstant -Path "storage::FS").EXT.INODE_SIZE
     $recovered = New-Object System.Collections.Generic.List[PSCustomObject]
     $count = 0
 
@@ -123,14 +117,14 @@ function Get-ScapeEXTMeta {
         [Parameter(Mandatory = $true)][int]$Offset,
         [string]$VolumeSerial = ""
     )
-    if (-not $Script:C) { Initialize-ScapeEXTParser }
+    
 
     # CORREÇÃO: Get-ScapeEXTInode
     $inode = Get-ScapeEXTInode -Buffer $Buffer -Offset $Offset
     if ($inode) {
         $inode | Add-Member -NotePropertyName "VolumeSerial" -NotePropertyValue $VolumeSerial -Force
         $inode | Add-Member -NotePropertyName "FSType" -NotePropertyValue "EXT4" -Force
-        $inode | Add-Member -NotePropertyName "Status" -NotePropertyValue $Script:C.DB["STATUS_DISC"] -Force
+        $inode | Add-Member -NotePropertyName "Status" -NotePropertyValue (Get-ScapeConstant -Path "network::DB")["STATUS_DISC"] -Force
         $blocks = Resolve-ScapeEXTIndirectBlock -InodeBuffer $Buffer
         $inode | Add-Member -NotePropertyName "BlockPointers" -NotePropertyValue $blocks -Force
         return $inode

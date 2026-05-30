@@ -85,37 +85,6 @@ function Get-ScapeSettingDefault {
     }
 }
 
-function Initialize-ScapeSetting {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param([switch]$ForceReset)
-    process {
-        $defaults = Get-ScapeSettingDefault
-        $state = if ($ForceReset) {
-            $defaults
-        }
-        else {
-            _LoadSettingsFromJson -Defaults $defaults
-        }
-        $state = Optimize-ScapeSettingsState -State $state -Defaults $defaults
-        Update-ScapeColdState -NewProperties $state | Out-Null
-        Update-ScapeColdState -NewProperties @{ Config = @{ Language = $state["CurrentLanguage"] } } | Out-Null
-        if (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
-            $personaData = Set-ScapePersona -Name $state["ThemePersona"] -Silent
-            if ($null -ne $personaData -and $personaData.Count -gt 0) {
-                foreach ($k in $personaData.Keys) { $state[$k] = $personaData[$k] }
-                Update-ScapeColdState -NewProperties $personaData | Out-Null
-            }
-        }
-        $useTrueColor = $state["Capability_TrueColor"] -eq $true
-        if (Get-Command Set-ScapeColorMode -ErrorAction SilentlyContinue) {
-            Set-ScapeColorMode -UseTrueColor $useTrueColor
-        }
-        $msgInit = Get-ScapeLogMsg -Key "SETTINGS_ENGINE_ONLINE" -MsgArgs @()
-        Publish-ScapeEvent -Type "SYS_CORE" -Payload @{ Action = "LogLine"; Key = "SETTINGS_ENGINE_ONLINE"; Message = $msgInit }
-        return $state
-    }
-}
 
 function Sync-ScapeThemeHydration {
     [CmdletBinding()]
@@ -409,3 +378,9 @@ function Optimize-ScapeSettingsState {
 
     return $normalized
 }
+
+$Script:LocalI18N = @(
+    "SETTINGS_ENGINE_ONLINE",
+    "SETTINGS_RESET_DEFAULTS",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+

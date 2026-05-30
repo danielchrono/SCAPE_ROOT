@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core\ActionManager
     Module: Scape.Core.ActionManager
@@ -41,6 +41,21 @@ function Publish-ScapeActionProgress {
         [int]$StepProgress = -1
     )
     process {
+        $statusKeyMap = @{
+            "DISCOVERED_PARSED" = "STATUS_DISCOVERED"
+            "DISCOVERED_CARVED" = "STATUS_DISCOVERED_RAW"
+            "SUCCESSFULLY_EXTRACTED" = "STATUS_EXTRACTED"
+            "EXTRACTED_PARTIAL_CORRUPTION" = "STATUS_PARTIAL_CORRUPT"
+            "ORPHANED_BLOCK" = "STATUS_ORPHAN"
+            "EXTRACTION_FAILED" = "STATUS_FAILED"
+            "TARGET_READY" = "STATUS_READY"
+            "ACTIVE_PROCESSING" = "STATUS_PROCESSING"
+            "INTEGRITY_VERIFIED" = "STATUS_VERIFIED"
+        }
+        if ($statusKeyMap.ContainsKey($StatusText)) {
+            $StatusText = Invoke-ScapeI18NFormat -Key $statusKeyMap[$StatusText]
+        }
+
         $targetFallback = Invoke-ScapeI18NFormat -Key "CORE_ACTION_SYSTEM_TASK"
         $targetDisp = if (-not [string]::IsNullOrWhiteSpace($Target)) { $Target } else { $targetFallback }
         $taskFallback = Invoke-ScapeI18NFormat -Key "CORE_ACTION_DEFAULT"
@@ -246,7 +261,7 @@ function Invoke-ScapeProgressWrapper {
 
 Register-ScapeActionHandler -Target 'Scape.Forge.Deployer' -Handler {
     param($Task, $PayloadDef, $Target)
-    if (Get-Command Invoke-ScapeDeployWorkflow -ErrorAction SilentlyContinue) { Invoke-ScapeDeployWorkflow -Task $Task } else { throw "Not Implemented" }
+    if (Get-Command Invoke-ScapeDeployWorkflow -ErrorAction SilentlyContinue) { Invoke-ScapeDeployWorkflow -Task $Task } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Core.Settings' -Handler {
@@ -262,31 +277,31 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync.Robocopy' -Handl
 Register-ScapeActionHandler -Target 'Scape.Analysis.Parser.Core' -Handler {
     param($Task, $PayloadDef, $Target)
     Resolve-ScapeActiveTarget | Out-Null
-    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload $PayloadDef } else { throw "Not Implemented" }
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload $PayloadDef } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.Carving.Carver' -Handler {
     param($Task, $PayloadDef, $Target)
     Resolve-ScapeActiveTarget | Out-Null
-    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "CARVING" } } else { throw "Not Implemented" }
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "CARVING" } } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.FS.Abstraction' -Handler {
     param($Task, $PayloadDef, $Target)
     Resolve-ScapeActiveTarget | Out-Null
-    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "FS_ABSTRACTION" } } else { throw "Not Implemented" }
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "FS_ABSTRACTION" } } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.FS.NTFS' -Handler {
     param($Task, $PayloadDef, $Target)
     Resolve-ScapeActiveTarget | Out-Null
-    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "NTFS" } } else { throw "Not Implemented" }
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "NTFS" } } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.FS.PartitionTable' -Handler {
     param($Task, $PayloadDef, $Target)
     Resolve-ScapeActiveTarget | Out-Null
-    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "PARTITION_TABLE" } } else { throw "Not Implemented" }
+    if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "PARTITION_TABLE" } } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Infrastructure.Telemetry' -Handler {
@@ -294,7 +309,7 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Telemetry' -Handler {
     if (Get-Command Invoke-ScapeTelemetryWorkflow -ErrorAction SilentlyContinue) {
         $taskName = if ([string]::IsNullOrWhiteSpace($Task)) { 'TELEMETRY' } else { $Task }
         Invoke-ScapeTelemetryWorkflow -Task $taskName
-    } else { throw "Not Implemented" }
+    } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Presentation.KeyBindings' -Handler {
@@ -309,4 +324,14 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.Network' -Handler {
 
 
 
+
+
+
+$Script:LocalI18N = @(
+    "DOMAIN_ANALYSIS",
+    "DOMAIN_ARCHAEOLOGY",
+    "DOMAIN_HARVESTER",
+    "DOMAIN_INFRA",
+    "DOMAIN_PARSING",
+) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 

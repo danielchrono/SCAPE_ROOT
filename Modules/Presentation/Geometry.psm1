@@ -34,14 +34,15 @@ function Get-ScapeMenuLayout {
 
         # Expand box width slightly to safely accommodate icons and 3 columns
         $minBoxW = [Math]::Max($layout.MinWidth, $MaxContentWidth + ($layout.Padding * 2) + ($layout.Margin * 2))
-        $boxW = [Math]::Min($ConsoleWidth - ($layout.Margin * 2), [Math]::Max($minBoxW, $MaxContentWidth + 10))
+        $safeZone = if ($layout.SafeZoneWidth) { $layout.SafeZoneWidth } else { 10 }
+        $boxW = [Math]::Min($ConsoleWidth - ($layout.Margin * 2), [Math]::Max($minBoxW, $MaxContentWidth + $safeZone))
         $boxH = [Math]::Max(1, $ItemCount)
 
         $x = [Math]::Max($layout.Margin, [Math]::Floor(($ConsoleWidth - $boxW) / 2))
         $y = [Math]::Max($HeaderHeight + $layout.Padding, [Math]::Floor(($ConsoleHeight - ($boxH + ($layout.Padding * 2))) / 2))
 
         $usable = [int]($boxW - ($layout.Margin * 2))
-        if ($usable -lt 10) { $usable = 10 }
+        if ($usable -lt $safeZone) { $usable = $safeZone }
 
         return [PSCustomObject]@{
             X = [int]$x; Y = [int]$y
