@@ -110,7 +110,7 @@ function Invoke-ScapeRouterReducer {
 
         if ($selAction -eq 'BACK' -or $selId -in @('RETURN', 'CANCEL')) {
             if ($ns.RouteStack.Count -gt 1) {
-                $ns.RouteStack.RemoveAt($ns.RouteStack.Count - 1)
+                $ns.RouteStack = @($ns.RouteStack[0..($ns.RouteStack.Count - 2)])
                 $ns.CurrentMenu = $ns.RouteStack[-1]
                 $ns.NeedsFullRedraw = $true
             } else {
@@ -119,7 +119,7 @@ function Invoke-ScapeRouterReducer {
             return $ns
         }
         if ($selAction -eq 'NAVIGATE' -and $selTarget) {
-            $ns.RouteStack.Add($selTarget)
+            $ns.RouteStack = @($ns.RouteStack) + $selTarget
             $ns.CurrentMenu = $selTarget
             $ns.NeedsFullRedraw = $true
         }
@@ -130,70 +130,81 @@ function Invoke-ScapeRouterReducer {
 function Start-ScapeRouter {
     param([string]$InitialMenu = 'MainMenu')
     process {
-        # Rastreamento de Viewport (Responsividade)
         $ViewportState = @{}
         if (Get-Command Initialize-ScapeViewportState -ErrorAction SilentlyContinue) {
             $ViewportState = Initialize-ScapeViewportState
         }
 
         Initialize-ScapeRenderer
-        if (Get-Command Set-ScapeViewportLocks -ErrorAction SilentlyContinue) { Set-ScapeViewportLocks | Out-Null }
         Initialize-ScapeStateObserver -AutoRegister | Out-Null
 
         $State = @{
             IsRunning = $true; CurrentMenu = $InitialMenu
-            RouteStack = New-Object 'System.Collections.Generic.List[string]'
+            RouteStack = @($InitialMenu)
             Cursor = 0; NeedsFullRedraw = $true; NeedsCursorUpdate = $false
             RawOptions = @(); LastCursor = -1; TitleKey = ""
-            LastLang = if (Get-Command Get-ScapeColdState -ErrorAction SilentlyContinue) { (Get-ScapeColdState)["CurrentLanguage"] } else { "" }
         }
-        $State.RouteStack.Add($InitialMenu)
 
         Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
 
         try {
+            # Start Async Input Listener
+            $inputRs = [runspacefactory]::CreateRunspace()
+            $inputRs.Open()
+            $inputPs = [powershell]::Create()
+            $inputPs.Runspace = $inputRs
+            $inputPs.AddScript({
+                while($true) {
+                    if (Test-ScapeKeyAvailable) {
+                        $key = Read-ScapeRawKey
+                        New-Event -SourceIdentifier "KEY_PRESSED" -MessageData $key | Out-Null
+                    }
+                    [System.Threading.Thread]::Sleep(20)
+                }
+            }) | Out-Null
+            $inputAsync = $inputPs.BeginInvoke()
+
             while ($State.IsRunning) {
                 Invoke-ScapeIdlePump | Out-Null
+                $evt = Wait-Event -Timeout 0.05
+                if ($evt) {
+                    Remove-Event -SourceIdentifier $evt.SourceIdentifier
+                }
 
-                # PLUG DE RESPONSIVIDADE: Checa redimensionamento em tempo real
                 $resizeCheck = Test-ScapeViewportChanged -LastWidth $ViewportState.LastWidth -LastHeight $ViewportState.LastHeight
                 if ($resizeCheck.HasResized) {
                     $ViewportState.LastWidth = $resizeCheck.NewWidth
                     $ViewportState.LastHeight = $resizeCheck.NewHeight
                     $ViewportState.HasResized = $true
-                    if (Get-Command Set-ScapeViewportLocks -ErrorAction SilentlyContinue) { Set-ScapeViewportLocks | Out-Null }
-                    $State.NeedsFullRedraw = $true
-                    Clear-ScapeInputBuffer -ErrorAction SilentlyContinue # Limpa input fantasma gerado pelo redimensionamento no Windows
+                    $ns = $State.Clone()
+                    $ns.NeedsFullRedraw = $true
+                    $State = $ns
+                    Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
                 } else {
                     $ViewportState.HasResized = $false
                 }
 
-                # PLUG DE I18N: Checa mudança de idioma
-                if (Get-Command Get-ScapeColdState -ErrorAction SilentlyContinue) {
-                    $currLang = (Get-ScapeColdState)["CurrentLanguage"]
-                    if (-not [string]::IsNullOrWhiteSpace($currLang) -and $State.LastLang -ne $currLang) {
-                        $State.NeedsFullRedraw = $true
-                        $State.LastLang = $currLang
-                    }
-                }
-
                 if ($State.NeedsFullRedraw -or $State.NeedsCursorUpdate) {
+                    $ns = $State.Clone()
                     if ($State.NeedsFullRedraw -or -not $State.RawOptions) {
                         $menuData = Get-ScapeMenuData -MenuId $State.CurrentMenu
                         if ($null -eq $menuData -or $null -eq $menuData.Items) {
                             Publish-ScapeEvent -Type "ROUTER_FATAL" -Severity "FATAL" -Payload "Menu starvation: '$($State.CurrentMenu)'"
-                            throw "ROUTER_FATAL: Menu '$($State.CurrentMenu)' not found."
+                            Publish-ScapeEvent -Type "ROUTER_FATAL" -Severity "FATAL" -Payload "Menu starvation: '$($State.CurrentMenu)'"
+                            $State.IsRunning = $false
+                            break
                         }
-                        $State.RawOptions = $menuData.Items
-                        $State.TitleKey = $menuData.TitleKey
-                        if ($State.NeedsFullRedraw) { $State.Cursor = 0; $State.LastCursor = -1 }
+                        $ns.RawOptions = $menuData.Items
+                        $ns.TitleKey = $menuData.TitleKey
+                        if ($State.NeedsFullRedraw) { $ns.Cursor = 0; $ns.LastCursor = -1 }
                     }
 
                     $__rrType = $(if ($State.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' })
-                    Request-ScapeRedraw -MenuId $State.CurrentMenu -Type $__rrType -RouterState $State -TitleKey $State.TitleKey
+                    Request-ScapeRedraw -MenuId $State.CurrentMenu -Type $__rrType -RouterState $ns -TitleKey $ns.TitleKey
 
-                    $State.NeedsFullRedraw = $false
-                    $State.NeedsCursorUpdate = $false
+                    $ns.NeedsFullRedraw = $false
+                    $ns.NeedsCursorUpdate = $false
+                    $State = $ns
                 }
 
                 $intent = Get-ScapeInputIntent -CurrentMenuState $State
@@ -201,11 +212,12 @@ function Start-ScapeRouter {
                     $State = Invoke-ScapeRouterReducer -State $State -Intent $intent
                     if ($State.EventToPublish) {
                         Publish-ScapeEvent -Type $State.EventToPublish.Type -Severity $State.EventToPublish.Severity -Payload $State.EventToPublish.Payload
-                        $State.EventToPublish = $null
+                        $ns2 = $State.Clone()
+                        $ns2.EventToPublish = $null
+                        $State = $ns2
                     }
                     Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
                 }
-                [System.Threading.Thread]::Sleep(15)
             }
         }
         finally {

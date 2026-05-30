@@ -13,6 +13,19 @@
     "CORE_BACKUP_PRIV_GRANTED"        = @{ T = 'Escalação de Privilégios Bem-sucedida: SeBackupPrivilege e SeRestorePrivilege estão ativos.'; H = 'Privilégios de backup elevados com sucesso'; F = 'SANCTUARY' }
     "CORE_BACKUP_PRIV_MISSING"        = @{ T = 'Privilégios de backup não habilitados totalmente. Capacidades de bypass de ACL do NTFS podem ser severamente restritas durante a extração.'; H = 'Aviso de escalação parcial de privilégios'; F = 'SANCTUARY_WARN' }
     "CORE_PRESERVATION_ACTIVE"        = @{ T = 'MODO DE PRESERVAÇÃO ATIVO - RESFRIANDO'; H = 'Indicador de status do modo de preservação'; F = 'STATUS' }
+    "CORE_INTEROP_FAIL"               = @{ T = 'Core.Interop indisponível. Bridge nativa não está disponível.'; H = 'Erro de módulo de interop não encontrado'; F = 'INTEROP_ERR' }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # GERENCIADOR DE AÇÕES
+    # ─────────────────────────────────────────────────────────────────────
+    "CORE_ACTION_STATUS"              = @{ T = 'Status'; H = 'Rótulo de status da ação'; F = 'HINT' }
+    "CORE_ACTION_SYSTEM_TASK"         = @{ T = 'Tarefa do Sistema'; H = 'Exibição de alvo padrão para tarefas de sistema'; F = 'HINT' }
+    "CORE_ACTION_DEFAULT"             = @{ T = 'Processando...'; H = 'Nome de tarefa padrão (fallback)'; F = 'HINT' }
+    "CORE_ACTION_TARGET_MODULE"       = @{ T = 'Módulo Alvo'; H = 'Rótulo esquerdo do painel de ação para alvo'; F = 'HINT' }
+    "CORE_ACTION_ACTIVE_TASK"         = @{ T = 'Tarefa Ativa'; H = 'Rótulo esquerdo do painel de ação para tarefa'; F = 'HINT' }
+    "CORE_ACTION_INITIALIZING"        = @{ T = 'Inicializando...'; H = 'Texto de status da fase de inicialização da ação'; F = 'STATUS' }
+    "CORE_ACTION_COMPLETED"           = @{ T = 'Concluído'; H = 'Texto de status de ação concluída'; F = 'SUCCESS' }
+    "CORE_ACTION_FAILED"              = @{ T = 'Falhou'; H = 'Texto de status de falha da ação'; F = 'ERR' }
 
     # ─────────────────────────────────────────────────────────────────────
     # SETTINGS ENGINE
@@ -84,6 +97,21 @@
     "TUI_FSUTIL"                      = @{ T = 'Colheita do USN Journal NTFS'; H = 'Nome de exibição da ferramenta Fsutil'; F = $null }
     "TUI_ROBOCOPY"                    = @{ T = 'Motor de Sincronização Robocopy'; H = 'Nome de exibição da ferramenta Robocopy'; F = $null }
     "TUI_DISKPART"                    = @{ T = 'Motor de Isolamento Diskpart'; H = 'Nome de exibição da ferramenta Diskpart'; F = $null }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # AÇÕES DE FERRAMENTAS NATIVAS E DE TERCEIROS
+    # ─────────────────────────────────────────────────────────────────────
+    "ACTION_TOOL_LAUNCH"              = @{ T = 'Iniciando {0}...'; H = 'Status de lançamento de ferramenta com token de nome'; F = 'EXEC' }
+    "ACTION_TOOL_COMPLETE"            = @{ T = '{0} concluído.'; H = 'Conclusão de ferramenta com token de nome'; F = 'SUCCESS' }
+    "ACTION_TOOL_SUCCESS"             = @{ T = '{0} finalizado com sucesso.'; H = 'Sucesso de ferramenta com token de nome'; F = 'SUCCESS' }
+    "ACTION_TOOL_FAIL"                = @{ T = '{0} falhou'; H = 'Falha de ferramenta com token de nome'; F = 'ERR' }
+    "ACTION_TOOL_MISSING"             = @{ T = '{0} ({1}) não encontrado no PATH.'; H = 'Ferramenta ausente com tokens de nome/comando'; F = 'TOOL_WARN' }
+    "ACTION_TOOL_MISSING_HINT"        = @{ T = 'Instale via winget, choco ou coloque o binário no PATH.'; H = 'Dica de instalação de ferramenta ausente'; F = 'HINT' }
+    "ACTION_TOOL_PACKAGER"            = @{ T = 'Empacotando {0} via instalador automático...'; H = 'Lançamento do empacotador com token de nome da ferramenta'; F = 'EXEC' }
+    "ACTION_PACKAGER_SUCCESS"         = @{ T = '{0} instalado com sucesso via empacotador.'; H = 'Sucesso do empacotador com token de nome da ferramenta'; F = 'SUCCESS' }
+    "ACTION_PACKAGER_FAIL"            = @{ T = 'Empacotador falhou ao instalar {0}.'; H = 'Falha do empacotador com token de nome da ferramenta'; F = 'ERR' }
+    "ACTION_FILEHASH_WARN"            = @{ T = 'Hash calculado via PowerShell Get-FileHash (modo não-forense).'; H = 'Aviso de Get-FileHash sobre modo não-forense'; F = 'WARN' }
+    "TOOL_ERROR_LBL"                  = @{ T = 'Erro'; H = 'Rótulo esquerdo de linha de erro genérico para painéis de ferramentas'; F = 'ERR' }
 
     "LAB_START"                       = @{ T = 'Iniciando análise binária em: {0}'; H = 'Início da análise de laboratório com token de arquivo'; F = 'LAB' }
     "LAB_MAGIC_FIXED"                 = @{ T = 'Assinatura hexadecimal restaurada. Tipo: {0}'; H = 'Confirmação de reparo de magic bytes com token de tipo'; F = 'LAB' }
@@ -206,6 +234,12 @@
     "NET_SYNC_FAIL"                   = @{ T = 'Espelhamento abortado ou encontrou erros críticos. Robocopy retornou código de saída {0}.'; H = 'Falha no sincronismo com token de código de saída'; F = 'CLOUD_SYNC_FATAL' }
     "NET_PACKET_DROP"                 = @{ T = 'Perda de pacotes/Queda TCP detectada durante o upload do staging. Auto-retomando fluxo de bytes a partir do último bloco confirmado.'; H = 'Notificação de recuperação de perda de pacotes'; F = 'CLOUD_SYNC_WARN' }
     "NET_SMB_AUTH_REQUIRED"           = @{ T = 'O endpoint Samba requer autenticação segura. Uma caixa de diálogo de Segurança do Windows aparecerá em breve.'; H = 'Aviso de prompt de autenticação SMB'; F = 'NETWORK_AUTH' }
+    "NET_NO_FREE_DRIVES"              = @{ T = 'Nenhuma letra de unidade disponível para montar o compartilhamento de rede.'; H = 'Erro de esgotamento de letras de unidade'; F = 'NETWORK_ERR' }
+    "NET_UNMOUNT_FAIL"                = @{ T = 'Falha ao desmontar unidade de rede. O handle pode ainda estar em uso.'; H = 'Falha de desmontagem de unidade de rede'; F = 'NETWORK_ERR' }
+    "ROBOCOPY_PREPARING"              = @{ T = 'Preparando ambiente Robocopy e validando caminhos...'; H = 'Texto de preparação pré-voo do Robocopy'; F = 'CLOUD_SYNC_INIT' }
+    "ROBOCOPY_READY"                  = @{ T = 'Motor Robocopy armado. Alvo bloqueado.'; H = 'Status de prontidão do Robocopy'; F = 'CLOUD_SYNC_INIT' }
+    "ACTION_RESOLVING_VAULT"          = @{ T = 'RESOLVENDO ENDPOINT DO COFRE CLOUD...'; H = 'Status de resolução do cofre cloud'; F = 'CLOUD_SYNC_INIT' }
+    "ACTION_AUTH_KEYS"                = @{ T = 'AUTENTICANDO CHAVES SHA256...'; H = 'Status de autenticação de chaves SHA256'; F = 'CLOUD_SYNC_INIT' }
 
     "NET_RADAR_GATEWAY_ERR"           = @{ T = 'Nenhum gateway real encontrado! O host pode estar isolado.'; H = 'Erro na descoberta de gateway'; F = 'ERRO' }
     "NET_RADAR_GATEWAY_OK"            = @{ T = 'Gateway: {0} ({1})'; H = 'Informações de gateway com tokens IP/nome'; F = 'NETWORK' }
@@ -282,6 +316,44 @@
     "PIPE_EXTRACT_COUNTER"            = @{ T = '[{0}] Processando carga: {1}'; H = 'Progresso de extração com tokens de índice/arquivo'; F = 'FLUXO_EXTRAÇÃO' }
     "PIPE_STREAMING_DATA"             = @{ T = 'STREAMING_DATA_FOR_RECORD: Injeção de Buffer de E/S Sincronizada.'; H = 'Aviso de sincronização de streaming de dados'; F = 'SYNC_PIPELINE' }
     "PIPE_TARGETED_RECOVERY"          = @{ T = 'SEQUÊNCIA DE RECUPERAÇÃO TARGETADA ATIVADA E TRAVADA.'; H = 'Ativação de recuperação direcionada'; F = 'EXEC_PIPELINE' }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # MOTOR PIPELINE / AUDITORIA / COMPLIANCE
+    # ─────────────────────────────────────────────────────────────────────
+    "PIPELINE_INIT"                   = @{ T = 'Motor de pipeline inicializando...'; H = 'Status de inicialização do pipeline'; F = 'PIPELINE' }
+    "PIPELINE_ACTIVE"                 = @{ T = 'Motor de pipeline ativo e processando.'; H = 'Status de pipeline ativo'; F = 'PIPELINE' }
+    "PIPELINE_NO_MODULE"              = @{ T = 'Módulo de pipeline não disponível.'; H = 'Erro de módulo de pipeline ausente'; F = 'PIPELINE_ERR' }
+    "AUDIT_EXPORTING"                 = @{ T = 'Exportando relatório de auditoria...'; H = 'Status de exportação de auditoria em progresso'; F = 'AUDIT' }
+    "AUDIT_EXPORT_SUCCESS"            = @{ T = 'Relatório de auditoria exportado com sucesso.'; H = 'Sucesso na exportação de auditoria'; F = 'AUDIT_SUCCESS' }
+    "UI_ABORT_CONFIRM_CRITICAL"       = @{ T = 'Abortar a E/S ativa pode deixar handles abertos ou corromper o banco de dados. Forçar Abort? (s/N): '; H = 'Confirmação de abort crítico'; F = 'AVISO CRÍTICO' }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # UI DE APRESENTAÇÃO — DISPATCHER, FILEPICKER, KEYBINDINGS, PROGRESSO
+    # ─────────────────────────────────────────────────────────────────────
+    "DISPATCHER_TARGET_LABEL"         = @{ T = 'Despachando para: {0}'; H = 'Rótulo de alvo do dispatcher com token de alvo'; F = 'UI' }
+    "FILEPICKER_INIT"                 = @{ T = 'Abrindo diálogo de seleção de arquivo...'; H = 'Status de inicialização do FilePicker'; F = 'UI' }
+    "FILEPICKER_DIALOG"               = @{ T = 'Selecione um arquivo'; H = 'Título do diálogo FilePicker'; F = 'UI' }
+    "KEYBINDINGS_INIT"                = @{ T = 'Inicializando configuração de atalhos de teclado...'; H = 'Mensagem de inicialização do KeyBindings'; F = 'UI' }
+    "KEYBINDINGS_NO_MODULE"           = @{ T = 'Módulo de atalhos de teclado não disponível.'; H = 'Erro de módulo KeyBindings ausente'; F = 'UI_ERR' }
+    "KEYBINDINGS_MODE"                = @{ T = 'Modo'; H = 'Rótulo de modo de atalho de teclado'; F = 'UI' }
+    "KEYBINDINGS_INTERACTIVE"         = @{ T = 'Interativo'; H = 'Rótulo de modo interativo'; F = 'UI' }
+    "KEYBINDINGS_STATUS"              = @{ T = 'Status'; H = 'Rótulo de status de atalho de teclado'; F = 'UI' }
+    "KEYBINDINGS_PRESS_KEY"           = @{ T = 'Pressione uma tecla para vincular...'; H = 'Prompt de pressão de tecla durante vinculação'; F = 'UI' }
+    "KEYBINDINGS_ACTION"              = @{ T = 'Ação'; H = 'Rótulo de ação de vinculação'; F = 'UI' }
+    "KEYBINDINGS_READY"               = @{ T = 'Atalhos de teclado prontos.'; H = 'Status de prontidão do KeyBindings'; F = 'UI' }
+    "KEYBINDINGS_PROF_LOADED"         = @{ T = 'Perfil carregado: {0}'; H = 'Confirmação de carregamento de perfil com token de nome'; F = 'UI' }
+    "KEYBINDINGS_NO_PROFILE"          = @{ T = 'Nenhum perfil encontrado. Usando padrões.'; H = 'Aviso de perfil não encontrado'; F = 'UI' }
+    "KEYBINDINGS_SAVED"               = @{ T = 'Atalhos de teclado salvos com sucesso.'; H = 'Sucesso ao salvar KeyBindings'; F = 'UI' }
+    "KEYBINDINGS_FAILED"              = @{ T = 'Falha ao salvar atalhos de teclado.'; H = 'Falha ao salvar KeyBindings'; F = 'UI_ERR' }
+    "KEYBINDINGS_SYS_READY"           = @{ T = 'Atalhos de teclado do sistema estão prontos.'; H = 'Vinculações de nível de sistema ativas'; F = 'UI' }
+    "LBL_OVERALL_PROGRESS"            = @{ T = 'PROGRESSO GERAL DA EXECUÇÃO'; H = 'Rótulo da barra de progresso geral'; F = 'UI' }
+    "LBL_CURRENT_PROGRESS"            = @{ T = 'PROGRESSO DA TAREFA ATUAL'; H = 'Rótulo da barra de progresso da tarefa atual'; F = 'UI' }
+    "AUDIT_EXPORT_FAILED"             = @{ T = 'Exportação do relatório de auditoria falhou.'; H = 'Falha na exportação de auditoria'; F = 'AUDIT_ERR' }
+    "AUDIT_MODULE_NOT_LOADED"         = @{ T = 'Módulo de auditoria não carregado.'; H = 'Erro de módulo de auditoria indisponível'; F = 'AUDIT_ERR' }
+    "COMPLIANCE_GENERATING"           = @{ T = 'Gerando relatório de conformidade...'; H = 'Geração de conformidade em progresso'; F = 'COMPLIANCE' }
+    "COMPLIANCE_GENERATED"            = @{ T = 'Relatório de conformidade gerado.'; H = 'Sucesso na geração de conformidade'; F = 'COMPLIANCE' }
+    "COMPLIANCE_FAILED"               = @{ T = 'Geração do relatório de conformidade falhou.'; H = 'Falha na geração de conformidade'; F = 'COMPLIANCE_ERR' }
+    "COMPLIANCE_NO_MODULE"            = @{ T = 'Módulo de conformidade não carregado.'; H = 'Erro de módulo de conformidade indisponível'; F = 'COMPLIANCE_ERR' }
 
     "PIPE_FALLBACK_WARNING"           = @{ T = 'OS METADADOS DO SISTEMA DE ARQUIVOS ESTÃO CORROMPIDOS, CRIPTOGRAFADOS OU FISICAMENTE INACESSÍVEIS.'; H = 'Aviso crítico de corrupção de metadados'; F = 'AVISO_CRÍTICO' }
     "PIPE_FALLBACK_IMMINENT"          = @{ T = 'RECUANDO PARA EXTRAÇÃO DE DADOS BRUTOS (PLANO B). SOBRECARGA EXTREMA DE E/S É IMINENTE.'; H = 'Aviso de fallback iminente'; F = 'AVISO_CRÍTICO' }

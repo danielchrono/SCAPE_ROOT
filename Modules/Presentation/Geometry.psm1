@@ -92,11 +92,7 @@ function Get-ScapeGridCoordinates {
 
         $plainIconLen = 0
         if (-not [string]::IsNullOrWhiteSpace($ActiveIcon)) {
-            if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) {
-                $plainIconLen = Get-ScapeVisualWidth -Text $ActiveIcon
-            } else {
-                $plainIconLen = ($ActiveIcon -replace '\x1B\[[0-9;]*[a-zA-Z]', '').Length
-            }
+            $plainIconLen = Get-ScapeVisualWidth -Text $ActiveIcon
         }
 
         # Centro do ícone no espaço de 5 colunas
@@ -143,9 +139,9 @@ function Invoke-ScapeStringClip {
             return $plain.Substring($cut, $MaxWidth)
         }
         else {
-            if ($MaxWidth -le 5) { return "..." }
+            if ($MaxWidth -le 5) { return (Get-ScapeConstant -Path "ui::Icons::Ellipsis" -Fallback "...") }
             $overflow = $len - $MaxWidth
-            return "..." + $plain.Substring($overflow + 3)
+            return (Get-ScapeConstant -Path "ui::Icons::Ellipsis" -Fallback "...") + $plain.Substring($overflow + 3)
         }
     }
 }

@@ -375,7 +375,7 @@ function Invoke-ScapeBatchFSAnalysis {
     $tasks = New-Object System.Collections.Generic.List[System.Threading.Tasks.Task]
 
     for ($i = 0; $i -lt $SectorBatch.Count; $i++) {
-        $throttle.Wait()
+        $throttle.Wait() | Out-Null
 
         # Isolando escopo local para o Linter e para o ThreadJob injetar com `$using:`
         $localBuf = $SectorBatch[$i]
@@ -406,7 +406,7 @@ function Invoke-ScapeBatchFSAnalysis {
         }
     }
 
-    $tasks | Wait-Job | Remove-Job
+    $tasks | Remove-Job -Force
     $null = $throttle.Dispose()
 
     return $results.ToArray()

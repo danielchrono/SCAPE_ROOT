@@ -1,8 +1,8 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Audit
-    Description: Immutable forensic ledger for extracted artifacts – chain-of-custody with hash chaining.
-    Zero hardcode – configs via infrastructure::Audit and system::LIMITS.
+    Description: Immutable forensic ledger for extracted artifacts â€“ chain-of-custody with hash chaining.
+    Zero hardcode â€“ configs via infrastructure::Audit and system::LIMITS.
     Thread-safe with backpressure, PowerShell 5.1 compatible.
 #>
 [CmdletBinding()] param()
@@ -24,13 +24,13 @@ function Initialize-ScapeAudit {
     if (-not $PSCmdlet.ShouldProcess("Audit Module", "Initialize Forensic Ledger")) { return $false }
 
     try {
-        # --- 2. CONFIGURAÇÃO DECLARATIVA ---
+        # --- 2. CONFIGURAÃ‡ÃƒO DECLARATIVA ---
         $Script:C = @{
             Audit  = Get-ScapeConstant -Path "infrastructure::Audit" -Fallback @{}
             Limits = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
         }
 
-        # --- 3. LÓGICA DE GÊNESIS ---
+        # --- 3. LÃ“GICA DE GÃŠNESIS ---
         $genesis = $Script:C.Audit["GENESIS_BLOCK"]
         if ($null -eq $genesis) { $genesis = "SCAPE_AUDIT_GENESIS_v1.0" }
 
@@ -93,7 +93,7 @@ function Initialize-ScapeAudit {
             Register-ScapeEventListener -EventMatch "*" -Action $script:AuditAction
         }
 
-        # --- 7. FINALIZAÇÃO ---
+        # --- 7. FINALIZAÃ‡ÃƒO ---
         $Script:Initialized = $true
 
         Publish-ScapeEvent -Type "AUDIT_INITIALIZED" -Severity "LOG_INFO" -Payload @{
@@ -304,7 +304,7 @@ Register-EngineEvent -SourceIdentifier PowerShell.OnExit -Action {
 }
 Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
     param($Task, $PayloadDef, $Target)
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 10 -StepProgress 10
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 10 -StepProgress 10
     
     
     $workspace = Get-ScapeConstant -Path "system::Workspace" -Fallback @{}
@@ -314,25 +314,26 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
     if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
     $exportDir = Join-Path $root $exportSubDir
     
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 30 -StepProgress 40
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 30 -StepProgress 40
     
 
     if (-not (Test-Path $exportDir)) { New-Item -ItemType Directory -Path $exportDir -Force | Out-Null }
     $exportPath = Join-Path $exportDir "AuditLedger_$(Get-Date -f 'yyyyMMdd_HHmmss').json"
     
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 70 -StepProgress 80
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 70 -StepProgress 80
     
 
     if (Get-Command Export-ScapeAuditLedger -ErrorAction SilentlyContinue) {
         $result = Export-ScapeAuditLedger -OutputPath $exportPath -Format "JSON"
         if ($result.Success) {
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORT_SUCCESS" ) -StatusFlag "Success" -RunProgress 100 -StepProgress 100
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORT_SUCCESS" ) -StatusFlag "Success" -RunProgress 100 -StepProgress 100
         } else {
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORT_FAILED" ) -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORT_FAILED" ) -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
             throw "Audit export failed"
         }
     } else {
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_MODULE_NOT_LOADED" ) -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
+        Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_MODULE_NOT_LOADED" ) -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
         throw "Audit module not available."
     }
 }
+

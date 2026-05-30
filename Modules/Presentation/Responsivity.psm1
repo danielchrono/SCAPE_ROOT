@@ -66,32 +66,8 @@ function Set-ScapeViewportLocks {
     [OutputType([void])]
     param()
     process {
-        try {
-            $layout = Get-ScapeConstant -Path "ui::Layout"
-            $minWidth = if ($layout.MinWidth) { $layout.MinWidth } else { 80 }
-            $minHeight = if ($layout.MinHeight) { $layout.MinHeight } else { 24 }
-
-            $raw = $Host.UI.RawUI
-            $curW = $raw.WindowSize.Width
-            $curH = $raw.WindowSize.Height
-
-            $newW = [Math]::Max($curW, $minWidth)
-            $newH = [Math]::Max($curH, $minHeight)
-
-            if ($curW -lt $newW -or $curH -lt $newH) {
-                # Se precisa crescer, ajusta o Buffer primeiro para comportar a nova Window
-                $bSize = $raw.BufferSize
-                if ($newW -gt $bSize.Width) { $bSize.Width = $newW }
-                if ($newH -gt $bSize.Height) { $bSize.Height = $newH }
-                $raw.BufferSize = $bSize
-
-                $wSize = $raw.WindowSize
-                $wSize.Width = $newW
-                $wSize.Height = $newH
-                $raw.WindowSize = $wSize
-            }
-        }
-        catch { }
+        # Resizing the console is a Host side-effect and should not be done by the View layer.
+        # The View must simply adapt to the available size.
     }
 }
 

@@ -16,48 +16,33 @@ $Script:ConsoleCache = @{
 
 function Get-ScapeConsoleDimension {
     [CmdletBinding()]
-    [OutputType([hashtable])]
     param([switch]$WithMargins)
-    process {
-        # Memoization: reusa cache se válido
-        $now = [DateTime]::Now
-        $elapsed = ($now - $Script:ConsoleCache.LastCheck).TotalMilliseconds
-
-        if ($elapsed -lt $Script:ConsoleCache.TTL_MS -and $Script:ConsoleCache.Width -gt 0) {
-            $layout = Get-ScapeConstant -Path "ui::Layout"
-            $m = if ($WithMargins) { $layout.Margin * 2 } else { 0 }
-            $maxW = if ($layout.MaxWidth -gt 0) { $layout.MaxWidth } else { 9999 }
-            $maxH = if ($layout.MaxHeight -gt 0) { $layout.MaxHeight } else { 9999 }
-            return @{
-                Width  = [Math]::Max($layout.MinWidth, [Math]::Min($Script:ConsoleCache.Width - $m, $maxW))
-                Height = [Math]::Max($layout.MinHeight, [Math]::Min($Script:ConsoleCache.Height - $layout.HeaderHeight, $maxH))
-            }
-        }
-
-        # Atualiza cache
-        try {
-            $raw = $Host.UI.RawUI
-            $Script:ConsoleCache.Width = $raw.WindowSize.Width
-            $Script:ConsoleCache.Height = $raw.WindowSize.Height
-            $Script:ConsoleCache.LastCheck = $now
-        }
-        catch {
-            # Fallback seguro
-            $Script:ConsoleCache.Width = [Console]::WindowWidth
-            $Script:ConsoleCache.Height = [Console]::WindowHeight
-            $Script:ConsoleCache.LastCheck = $now
-        }
-
-        $layout = Get-ScapeConstant -Path "ui::Layout"
-        $m = if ($WithMargins) { $layout.Margin * 2 } else { 0 }
-        $maxW = if ($layout.MaxWidth -gt 0) { $layout.MaxWidth } else { 9999 }
-        $maxH = if ($layout.MaxHeight -gt 0) { $layout.MaxHeight } else { 9999 }
-
+    
+    $maxW = Get-ScapeConstant -Path "ui::Config::MaxCanvasWidth" -Fallback 140
+    $maxH = Get-ScapeConstant -Path "ui::Config::MaxCanvasHeight" -Fallback 40
+    $layout = Get-ScapeConstant -Path "ui::Layout"
+    
+    $width = 120
+    $height = 30
+    
+    try {
+        $raw = Get-Host | Select-Object -ExpandProperty UI | Select-Object -ExpandProperty RawUI
+        $width = $raw.WindowSize.Width
+        $height = $raw.WindowSize.Height
+    } catch {
+        $width = [Console]::WindowWidth
+        $height = [Console]::WindowHeight
+    }
+    
+    if ($WithMargins) {
+        $m = $layout.Margin * 2
         return @{
-            Width  = [Math]::Max($layout.MinWidth, [Math]::Min($Script:ConsoleCache.Width - $m, $maxW))
-            Height = [Math]::Max($layout.MinHeight, [Math]::Min($Script:ConsoleCache.Height - $layout.HeaderHeight, $maxH))
+            Width  = [Math]::Max($layout.MinWidth, [Math]::Min($width - $m, $maxW))
+            Height = [Math]::Max($layout.MinHeight, [Math]::Min($height - $layout.HeaderHeight, $maxH))
         }
     }
+    
+    return @{ Width = $width; Height = $height }
 }
 
 function Set-ScapeCursorPosition {
@@ -105,7 +90,7 @@ function Read-ScapeKeyPress {
             $start = [DateTime]::Now
             $timeout = [TimeSpan]::FromMilliseconds($TimeoutMilliseconds)
 
-            while (([DateTime]::Now - $start) -lt $timeout) {
+            if ($true) {
                 try {
                     if ($Host.UI.RawUI.KeyAvailable) {
                         $keyInfo = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
@@ -121,7 +106,7 @@ function Read-ScapeKeyPress {
                         return $keyCode.ToString()
                     }
                 } catch { return $null }
-                Start-Sleep -Milliseconds 10
+                Invoke-ScapeIdlePump | Out-Null
             }
             return $null
         } finally {
@@ -162,8 +147,12 @@ function Clear-ScapeRegion {
         if ($Width -le 0 -or $Height -le 0) { return }
         $blankLine = " " * $Width
         for ($i = 0; $i -lt $Height; $i++) {
-            Set-ScapeCursorPosition -Left $Left -Top ($Top + $i)
-            [Console]::Write($blankLine)
+            if (Get-Command Add-ScapeDisplayListAt -ErrorAction SilentlyContinue) {
+                Add-ScapeDisplayListAt -X $Left -Y ($Top + $i) -Text $blankLine
+            } else {
+                Set-ScapeCursorPosition -Left $Left -Top ($Top + $i)
+                [Console]::Write($blankLine)
+            }
         }
     }
 }
@@ -178,9 +167,17 @@ function Clear-ScapeLine {
     )
     process {
         if ($Width -le 0) { return }
-        Set-ScapeCursorPosition -Left $Left -Top $Top
-        [Console]::Write(" " * $Width)
+        $blankLine = " " * $Width
+        if (Get-Command Add-ScapeDisplayList -ErrorAction SilentlyContinue) {
+            Add-ScapeDisplayListAt -X $Left -Y $Top -Text $blankLine
+        } else {
+            Set-ScapeCursorPosition -Left $Left -Top $Top
+            [Console]::Write($blankLine)
+        }
     }
 }
 
 Export-ModuleMember -Function Get-ScapeConsoleDimension, Set-ScapeCursorPosition, Set-ScapeCursorVisibility, Read-ScapeKeyPress, Clear-ScapeInputBuffer, Clear-ScapeRegion, Clear-ScapeLine
+function Test-ScapeKeyAvailable { return [Console]::KeyAvailable }
+
+function Read-ScapeRawKey { return [Console]::ReadKey($true) }

@@ -36,7 +36,10 @@ function Invoke-ScapeBinWrapper {
     $proc = [System.Diagnostics.Process]::Start($psi)
     $stdOut = $proc.StandardOutput.ReadToEnd()
     $stdErr = $proc.StandardError.ReadToEnd()
-    $proc.WaitForExit()
+    while (-not $proc.HasExited) {
+        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+        [System.Threading.Thread]::Sleep(50)
+    }
     $exitCode = $proc.ExitCode
 
     $parsedData = switch ($ToolId) {

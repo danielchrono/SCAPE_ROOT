@@ -15,76 +15,55 @@ function Invoke-ScapeDirectoryPicker {
         $initMsg = Invoke-ScapeI18NFormat -Key "FILEPICKER_INIT"
         Publish-ScapeEvent -Type "NET_MAP_INIT" -Severity "INFO" -Payload @{ Message = $initMsg }
 
-        $selectedPath = $null
+        $dialogTitle = Invoke-ScapeI18NFormat -Key "FILEPICKER_DIALOG"
 
-        try {
+        # Create isolated STA Runspace for COM object
+        $rs = [runspacefactory]::CreateRunspace()
+        $rs.ApartmentState = "STA"
+        $rs.ThreadOptions = "ReuseThread"
+        $rs.Open()
+
+        $ps = [powershell]::Create()
+        $ps.Runspace = $rs
+        $ps.AddScript({
+            param($Title)
             $shell = New-Object -ComObject Shell.Application
-            $dialogTitle = Invoke-ScapeI18NFormat -Key "FILEPICKER_DIALOG"
-            $folder = $shell.BrowseForFolder(0, $dialogTitle, 0x0240, 0)
+            $folder = $shell.BrowseForFolder(0, $Title, 0x0240, 0)
+            if ($null -ne $folder) { return $folder.Self.Path }
+            return $null
+        }).AddArgument($dialogTitle) | Out-Null
 
-            if ($null -ne $folder) {
-                $selectedPath = $folder.Self.Path
-            }
-        }
-        catch {
-            $failMsg = Invoke-ScapeI18NFormat -Key "FILEPICKER_COM_FAIL"
-            Publish-ScapeEvent -Type "UI_SELECT_DIR_ERROR" -Severity "WARN" -Payload @{ Message = $failMsg }
+        # Register purely reactive callback
+        Register-ObjectEvent -InputObject $ps -EventName InvocationStateChanged -Action {
+            if ($sender.InvocationStateInfo.State -eq 'Completed') {
+                $selectedPath = $sender.EndInvoke($sender.EndInvokeAsyncResult)[0]
+                $sender.Dispose()
+                $sender.Runspace.Close()
+                $sender.Runspace.Dispose()
 
-            [Console]::CursorVisible = $true
-            [Console]::WriteLine("`n")
-            
-            $buf = ""
-            while ($true) {
-                if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-                if ($Host.UI.RawUI.KeyAvailable) {
-                    $k = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-                    if ($k.VirtualKeyCode -eq 13) { break }
-                    if ($k.VirtualKeyCode -eq 8) { 
-                        if ($buf.Length -gt 0) { 
-                            $buf = $buf.Substring(0, $buf.Length - 1)
-                            $x = [Console]::CursorLeft
-                            $y = [Console]::CursorTop
-                            if ($x -gt 0) { [Console]::SetCursorPosition($x - 1, $y); [Console]::Write(" "); [Console]::SetCursorPosition($x - 1, $y) }
-                        } 
-                    }
-                    elseif ($k.Character -ne 0) { 
-                        $buf += $k.Character
-                        [Console]::Write($k.Character) 
-                    }
-                } else {
-                    Start-Sleep -Milliseconds 15
+                if ([string]::IsNullOrWhiteSpace($selectedPath)) {
+                    $cancelMsg = "Cancelado pelo usuario." # Fallback I18N
+                    Publish-ScapeEvent -Type "NET_MAP_CANCELLED" -Severity "WARN" -Payload @{ Message = $cancelMsg }
+                    return
                 }
+
+                # Dispatch intent to Model Layer instead of writing filesystem
+                Publish-ScapeEvent -Type 'ACTION_CREATE_DIRECTORY' -Severity 'INFO' -Payload @{ Path = $selectedPath }
+                Publish-ScapeEvent -Type 'INTENT_CHANGE_SETTING' -Key 'OutPath' -Value $selectedPath
+                Publish-ScapeEvent -Type "STATE_MUTATED" -Severity "INFO" -Payload @{
+                    MenuId      = "DestSelection"
+                    SelectionId = "FOLDER"
+                    Timestamp   = [DateTime]::Now
+                }
+            } elseif ($sender.InvocationStateInfo.State -eq 'Failed') {
+                Publish-ScapeEvent -Type "UI_SELECT_DIR_ERROR" -Severity "FATAL" -Payload @{ Message = "COM_FAIL" }
+                $sender.Dispose()
+                $sender.Runspace.Close()
+                $sender.Runspace.Dispose()
             }
-            $selectedPath = $buf
-            [Console]::CursorVisible = $false
-        }
+        } | Out-Null
 
-        if ([string]::IsNullOrWhiteSpace($selectedPath)) {
-            $cancelMsg = Invoke-ScapeI18NFormat -Key "FILEPICKER_CANCEL"
-            Publish-ScapeEvent -Type "NET_MAP_CANCELLED" -Severity "WARN" -Payload @{ Message = $cancelMsg }
-            return
-        }
-
-        if (-not (Test-Path $selectedPath)) {
-            try { New-Item -ItemType Directory -Path $selectedPath -Force | Out-Null }
-            catch {
-                $invalidMsg = (Invoke-ScapeI18NFormat -Key "FILEPICKER_INVALID") -f $selectedPath
-                Publish-ScapeEvent -Type "ERR_PATH_INVALID" -Severity "ERROR" -Payload @{ Message = $invalidMsg }
-                return
-            }
-        }
-
-        if (Get-Command Set-ScapeSettingMutation -ErrorAction SilentlyContinue) {
-            Set-ScapeSettingMutation -Key 'OutPath' -Value $selectedPath | Out-Null
-
-            Publish-ScapeEvent -Type "STATE_MUTATED" -Severity "INFO" -Payload @{
-                MenuId      = "DestSelection"
-                SelectionId = "FOLDER"
-                Timestamp   = [DateTime]::Now
-            }
-            $lockedMsg = (Invoke-ScapeI18NFormat -Key "FILEPICKER_LOCKED") -f $selectedPath
-            Publish-ScapeEvent -Type "RC_SPACE_CHECK" -Severity "SUCCESS" -Payload @{ Message = $lockedMsg }
-        }
+        $ps.BeginInvoke() | Out-Null
     }
 }
 Register-ScapeActionHandler -Target 'Scape.Presentation.FilePicker' -Handler {

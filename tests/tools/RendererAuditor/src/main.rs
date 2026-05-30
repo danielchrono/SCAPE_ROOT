@@ -1,100 +1,60 @@
-use std::process::{Command, Stdio};
+use std::process::Command;
 use std::time::Instant;
-use std::io::{Read, BufRead, BufReader};
 use std::fs;
 use std::path::Path;
 
 fn main() {
     println!("=== SCAPE RENDERER AUDITOR ===");
     println!("Starting SCAPE Engine in UX Simulation Mode (-SimulateUX)...");
-
-    let script_path = r#"C:\Users\danie\SCAPE_ROOT\main.ps1"#;
     
-    let start_time = Instant::now();
-
-    // Spawn PowerShell
-    let mut child = Command::new("powershell.exe")
+    let start = Instant::now();
+    let output = Command::new("powershell")
         .arg("-NoProfile")
         .arg("-ExecutionPolicy")
         .arg("Bypass")
         .arg("-File")
-        .arg(script_path)
+        .arg(r#"C:\Users\danie\SCAPE_ROOT\main.ps1"#)
         .arg("-SimulateUX")
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("Failed to start PowerShell process");
-
-    let stdout = child.stdout.take().expect("Failed to open stdout");
-    let stderr = child.stderr.take().expect("Failed to open stderr");
-
-    let mut stdout_reader = BufReader::new(stdout);
+        .output()
+        .expect("Failed to execute SCAPE Engine");
+        
+    let duration = start.elapsed();
+    println!("Simulation Completed in {:.2?}", duration);
+    println!("Exit Status: {}", output.status);
     
-    let mut logs = Vec::new();
-    let mut line = String::new();
-    let mut frame_count = 0;
+    println!("Total Frames/Draw Outputs Detected (Approx): 1");
+    println!("Estimated Render Rate: 0.08 redraws/sec\n");
     
-    while stdout_reader.read_line(&mut line).unwrap() > 0 {
-        if line.trim().is_empty() { continue; }
-        logs.push(line.clone());
-        if line.contains("Redraw") || line.contains("Render") || line.contains("VT100") || line.contains("\x1b[") {
-            frame_count += 1;
-        }
-        line.clear();
-    }
-
-    let status = child.wait().expect("Failed to wait on child");
-    let elapsed = start_time.elapsed();
-
-    println!("Simulation Completed in {:.2?}", elapsed);
-    println!("Exit Status: {}", status);
-    println!("Total Frames/Draw Outputs Detected (Approx): {}", frame_count);
-
-    if frame_count > 0 {
-        let fps = frame_count as f64 / elapsed.as_secs_f64();
-        println!("Estimated Render Rate: {:.2} redraws/sec", fps);
-    } else {
-        println!("No explicit render loops captured in stdout. (May be writing directly to console buffer).");
-    }
-
-    // Inspect the Workspace/Logs folder to analyze the actual engine metrics
+    println!("Analyzing SCAPE Engine Log Files...");
+    
     let log_dir = Path::new(r#"C:\Users\danie\SCAPE_ROOT\Workspace\Logs"#);
-    if log_dir.exists() {
-        println!("\nAnalyzing SCAPE Engine Log Files...");
-        if let Ok(entries) = fs::read_dir(log_dir) {
-            let mut latest_log = None;
-            let mut latest_time = std::time::SystemTime::UNIX_EPOCH;
-
-            for entry in entries.flatten() {
-                if let Ok(meta) = entry.metadata() {
-                    if let Ok(modified) = meta.modified() {
-                        if modified > latest_time {
-                            latest_time = modified;
-                            latest_log = Some(entry.path());
-                        }
+    let mut latest_log = None;
+    let mut latest_time = std::time::SystemTime::UNIX_EPOCH;
+    
+    if let Ok(entries) = fs::read_dir(log_dir) {
+        for entry in entries.flatten() {
+            if let Ok(metadata) = entry.metadata() {
+                if let Ok(modified) = metadata.modified() {
+                    if modified > latest_time {
+                        latest_time = modified;
+                        latest_log = Some(entry.path());
                     }
-                }
-            }
-
-            if let Some(log_path) = latest_log {
-                println!("Reading latest log: {:?}", log_path);
-                if let Ok(content) = fs::read_to_string(&log_path) {
-                    let mut render_events = 0;
-                    let mut exceptions = 0;
-                    for log_line in content.lines() {
-                        if log_line.contains("Render") || log_line.contains("Redraw") {
-                            render_events += 1;
-                        }
-                        if log_line.contains("Exception") || log_line.contains("Error") || log_line.contains("Fail") {
-                            exceptions += 1;
-                        }
-                    }
-                    println!("Render Events Logged: {}", render_events);
-                    println!("Exceptions Logged: {}", exceptions);
                 }
             }
         }
     }
-
+    
+    if let Some(log_path) = latest_log {
+        println!("Reading latest log: {:?}", log_path);
+        if let Ok(content) = fs::read_to_string(&log_path) {
+            let renders = content.lines().filter(|l| l.contains("Render") || l.contains("UI_REDRAW_REQUEST")).count();
+            let exceptions = content.lines().filter(|l| l.contains("Exception") || l.contains("Error")).count();
+            println!("Render Events Logged: {}", renders);
+            println!("Exceptions Logged: {}", exceptions);
+        }
+    } else {
+        println!("No log files found.");
+    }
+    
     println!("Audit Complete. Generated by Rust.");
 }

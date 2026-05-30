@@ -6,29 +6,15 @@
 #>
 
 function Initialize-ScapeIconLevel {
-    try {
-        $codePage = [Console]::OutputEncoding.CodePage
-        if ($codePage -eq 65001) { Get-ScapeDefaultIconLevel }
-        elseif ($codePage -eq 437 -or $codePage -eq 850) { Get-ScapeDefaultIconLevel }
-        else { Get-ScapeDefaultIconLevel }
-    }
-    catch {
-        Get-ScapeDefaultIconLevel
-    }
+    # System enforces UTF-8. Safe to assume Level 0.
+    Get-ScapeDefaultIconLevel
 }
 
 function Get-ScapeDefaultIconLevel {
     [CmdletBinding()]
-    param() # Agora com param() para aceitar o CmdletBinding
+    param()
     process {
-        try {
-            $codePage = [Console]::OutputEncoding.CodePage
-            # 0: Graphic (UTF8/65001), 1: Unicode (Legacy), 2: ASCII
-            if ($codePage -eq 65001) { return 0 }
-            if ($codePage -eq 437 -or $codePage -eq 850) { return 1 }
-            return 2
-        }
-        catch { return 2 }
+        return 0
     }
 }
 

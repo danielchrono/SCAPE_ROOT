@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.CloudSync
     Architecture: Robocopy Cloud Engine integration and pre-flight space checks.
@@ -45,7 +45,10 @@ function Invoke-ScapeRobocopy {
 
     $proc = [System.Diagnostics.Process]::Start($psi)
     $out = $proc.StandardOutput.ReadToEnd()
-    $proc.WaitForExit()
+    if (-not $proc.HasExited) { Register-ObjectEvent -InputObject $proc -EventName Exited -Action { Publish-ScapeEvent -Type 'SYNC_DONE' } | Out-Null }
+        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+        
+    }
 
     $limit = Get-ScapeConstant -Path "system::LIMITS::SUCCESS_EXIT_CODE_MAX" -Fallback 8
     $success = ($proc.ExitCode -lt $limit)
@@ -90,7 +93,7 @@ function Start-ScapeRobocopyConfiguration {
     param([string]$Task, [string]$Target)
 
     $prepText = Invoke-ScapeI18NFormat -Key "ROBOCOPY_PREPARING" 
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $prepText -StatusFlag "INFO"
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $prepText -StatusFlag "INFO"
 
     $rcOptionsData = Get-ScapeConstant -Path "ui::ToggleLists" -Fallback @{}
     $rcCycles = Get-ScapeConstant -Path "ui::CycleLists" -Fallback @{}
@@ -120,7 +123,7 @@ function Start-ScapeRobocopyConfiguration {
     }
 
     $readyText = Invoke-ScapeI18NFormat -Key "ROBOCOPY_READY" 
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $readyText -StatusFlag "Success"
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $readyText -StatusFlag "Success"
 }
 
 Export-ModuleMember -Function 'Start-ScapeRobocopyConfiguration'
@@ -128,7 +131,7 @@ Export-ModuleMember -Function 'Start-ScapeRobocopyConfiguration'
 Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync' -Handler {
     param($Task, $PayloadDef, $Target)
     $txtResolve = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ACTION_RESOLVING_VAULT"  } else { "RESOLVING CLOUD VAULT ENDPOINT..." }
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtResolve -StatusFlag "WARN" -RunProgress 10 -StepProgress 20
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtResolve -StatusFlag "WARN" -RunProgress 10 -StepProgress 20
     
 
     if (Get-Command Invoke-ScapeCloudSyncPreparation -ErrorAction SilentlyContinue) { 
@@ -138,13 +141,14 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync' -Handler {
     }
     
     $txtAuth = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ACTION_AUTH_KEYS"  } else { "AUTHENTICATING SHA256 KEYS..." }
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtAuth -StatusFlag "WARN" -RunProgress 40 -StepProgress 60
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtAuth -StatusFlag "WARN" -RunProgress 40 -StepProgress 60
     
 
     $txtSync = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "NET_SYNC_START" -Args @("CLOUD_VAULT") } else { "STARTING SYNC..." }
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtSync -StatusFlag "INFO" -RunProgress 70 -StepProgress 80
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtSync -StatusFlag "INFO" -RunProgress 70 -StepProgress 80
     
 
     $txtDone = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "NET_SYNC_SUCCESS" -Args @("0") } else { "SYNC DONE" }
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtDone -StatusFlag "Success" -RunProgress 100 -StepProgress 100
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtDone -StatusFlag "Success" -RunProgress 100 -StepProgress 100
 }
+

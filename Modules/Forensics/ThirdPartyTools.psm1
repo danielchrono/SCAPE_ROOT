@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Forensics | Module: Scape.Forensics.ThirdPartyTools
     Architecture: Specialized Third-Party Forensics Handler
@@ -17,7 +17,7 @@ function Invoke-ThirdPartyTool {
     )
     $rows = @()
     if (Get-Command $CommandName -ErrorAction SilentlyContinue) {
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @($ToolName)) -StatusFlag "WARN" -RunProgress 50 -StepProgress 50
+        Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @($ToolName)) -StatusFlag "WARN" -RunProgress 50 -StepProgress 50
         try {
             if ([string]::IsNullOrWhiteSpace($Arguments)) {
                 $proc = Start-Process -FilePath $CommandName -Wait -PassThru -ErrorAction Stop
@@ -33,7 +33,7 @@ function Invoke-ThirdPartyTool {
         }
     }
     else {
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_PACKAGER" -Args @($ToolName)) -StatusFlag "WARN"
+        Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_PACKAGER" -Args @($ToolName)) -StatusFlag "WARN"
         if (Get-Command "Install-ScapeForensicTool" -ErrorAction SilentlyContinue) {
             $installResult = Install-ScapeForensicTool -ToolName $ToolName
             if ($installResult.Success) {
@@ -54,7 +54,7 @@ function Invoke-ThirdPartyTool {
         TitleKey = $TitleKey
         Rows     = $rows
     }
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_COMPLETE" -Args @($ToolName)) -StatusFlag "Success" -RunProgress 100 -StepProgress 100
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_COMPLETE" -Args @($ToolName)) -StatusFlag "Success" -RunProgress 100 -StepProgress 100
 }
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.ThirdParty.AUTOSPSY' -Handler {
@@ -153,3 +153,4 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.ThirdParty.DD' -Handler {
 }
 
 Export-ModuleMember -Function 'Invoke-ThirdPartyTool'
+

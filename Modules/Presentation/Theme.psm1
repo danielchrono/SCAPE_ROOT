@@ -343,3 +343,22 @@ function Get-ScapeResolvedIcon {
         return [string]$iconArr[$level]
     }
 }
+
+
+function Format-ScapeANSIHighlight {
+    param([string]$Text, [string]$Flag)
+    $ESC = [char]27
+    if ($Script:ColorMode -eq "TrueColor") {
+        $rgb = Resolve-ScapeThemeColor -Flag $Flag
+        $bgAnsi = Convert-ScapeRGBToAnsi -RGB $rgb -IsBackground $true
+        $fgAnsi = "${ESC}[30m"
+        return "${bgAnsi}${fgAnsi}${Text}${ESC}[0m"
+    } else {
+        $fgAnsi16 = Get-ScapeAnsi16SequenceForFlag -Flag $Flag
+        $bgAnsi16 = $fgAnsi16 -replace '\[3', '[4' -replace '\[9', '[10'
+        $blackText = "${ESC}[30m"
+        return "${bgAnsi16}${blackText}${Text}${ESC}[0m"
+    }
+}
+
+Export-ModuleMember -Function Format-ScapeANSIHighlight

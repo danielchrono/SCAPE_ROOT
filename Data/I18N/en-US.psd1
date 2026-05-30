@@ -13,6 +13,19 @@
     "CORE_BACKUP_PRIV_GRANTED"        = @{ T = 'Privilege Escalation Successful: SeBackupPrivilege and SeRestorePrivilege are active.'; H = 'Backup privileges successfully elevated'; F = 'SANCTUARY' }
     "CORE_BACKUP_PRIV_MISSING"        = @{ T = 'Backup privileges not fully enabled. NTFS ACL bypass capabilities may be heavily restricted during extraction.'; H = 'Partial privilege escalation warning'; F = 'SANCTUARY_WARN' }
     "CORE_PRESERVATION_ACTIVE"        = @{ T = 'PRESERVATION MODE ACTIVE - COOLING DOWN'; H = 'Preservation mode status indicator'; F = 'STATUS' }
+    "CORE_INTEROP_FAIL"               = @{ T = 'Core.Interop not available. Native bridge unavailable.'; H = 'Core interop module missing error'; F = 'INTEROP_ERR' }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # ACTION MANAGER
+    # ─────────────────────────────────────────────────────────────────────
+    "CORE_ACTION_STATUS"              = @{ T = 'Status'; H = 'Action status label'; F = 'HINT' }
+    "CORE_ACTION_SYSTEM_TASK"         = @{ T = 'System Task'; H = 'Fallback target display for system-level tasks'; F = 'HINT' }
+    "CORE_ACTION_DEFAULT"             = @{ T = 'Processing...'; H = 'Fallback task name'; F = 'HINT' }
+    "CORE_ACTION_TARGET_MODULE"       = @{ T = 'Target Module'; H = 'Action panel left label for target'; F = 'HINT' }
+    "CORE_ACTION_ACTIVE_TASK"         = @{ T = 'Active Task'; H = 'Action panel left label for task'; F = 'HINT' }
+    "CORE_ACTION_INITIALIZING"        = @{ T = 'Initializing...'; H = 'Action initialization phase status text'; F = 'STATUS' }
+    "CORE_ACTION_COMPLETED"           = @{ T = 'Completed'; H = 'Action completed status text'; F = 'SUCCESS' }
+    "CORE_ACTION_FAILED"              = @{ T = 'Failed'; H = 'Action failure status text'; F = 'ERR' }
 
     # ─────────────────────────────────────────────────────────────────────
     # SETTINGS ENGINE
@@ -84,6 +97,21 @@
     "TUI_FSUTIL"                      = @{ T = 'NTFS USN Journal Harvest'; H = 'Fsutil tool display name'; F = $null }
     "TUI_ROBOCOPY"                    = @{ T = 'Robocopy Cloud Sync Engine'; H = 'Robocopy tool display name'; F = $null }
     "TUI_DISKPART"                    = @{ T = 'Diskpart Isolation Engine'; H = 'Diskpart tool display name'; F = $null }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # NATIVE & THIRD-PARTY TOOL ACTIONS
+    # ─────────────────────────────────────────────────────────────────────
+    "ACTION_TOOL_LAUNCH"              = @{ T = 'Launching {0}...'; H = 'Tool launch status with tool name token'; F = 'EXEC' }
+    "ACTION_TOOL_COMPLETE"            = @{ T = '{0} completed.'; H = 'Tool completion with tool name token'; F = 'SUCCESS' }
+    "ACTION_TOOL_SUCCESS"             = @{ T = '{0} finished successfully.'; H = 'Tool success with tool name token'; F = 'SUCCESS' }
+    "ACTION_TOOL_FAIL"                = @{ T = '{0} failed'; H = 'Tool failure with tool name token'; F = 'ERR' }
+    "ACTION_TOOL_MISSING"             = @{ T = '{0} ({1}) not found in PATH.'; H = 'Missing tool with name/command tokens'; F = 'TOOL_WARN' }
+    "ACTION_TOOL_MISSING_HINT"        = @{ T = 'Install it via winget, choco, or place the binary in PATH.'; H = 'Missing tool installation hint'; F = 'HINT' }
+    "ACTION_TOOL_PACKAGER"            = @{ T = 'Packaging {0} via auto-installer...'; H = 'Packager launch with tool name token'; F = 'EXEC' }
+    "ACTION_PACKAGER_SUCCESS"         = @{ T = '{0} installed successfully via packager.'; H = 'Packager success with tool name token'; F = 'SUCCESS' }
+    "ACTION_PACKAGER_FAIL"            = @{ T = 'Packager failed to install {0}.'; H = 'Packager failure with tool name token'; F = 'ERR' }
+    "ACTION_FILEHASH_WARN"            = @{ T = 'Hash computed via PowerShell Get-FileHash (non-forensic mode).'; H = 'Get-FileHash warning about non-forensic mode'; F = 'WARN' }
+    "TOOL_ERROR_LBL"                  = @{ T = 'Error'; H = 'Generic error row left label for tool panels'; F = 'ERR' }
 
     "LAB_START"                       = @{ T = 'Initiating binary analysis on: {0}'; H = 'Lab analysis start with file token'; F = 'LAB' }
     "LAB_MAGIC_FIXED"                 = @{ T = 'Hex signature restored. Type: {0}'; H = 'Magic byte repair confirmation with type token'; F = 'LAB' }
@@ -206,6 +234,12 @@
     "NET_SYNC_FAIL"                   = @{ T = 'Mirroring aborted or encountered critical errors. Robocopy returned exit code {0}.'; H = 'Sync failure with exit code token'; F = 'CLOUD_SYNC_FATAL' }
     "NET_PACKET_DROP"                 = @{ T = 'Packet loss/TCP drop detected during staging upload. Auto-resuming byte stream from last acknowledged block.'; H = 'Packet loss recovery notice'; F = 'CLOUD_SYNC_WARN' }
     "NET_SMB_AUTH_REQUIRED"           = @{ T = 'Samba endpoint requires secure authentication. A Windows Security dialog will appear shortly.'; H = 'SMB authentication prompt notice'; F = 'NETWORK_AUTH' }
+    "NET_NO_FREE_DRIVES"              = @{ T = 'No free drive letters available to mount the network share.'; H = 'Drive letter exhaustion error'; F = 'NETWORK_ERR' }
+    "NET_UNMOUNT_FAIL"                = @{ T = 'Failed to unmount network drive. Handle may still be open.'; H = 'Network drive unmount failure'; F = 'NETWORK_ERR' }
+    "ROBOCOPY_PREPARING"              = @{ T = 'Preparing Robocopy environment and validating paths...'; H = 'Robocopy pre-flight preparation text'; F = 'CLOUD_SYNC_INIT' }
+    "ROBOCOPY_READY"                  = @{ T = 'Robocopy engine armed. Target locked.'; H = 'Robocopy ready status'; F = 'CLOUD_SYNC_INIT' }
+    "ACTION_RESOLVING_VAULT"          = @{ T = 'RESOLVING CLOUD VAULT ENDPOINT...'; H = 'Cloud vault resolution status'; F = 'CLOUD_SYNC_INIT' }
+    "ACTION_AUTH_KEYS"                = @{ T = 'AUTHENTICATING SHA256 KEYS...'; H = 'SHA256 key authentication status'; F = 'CLOUD_SYNC_INIT' }
 
     "NET_RADAR_GATEWAY_ERR"           = @{ T = 'No real gateway found! Host might be isolated.'; H = 'Gateway discovery failure'; F = 'ERROR' }
     "NET_RADAR_GATEWAY_OK"            = @{ T = 'Gateway: {0} ({1})'; H = 'Gateway info with IP/hostname tokens'; F = 'NETWORK' }
@@ -283,6 +317,21 @@
     "PIPE_STREAMING_DATA"             = @{ T = 'STREAMING_DATA_FOR_RECORD: I/O Buffer Injection Synchronized.'; H = 'Data streaming sync notice'; F = 'PIPELINE_SYNC' }
     "PIPE_TARGETED_RECOVERY"          = @{ T = 'TARGETED RECOVERY SEQUENCE ACTIVATED AND LOCKED.'; H = 'Targeted recovery activation'; F = 'PIPELINE_EXEC' }
 
+    # ─────────────────────────────────────────────────────────────────────
+    # PIPELINE ENGINE / AUDIT / COMPLIANCE
+    # ─────────────────────────────────────────────────────────────────────
+    "PIPELINE_INIT"                   = @{ T = 'Pipeline engine initializing...'; H = 'Pipeline startup status'; F = 'PIPELINE' }
+    "PIPELINE_ACTIVE"                 = @{ T = 'Pipeline engine active and processing.'; H = 'Pipeline active status'; F = 'PIPELINE' }
+    "PIPELINE_NO_MODULE"              = @{ T = 'Pipeline module not available.'; H = 'Pipeline module missing error'; F = 'PIPELINE_ERR' }
+    "AUDIT_EXPORTING"                 = @{ T = 'Exporting audit report...'; H = 'Audit export in-progress status'; F = 'AUDIT' }
+    "AUDIT_EXPORT_SUCCESS"            = @{ T = 'Audit report exported successfully.'; H = 'Audit export success'; F = 'AUDIT_SUCCESS' }
+    "AUDIT_EXPORT_FAILED"             = @{ T = 'Audit report export failed.'; H = 'Audit export failure'; F = 'AUDIT_ERR' }
+    "AUDIT_MODULE_NOT_LOADED"         = @{ T = 'Audit module not loaded.'; H = 'Audit module unavailable error'; F = 'AUDIT_ERR' }
+    "COMPLIANCE_GENERATING"           = @{ T = 'Generating compliance report...'; H = 'Compliance generation in-progress'; F = 'COMPLIANCE' }
+    "COMPLIANCE_GENERATED"            = @{ T = 'Compliance report generated.'; H = 'Compliance generation success'; F = 'COMPLIANCE' }
+    "COMPLIANCE_FAILED"               = @{ T = 'Compliance report generation failed.'; H = 'Compliance generation failure'; F = 'COMPLIANCE_ERR' }
+    "COMPLIANCE_NO_MODULE"            = @{ T = 'Compliance module not loaded.'; H = 'Compliance module unavailable error'; F = 'COMPLIANCE_ERR' }
+
     "PIPE_FALLBACK_WARNING"           = @{ T = 'FILE SYSTEM METADATA IS CORRUPTED, ENCRYPTED, OR PHYSICALLY INACCESSIBLE.'; H = 'Metadata corruption critical warning'; F = 'CRITICAL_WARNING' }
     "PIPE_FALLBACK_IMMINENT"          = @{ T = 'FALLING BACK TO RAW DATA CARVING (PLAN B). EXTREME I/O THRASHING IS IMMINENT.'; H = 'Fallback imminent warning'; F = 'CRITICAL_WARNING' }
     "PIPE_FALLBACK_COUNTDOWN"         = @{ T = 'WAITING {0} SECONDS TO ABORT OPERATION (PRESS CTRL+C NOW)...'; H = 'Fallback countdown with seconds token'; F = 'FAILSAFE_TIMER' }
@@ -320,6 +369,28 @@
 
     "UI_COMPLIANCE_DISCLAIMER"        = @{ T = 'Accessing RAW sectors carries risk of hardware stress or data loss. Accept? (y/N): '; H = 'RAW access risk disclaimer'; F = 'DASD COMPLIANCE' }
     "UI_ABORT_CONFIRM_CRITICAL"       = @{ T = 'Aborting active I/O may leave handles open or corrupt the database. Force Abort? (y/N): '; H = 'Critical abort confirmation'; F = 'CRITICAL WARNING' }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # PRESENTATION UI — DISPATCHER, FILEPICKER, KEYBINDINGS, PROGRESS
+    # ─────────────────────────────────────────────────────────────────────
+    "DISPATCHER_TARGET_LABEL"         = @{ T = 'Dispatching to: {0}'; H = 'Dispatcher target label with target token'; F = 'UI' }
+    "FILEPICKER_INIT"                 = @{ T = 'Launching file picker dialog...'; H = 'FilePicker initialization status'; F = 'UI' }
+    "FILEPICKER_DIALOG"               = @{ T = 'Select a file'; H = 'FilePicker dialog title'; F = 'UI' }
+    "KEYBINDINGS_INIT"                = @{ T = 'Initializing key binding configuration...'; H = 'KeyBindings init message'; F = 'UI' }
+    "KEYBINDINGS_NO_MODULE"           = @{ T = 'Key binding module not available.'; H = 'KeyBindings module missing error'; F = 'UI_ERR' }
+    "KEYBINDINGS_MODE"                = @{ T = 'Mode'; H = 'Key binding mode label'; F = 'UI' }
+    "KEYBINDINGS_INTERACTIVE"         = @{ T = 'Interactive'; H = 'Interactive mode label'; F = 'UI' }
+    "KEYBINDINGS_STATUS"              = @{ T = 'Status'; H = 'Key binding status label'; F = 'UI' }
+    "KEYBINDINGS_PRESS_KEY"           = @{ T = 'Press a key to bind...'; H = 'Prompt for key press during binding'; F = 'UI' }
+    "KEYBINDINGS_ACTION"              = @{ T = 'Action'; H = 'Binding action label'; F = 'UI' }
+    "KEYBINDINGS_READY"               = @{ T = 'Key bindings ready.'; H = 'KeyBindings ready status'; F = 'UI' }
+    "KEYBINDINGS_PROF_LOADED"         = @{ T = 'Profile loaded: {0}'; H = 'Profile load confirmation with name token'; F = 'UI' }
+    "KEYBINDINGS_NO_PROFILE"          = @{ T = 'No profile found. Using defaults.'; H = 'No profile found notice'; F = 'UI' }
+    "KEYBINDINGS_SAVED"               = @{ T = 'Key bindings saved successfully.'; H = 'KeyBindings save success'; F = 'UI' }
+    "KEYBINDINGS_FAILED"              = @{ T = 'Failed to save key bindings.'; H = 'KeyBindings save failure'; F = 'UI_ERR' }
+    "KEYBINDINGS_SYS_READY"           = @{ T = 'System key bindings are ready.'; H = 'System-level bindings active'; F = 'UI' }
+    "LBL_OVERALL_PROGRESS"            = @{ T = 'OVERALL RUN PROGRESS'; H = 'Overall progress bar label'; F = 'UI' }
+    "LBL_CURRENT_PROGRESS"            = @{ T = 'CURRENT TASK PROGRESS'; H = 'Current task progress bar label'; F = 'UI' }
 
     # ─────────────────────────────────────────────────────────────────────
     # VIEW / DASHBOARD UI

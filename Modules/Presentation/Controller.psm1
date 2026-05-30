@@ -135,9 +135,9 @@ function Update-ScapeMenuViewModel {
                 }
             }
 
-            $ansiStrip = "$([char]27)\[[0-9;]*[a-zA-Z]"
-            $cleanStr = if ($finalText) { $finalText -replace $ansiStrip, '' } else { '' }
-            $cleanDyn = if ($formattedDynText) { $formattedDynText -replace $ansiStrip, '' } else { '' }
+            $ansiStripPattern = if ($null -ne $Script:AnsiStrip) { $Script:AnsiStrip } else { [regex]"$([char]27)\[[0-9;]*[a-zA-Z]" }
+            $cleanStr = if ($finalText) { $ansiStripPattern.Replace($finalText, '') } else { '' }
+            $cleanDyn = if ($formattedDynText) { $ansiStripPattern.Replace($formattedDynText, '') } else { '' }
 
             $visStrW = if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { try { Get-ScapeVisualWidth $cleanStr } catch { $cleanStr.Length } } else { $cleanStr.Length }
             $dynLen = if (Get-Command Get-ScapePlainTextLength -ErrorAction SilentlyContinue) { try { Get-ScapePlainTextLength -Text $formattedDynText } catch { $cleanDyn.Length } } else { $cleanDyn.Length }

@@ -1,8 +1,8 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Compliance
     Description: Verifies integrity of system segments (PSD1, modules, binaries) using cryptographic hashes.
-    Zero hardcode – all configs via Get-ScapeConstant from infrastructure::Compliance.
+    Zero hardcode â€“ all configs via Get-ScapeConstant from infrastructure::Compliance.
     Thread-safe, PowerShell 5.1 compatible.
 #>
 [CmdletBinding()] param()
@@ -16,7 +16,7 @@ function Initialize-ScapeCompliance {
     [OutputType([bool])]
     param()
 
-    # --- 1. CONFIGURAÇÃO (DECLARATIVA + ESCOPO CORRETO) ---
+    # --- 1. CONFIGURAÃ‡ÃƒO (DECLARATIVA + ESCOPO CORRETO) ---
     $Script:Config = @{
         Compliance = Get-ScapeConstant -Path "infrastructure::Compliance" -Fallback @{}
     }
@@ -30,7 +30,7 @@ function Initialize-ScapeCompliance {
         }
         else { @{} }
 
-        # --- 3. VALIDAÇÃO DE SEGMENTOS (PIPELINE FUNCIONAL) ---
+        # --- 3. VALIDAÃ‡ÃƒO DE SEGMENTOS (PIPELINE FUNCIONAL) ---
         if ($Script:Config.Compliance -and $Script:Config.Compliance["SEGMENT_VERIFY_ON_LOAD"] -eq $true) {
 
             $criticalSegments = $Script:Config.Compliance["CRITICAL_SEGMENTS"]
@@ -55,7 +55,7 @@ function Initialize-ScapeCompliance {
             }
         }
 
-        # --- 4. FINALIZAÇÃO ---
+        # --- 4. FINALIZAÃ‡ÃƒO ---
         $hashAlgo = Get-DefaultHashAlgorithm
 
         Publish-ScapeEvent -Type "COMPLIANCE_INITIALIZED" -Severity "LOG_INFO" -Payload @{
@@ -74,7 +74,7 @@ function Initialize-ScapeCompliance {
     }
 }
 
-# --- 1. ALGORITMO PADRÃO (EXPRESSÃO PURA) ---
+# --- 1. ALGORITMO PADRÃƒO (EXPRESSÃƒO PURA) ---
 function Get-DefaultHashAlgorithm {
     [CmdletBinding()] [OutputType([string])]
     param()
@@ -158,16 +158,16 @@ function Test-ScapeModuleIntegrity {
         [Parameter(Mandatory = $true)][string]$PayloadContent
     )
 
-    # Verifica se há uma lista de hashes conhecidos para módulos em System/Manifest
+    # Verifica se hÃ¡ uma lista de hashes conhecidos para mÃ³dulos em System/Manifest
     $algo = Get-DefaultHashAlgorithm
     $expectedHash = if ($Script:ExpectedHashes.ContainsKey($ModuleName)) { $Script:ExpectedHashes[$ModuleName] } else { $null }
 
     if ($null -eq $expectedHash) {
-        # Em modo rigoroso (strict), falhar se não tiver assinatura. Para retrocompatibilidade, se não estiver na lista de checagem crítica, retorna $true ou registra um WARNING.
-        # Mas para "garantir que não tem virus", vamos requerer a assinatura para todos ou pelo menos tentar verificar.
-        # Por enquanto, emitimos um log. O usuário exigiu segurança.
+        # Em modo rigoroso (strict), falhar se nÃ£o tiver assinatura. Para retrocompatibilidade, se nÃ£o estiver na lista de checagem crÃ­tica, retorna $true ou registra um WARNING.
+        # Mas para "garantir que nÃ£o tem virus", vamos requerer a assinatura para todos ou pelo menos tentar verificar.
+        # Por enquanto, emitimos um log. O usuÃ¡rio exigiu seguranÃ§a.
         Publish-ScapeEvent -Type "COMPLIANCE_UNKNOWN_MODULE" -Severity "LOG_WARN" -Payload @{ Module = $ModuleName; Message = "Module signature not present in expected hashes." }
-        return $true # Fallback flexível: se não for exigido hash, assume true para não quebrar módulos dinamicos, ou deveria quebrar?
+        return $true # Fallback flexÃ­vel: se nÃ£o for exigido hash, assume true para nÃ£o quebrar mÃ³dulos dinamicos, ou deveria quebrar?
     }
 
     $hasher = [System.Security.Cryptography.HashAlgorithm]::Create($algo)
@@ -195,7 +195,7 @@ function Test-ScapeModuleIntegrity {
     }
 }
 
-# --- 4. RELATÓRIO DE EXPORTAÇÃO (TRANSFORMAÇÃO DE DADOS) ---
+# --- 4. RELATÃ“RIO DE EXPORTAÃ‡ÃƒO (TRANSFORMAÃ‡ÃƒO DE DADOS) ---
 function Export-ScapeComplianceReport {
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([hashtable])]
@@ -245,7 +245,7 @@ Export-ModuleMember -Function 'Initialize-ScapeCompliance',
                               'Export-ScapeComplianceReport'
 Register-ScapeActionHandler -Target 'Scape.Infrastructure.Compliance' -Handler {
     param($Task, $PayloadDef, $Target)
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_GENERATING") -StatusFlag "INFO"
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_GENERATING") -StatusFlag "INFO"
     $root = (Get-ScapeColdState)["ROOT"]
     if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
     $exportDir = Join-Path $root "Data\Exports"
@@ -255,13 +255,14 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Compliance' -Handler {
     if (Get-Command Export-ScapeComplianceReport -ErrorAction SilentlyContinue) {
         $result = Export-ScapeComplianceReport -OutputPath $exportPath
         if ($result.Success) {
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText ((Invoke-ScapeI18NFormat -Key "COMPLIANCE_GENERATED") + ": $($result.Status)") -StatusFlag "Success"
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText ((Invoke-ScapeI18NFormat -Key "COMPLIANCE_GENERATED") + ": $($result.Status)") -StatusFlag "Success"
         } else {
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_FAILED") -StatusFlag "Failure"
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_FAILED") -StatusFlag "Failure"
             throw "Compliance export failed"
         }
     } else {
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_NO_MODULE") -StatusFlag "Failure"
+        Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_NO_MODULE") -StatusFlag "Failure"
         throw "Compliance module not available."
     }
 }
+

@@ -180,12 +180,12 @@ function Invoke-ScapeChordDetection {
         $startTime = [DateTime]::Now
 
         while (([DateTime]::Now - $startTime).TotalMilliseconds -lt $TimeoutMs) {
-            if ([Console]::KeyAvailable) {
-                $key = [Console]::ReadKey($true)
+            if ((Test-ScapeKeyAvailable)) {
+                $key = (Read-ScapeRawKey)
                 $keyName = if ($key.Key -eq [ConsoleKey]::Enter) { 'Enter' } else { $key.KeyChar }
                 $Script:ChordBuffer += $keyName
             } else {
-                Start-Sleep -Milliseconds 10
+                [System.Threading.Thread]::Sleep(10)
             }
         }
 
@@ -330,11 +330,11 @@ function Invoke-ScapeKeyBindingAction {
     param([string]$Task, [hashtable]$PayloadDef, [string]$Target)
 
     $initText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_INIT"
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $initText -StatusFlag "INFO"
+    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $initText -StatusFlag "INFO"
 
     if (-not (Get-Command Initialize-ScapeKeyBindings -ErrorAction SilentlyContinue)) {
         $noModuleText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_NO_MODULE"
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $noModuleText -StatusFlag "Failure"
+        Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $noModuleText -StatusFlag "Failure"
         throw "KeyBindings module not available"
     }
 
@@ -359,34 +359,33 @@ function Invoke-ScapeKeyBindingAction {
             Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                 Row = @{ LeftText = ((Invoke-ScapeI18NFormat -Key "KEYBINDINGS_ACTION") + " [$action]"); RightText = $currentSeq; Flag = "Hint"; RightFlag = "Info" }
             }
-            Start-Sleep -Milliseconds 100
         }
 
         $readyText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_READY"
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $readyText -StatusFlag "Success"
+        Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $readyText -StatusFlag "Success"
 
     } elseif ($Task -eq 'LOAD_PROFILE') {
         $TargetProfile = $PayloadDef['Profile']
         if ($null -ne $TargetProfile) {
             Set-ScapeKeyBindingProfile -ProfileName $TargetProfile | Out-Null
             $profLoaded = (Invoke-ScapeI18NFormat -Key "KEYBINDINGS_PROF_LOADED") -f "[$TargetProfile]"
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $profLoaded -StatusFlag "Success"
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $profLoaded -StatusFlag "Success"
         } else {
             $noProf = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_NO_PROFILE"
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $noProf -StatusFlag "Failure"
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $noProf -StatusFlag "Failure"
         }
     } elseif ($Task -eq 'SAVE_BINDINGS') {
         $result = Export-ScapeKeyBindings
         if ($result) {
             $savedText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_SAVED"
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $savedText -StatusFlag "Success"
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $savedText -StatusFlag "Success"
         } else {
             $failedText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_FAILED"
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $failedText -StatusFlag "Failure"
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $failedText -StatusFlag "Failure"
         }
     } else {
         $sysReadyText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_SYS_READY"
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $sysReadyText -StatusFlag "Success"
+        Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $sysReadyText -StatusFlag "Success"
     }
 }
 

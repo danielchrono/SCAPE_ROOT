@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.Network
     Architecture: SMB/CIFS Network Discovery and Mounting
@@ -24,11 +24,23 @@ function Find-ScapeNetworkNode {
         Start-Job -ScriptBlock {
             param($tIP, $tPort, $tTime)
             $client = [System.Net.Sockets.TcpClient]::new()
-            try { $client.ConnectAsync($tIP, $tPort).Wait($tTime); if ($client.Connected) { return $tIP } } catch {} finally { $client.Close() }
+            try { $asyncTask = $client.ConnectAsync($tIP, $tPort); if ($asyncTask.Wait($tTime)); if ($client.Connected) { return $tIP } } catch {} finally { $client.Close() }
         } -ArgumentList $ip, $port, $timeout
     }
 
-    $results = $tasks | Wait-Job | Receive-Job | Where-Object { $_ }
+    
+    # Async Job processing via event registration
+    $results = @()
+    foreach ($t in $tasks) {
+        Register-ObjectEvent -InputObject $t -EventName StateChanged -Action {
+            if ($sender.State -eq 'Completed') {
+                $res = Receive-Job -Job $sender
+                Publish-ScapeEvent -Type "NET_SCAN_RESULT" -Payload $res
+            }
+        } | Out-Null
+    }
+    return # Fire and forget
+
     $tasks | Remove-Job -Force
 
     return @($results)
@@ -59,7 +71,10 @@ function New-ScapeNetworkMount {
                 FileName = $netExe; Arguments = $argsStr
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
             }))
-    $proc.WaitForExit()
+    while (-not $proc.HasExited) {
+        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+        
+    }
 
     if ($proc.ExitCode -eq 0) {
         Publish-ScapeEvent -Type "NET_SMB_LOCK" -Severity "LOG_INFO" -Payload @{ Target = $RemoteVault; Drive = $DriveLetter }
@@ -77,7 +92,10 @@ function Remove-ScapeNetworkMount {
                 FileName = $netExe; Arguments = "use $DriveLetter /delete /yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
             }))
-    $proc.WaitForExit()
+    while (-not $proc.HasExited) {
+        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+        
+    }
 
     if ($proc.ExitCode -eq 0) {
         Publish-ScapeEvent -Type "NET_SMB_UNMOUNT" -Severity "LOG_INFO" -Payload @{ Drive = $DriveLetter }
@@ -95,7 +113,10 @@ function Clear-ScapeNetworkMounts {
                 FileName = $netExe; Arguments = "use * /delete /yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
             }))
-    $proc.WaitForExit()
+    while (-not $proc.HasExited) {
+        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+        
+    }
     Publish-ScapeEvent -Type "NET_SMB_UNMOUNT_ALL" -Severity "LOG_INFO" -Payload @{}
     return ($proc.ExitCode -eq 0)
 }
@@ -105,18 +126,18 @@ function Start-ScapeNetworkScan {
     param()
     
     $radarSweepMsg = Get-ScapeLogMsg -Key "NET_RADAR_SWEEP"
-    Write-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $radarSweepMsg -StatusFlag "INFO" -RunProgress 10 -StepProgress 10
+    Publish-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $radarSweepMsg -StatusFlag "INFO" -RunProgress 10 -StepProgress 10
 
     $gw = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Select-Object -First 1).NextHop
     if (-not $gw) {
         $gwErr = Get-ScapeLogMsg -Key "NET_RADAR_GATEWAY_ERR"
-        Write-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $gwErr -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
+        Publish-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $gwErr -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
         return $null
     }
 
     $subnet = $gw -replace '\.\d+$', ''
     $scanMsg = Get-ScapeLogMsg -Key "NET_RADAR_SCAN" -MsgArgs @($subnet)
-    Write-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $scanMsg -StatusFlag "INFO" -RunProgress 50 -StepProgress 50
+    Publish-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $scanMsg -StatusFlag "INFO" -RunProgress 50 -StepProgress 50
 
     $nodes = Find-ScapeNetworkNode -SubnetRoot $subnet
     return $nodes
@@ -255,3 +276,4 @@ function Invoke-ScapeNetworkAction {
 # ==============================================================================
 
 Export-ModuleMember -Function 'Find-ScapeNetworkNode', 'New-ScapeNetworkMount', 'Remove-ScapeNetworkMount', 'Clear-ScapeNetworkMounts', 'Start-ScapeNetworkScan', 'Invoke-ScapeNetworkRadarAction', 'Invoke-ScapeNetworkAction'
+

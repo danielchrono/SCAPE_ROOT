@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core\ActionManager
     Module: Scape.Core.ActionManager
@@ -30,7 +30,7 @@ function Get-ScapeActionHandler {
     }
 }
 
-function Write-ScapeActionProgress {
+function Publish-ScapeActionProgress {
     [CmdletBinding()]
     param(
         [string]$Target,
@@ -92,7 +92,7 @@ function Invoke-ScapeActionDispatcher {
 
         # Lifecycle Start
         if (-not $isSilent) {
-            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "CORE_ACTION_INITIALIZING") -StatusFlag "WARN"
+            Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "CORE_ACTION_INITIALIZING") -StatusFlag "WARN"
         }
 
         # Execution
@@ -114,14 +114,14 @@ function Invoke-ScapeActionDispatcher {
                         Row = @{ LeftText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_STATUS"); RightText = $completedText; Flag = "HINT"; RightFlag = "Success" }
                     }
                 } else {
-                    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $completedText -StatusFlag "Success"
+                    Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $completedText -StatusFlag "Success"
                 }
             }
         }
         catch {
             if (-not $isSilent) {
                 $failedText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_FAILED") + ": $($_.Exception.Message)"
-                Write-ScapeActionProgress -Target $Target -Task $Task -StatusText $failedText -StatusFlag "Failure"
+                Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $failedText -StatusFlag "Failure"
             }
         }
 
@@ -190,7 +190,7 @@ function Resolve-ScapeActiveTarget {
 # ACTION DELEGATES (Pure Domain Functions)
 # ==============================================================================
 
-Export-ModuleMember -Function 'Register-ScapeActionHandler', 'Get-ScapeActionHandler', 'Invoke-ScapeActionDispatcher', 'Write-ScapeActionProgress', 'Resolve-ScapeActiveTarget', 'Publish-ScapeTreeUpdate', 'Invoke-ScapeProgressWrapper'
+Export-ModuleMember -Function 'Register-ScapeActionHandler', 'Get-ScapeActionHandler', 'Invoke-ScapeActionDispatcher', 'Publish-ScapeActionProgress', 'Resolve-ScapeActiveTarget', 'Publish-ScapeTreeUpdate', 'Invoke-ScapeProgressWrapper'
 
 function Publish-ScapeTreeUpdate {
     [CmdletBinding()]
@@ -306,6 +306,7 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.Network' -Handler {
     param($Task, $PayloadDef, $Target)
     Invoke-ScapeNetworkAction -Task $Task -Target $Target
 }
+
 
 
 

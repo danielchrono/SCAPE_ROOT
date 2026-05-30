@@ -68,7 +68,10 @@ function Invoke-ScapeTreeUpdateEvent {
     $vmStateSnapshot = Get-ScapeColdState
     $frameStyle = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('FrameStyle')) { [string]$vmStateSnapshot['FrameStyle'] } else { $null }
 
-    Write-ScapeTreeView -RenderConfig $renderConfig -FrameStyle $frameStyle
+    Publish-ScapeEvent -Type "VIEW_MODEL_TREE_READY" -Severity "TRACE" -Payload @{
+        RenderConfig = $renderConfig
+        FrameStyle = $frameStyle
+    }
 }
 
 function Invoke-ScapeActionScreenEvent {
@@ -91,8 +94,9 @@ function Invoke-ScapeActionScreenEvent {
     $vmStateSnapshot = Get-ScapeColdState
     $frameStyle = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('FrameStyle')) { [string]$vmStateSnapshot['FrameStyle'] } else { $null }
 
-    if (Get-Command Write-ScapeActionScreen -ErrorAction SilentlyContinue) {
-        Write-ScapeActionScreen -RenderConfig $renderConfig -FrameStyle $frameStyle
+    Publish-ScapeEvent -Type "VIEW_MODEL_ACTION_READY" -Severity "TRACE" -Payload @{
+        RenderConfig = $renderConfig
+        FrameStyle = $frameStyle
     }
 }
 
@@ -110,9 +114,7 @@ function Invoke-ScapeRedrawRequestEvent {
     elseif ($null -ne $p.PSObject -and $p.PSObject.Properties['State']) { $p.State }
     else { $null }
 
-    if ($null -ne $routerState -and $null -eq $routerState.RawOptions) {
-        $routerState.RawOptions = @()
-    }
+    $rawOptsInput = if ($null -ne $routerState -and $null -ne $routerState.RawOptions) { $routerState.RawOptions } else { @() }
 
     $menuId = if ($p -is [System.Collections.IDictionary]) { $p['MenuId'] }
     elseif ($null -ne $p.PSObject -and $p.PSObject.Properties['MenuId']) { $p.MenuId }
@@ -135,10 +137,7 @@ function Invoke-ScapeRedrawRequestEvent {
     if ($null -eq $routerState) {
         $routerState = @{ Cursor = $null; LastCursor = -1; RawOptions = @() }
     }
-    if ($null -eq $routerState.RawOptions) {
-        $routerState.RawOptions = @()
-    }
-
+    
     $rawOpts = @($routerState.RawOptions)
     $cursorIdx = $routerState.Cursor
     $lastIdx = if ($null -ne $routerState.LastCursor) { $routerState.LastCursor } else { -1 }
@@ -150,42 +149,19 @@ function Invoke-ScapeRedrawRequestEvent {
     $iconLevel = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('IconLevel')) { [int]$vmStateSnapshot['IconLevel'] } else { 0 }
 
     # Viewport Calculation (Moved from Renderer for Pure View)
-    $dims = Get-ScapeConsoleDimension -WithMargins
-    $layout = Get-ScapeConstant -Path "ui::Layout"
-    $safeDimsHeight = [Math]::Max(10, $dims.Height - 1)
-    $itemCount = $hydratedOpts.Count
-    $bannerVariant = if (Get-Command Get-ScapeBannerVariant -ErrorAction SilentlyContinue) {
-        Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight
-    } else {
-        if (($itemCount + $layout.HeaderHeight) -gt $safeDimsHeight) { 'Compact' } else { 'Standard' }
-    }
-    $artMap = Get-ScapeConstant -Path "ui::Art::Variants"
-    $artKey = 'SmallLogo'
-    if ($artMap -and $artMap.ContainsKey($bannerVariant)) { $artKey = $artMap[$bannerVariant] }
-    $rawArt = Get-ScapeConstant -Path "ui::Art::$artKey"
-    $bannerLineCount = if ([string]::IsNullOrWhiteSpace($rawArt)) { 0 } else { ($rawArt -split '\r?\n' | Where-Object { $_.Trim() }).Count }
-    $availableHeight = [Math]::Max(1, $safeDimsHeight - $bannerLineCount - $layout.Padding - 5)
-
-    $viewportRange = $null
-    if (Get-Command Get-ScapeViewportRange -ErrorAction SilentlyContinue) {
-        $viewportRange = Get-ScapeViewportRange -TotalItems $itemCount -CursorIndex $cursorIdx -AvailableHeight $availableHeight
-    }
-    if ($null -eq $viewportRange) {
-        $viewportRange = @{ Start = 0; End = [Math]::Min($itemCount, $availableHeight) }
-    }
+    # Viewport calculation pushed to Renderer
+    $viewportStart = 0
+    $viewportEnd = $hydratedOpts.Count
     
-    $viewportStart = $viewportRange.Start
-    $viewportEnd = $viewportRange.End
-    
-    if ($Script:RedrawDebounce.LastViewportStart -ne $viewportStart) {
+    if ($Script:LastViewportStart -ne $viewportStart) {
         $isFull = $true
     }
-    $Script:RedrawDebounce.LastViewportStart = $viewportStart
+    $Script:LastViewportStart = $viewportStart
     
     $isDataMutated = ($type -eq 'DATA')
     $forceRowRedraw = ($isFull -or $isDataMutated)
 
-    $lastIdx = if ($null -ne $Script:RedrawDebounce.LastCursorIndex) { $Script:RedrawDebounce.LastCursorIndex } else { -1 }
+    $lastIdx = if ($null -ne $Script:LastCursorIndex) { $Script:LastCursorIndex } else { -1 }
 
     Publish-ScapeEvent -Type "VIEW_MODEL_READY" -Severity "TRACE" -Payload @{
         Options = $hydratedOpts
@@ -199,7 +175,7 @@ function Invoke-ScapeRedrawRequestEvent {
         FrameStyle = $frameStyle
         IconLevel = $iconLevel
     }
-    $Script:RedrawDebounce.LastCursorIndex = $cursorIdx
+    $Script:LastCursorIndex = $cursorIdx
 }
 
 function Invoke-ScapeTransientEvent {
@@ -215,15 +191,16 @@ function Invoke-ScapeTransientEvent {
 
     if ($isHelpLike -and $now -lt $Script:TransientState.HoldUntil) { return }
 
-    if (Get-Command Convert-ScapeObservedEventData -ErrorAction SilentlyContinue) {
-        $processed = Convert-ScapeObservedEventData -IncomingEventData $IncomingEventData
+    $processed = Convert-ScapeObservedEventData -IncomingEventData $IncomingEventData
         if ($processed.ShouldProcess -and $processed.RenderConfig.ShouldRender) {
             if ($isActionLike) {
                 $holdMs = Get-ScapeConstant -Path "ui::Feedback::TransientActionHoldMs" -Fallback 1800
                 $Script:TransientState.HoldUntil = $now.AddMilliseconds([int]$holdMs)
-            }
+            
             $processed.RenderConfig.HoldUntil = $Script:TransientState.HoldUntil
-            Write-ScapeTransientView -RenderConfig $processed.RenderConfig
+            Publish-ScapeEvent -Type "VIEW_MODEL_TRANSIENT_READY" -Severity "TRACE" -Payload @{
+                RenderConfig = $processed.RenderConfig
+            }
         }
     }
 }
@@ -280,9 +257,8 @@ function Invoke-ScapeSelectionEvent {
 
         if (-not [string]::IsNullOrWhiteSpace($target)) {
             # MVVM/SRP: delegate to ActionManager — single dispatch path
-            if (Get-Command Invoke-ScapeActionDispatcher -ErrorAction SilentlyContinue) {
-                Invoke-ScapeActionDispatcher -Target $target -Task $task -PayloadDef $payloadDef -MenuId $menuId -Cursor ([int]$cursorIdx) | Out-Null
-            }
+            Invoke-ScapeActionDispatcher -Target $target -Task $task -PayloadDef $payloadDef -MenuId $menuId -Cursor ([int]$cursorIdx) | Out-Null
+            
         }
     }
     elseif ($action -eq 'MUTATE' -and $routeDef) {
@@ -290,13 +266,12 @@ function Invoke-ScapeSelectionEvent {
         $mutationDirection = if ($p -is [hashtable]) { $p['MutationDirection'] } elseif ($null -ne $p.PSObject) { $p.MutationDirection } else { $null }
         if ([string]::IsNullOrWhiteSpace($mutationDirection)) { $mutationDirection = 'NEXT' }
 
-        if (Get-Command Invoke-ScapeStateMutation -ErrorAction SilentlyContinue) {
-            $mutated = Invoke-ScapeStateMutation -MenuId $menuId -SelectionId $selId -Payload $payloadDef -Direction $mutationDirection
+        $mutated = Invoke-ScapeStateMutation -MenuId $menuId -SelectionId $selId -Payload $payloadDef -Direction $mutationDirection
 
             if ($mutated) {
                 Publish-ScapeEvent -Type "STATE_MUTATED" -Severity "INFO" -Payload @{
                     MenuId = $menuId; SelectionId = $selId; Timestamp = [DateTime]::Now
-                }
+                
             }
         }
     }
@@ -316,27 +291,27 @@ function Request-ScapeRedraw {
     )
     process {
         if ($null -ne $RouterState) {
-            $Script:RedrawDebounce.LastRouterState = $RouterState
+            $Script:LastRouterState = $RouterState
         }
         if ($null -ne $TitleKey) {
-            $Script:RedrawDebounce.LastTitleKey = $TitleKey
+            $Script:LastTitleKey = $TitleKey
         }
 
         $isFull = ($Type -eq 'FULL')
-    foreach ($q in $Script:RedrawDebounce.RequestQueue) {
+    foreach ($q in $Script:RedrawQueue) {
         if ($q.Type -eq 'FULL') { $isFull = $true; break }
     }
     $finalType = if ($isFull) { 'FULL' } else { 'PARTIAL' }
 
-    $Script:RedrawDebounce.RequestQueue = @(@{ MenuId = $MenuId; Type = $finalType; RouterState = $RouterState; TitleKey = $TitleKey })
+    $Script:RedrawQueue = @(@{ MenuId = $MenuId; Type = $finalType; RouterState = $RouterState; TitleKey = $TitleKey })
 
-    if ($Script:RedrawDebounce.IsRendering) { return }
-    $Script:RedrawDebounce.IsRendering = $true
+    if ($Script:IsRendering) { return }
+    $Script:IsRendering = $true
 
     try {
-        while ($Script:RedrawDebounce.RequestQueue.Count -gt 0) {
-            $next = $Script:RedrawDebounce.RequestQueue[0]
-            $Script:RedrawDebounce.RequestQueue = @() # Clear queue before dispatch
+        while ($Script:RedrawQueue.Count -gt 0) {
+            $next = $Script:RedrawQueue[0]
+            $Script:RedrawQueue = @() # Clear queue before dispatch
 
             $viewportStart = if ($next.RouterState.ContainsKey('ViewportStart')) { $next.RouterState['ViewportStart'] } else { 0 }
             
@@ -350,7 +325,7 @@ function Request-ScapeRedraw {
         }
     }
     finally {
-        $Script:RedrawDebounce.IsRendering = $false
+        $Script:IsRendering = $false
     }
     }
 }
@@ -385,15 +360,14 @@ function Initialize-ScapeStateObserver {
                     param($EventFrame)
                     $p = $EventFrame.Payload
                     $redrawType = 'PARTIAL'
-                    if (Get-Command Test-ScapeRedrawScope -ErrorAction SilentlyContinue) {
-                        $redrawType = Test-ScapeRedrawScope -MutationKey $p.Key
-                    } else {
+                    $redrawType = Test-ScapeRedrawScope -MutationKey $p.Key
+                     else {
                         $fullKeys = Get-ScapeConstant -Path "ui::Redraw::DestructiveKeys" -Fallback @('ThemePersona', 'ColorMode', 'Capability_TrueColor', 'IconLevel', 'FrameStyle', 'ProgressStyle', 'CurrentLanguage')
                         if ($p.Key -in $fullKeys) { $redrawType = 'FULL' }
                     }
                     
-                    $lastState = $Script:RedrawDebounce.LastRouterState
-                    $lastTitle = $Script:RedrawDebounce.LastTitleKey
+                    $lastState = $Script:LastRouterState
+                    $lastTitle = $Script:LastTitleKey
                     $st = Get-ScapeColdState
                     $menuId = if ($lastState) { $lastState.CurrentMenu } elseif ($st) { $st.CurrentMenu } else { $null }
                     
@@ -462,10 +436,9 @@ function Remove-ScapeStateObserver {
         if ($PSCmdlet.ShouldProcess("State Observer", "Remove $($RegisteredHandlers.Count) handlers")) {
             $cleanup = New-Object System.Collections.Generic.List[hashtable]
             foreach ($handler in $RegisteredHandlers) {
-                if (Get-Command Unregister-ScapeEventListener -ErrorAction SilentlyContinue) {
-                    $result = Unregister-ScapeEventListener -Handler $handler
+                $result = Unregister-ScapeEventListener -Handler $handler
                     $cleanup.Add($result)
-                }
+                
             }
             return [System.Object[]]$cleanup.ToArray()
         }
