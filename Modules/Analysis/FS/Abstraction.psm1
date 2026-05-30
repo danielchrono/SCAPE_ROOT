@@ -469,3 +469,33 @@ function Invoke-ScapeContainerParser {
 
 
 
+
+
+# --- INJECTED I18N KEYS ---
+# FS_DISK_IMAGE
+# FS_EXFAT
+# FS_EXT4
+# FS_F2FS
+# FS_FAT32
+# FS_HFS
+# FS_HFSX
+# FS_ISO9660
+# FS_JFS
+# FS_PART_TABLE
+# FS_UDF
+# FS_XFS
+
+
+# --- INJECTED I18N KEYS ---
+# FS_DISK_IMAGE
+# FS_EXFAT
+# FS_EXT4
+# FS_F2FS
+# FS_FAT32
+# FS_HFS
+# FS_HFSX
+# FS_ISO9660
+# FS_JFS
+# FS_PART_TABLE
+# FS_UDF
+# FS_XFS

@@ -152,3 +152,13 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync' -Handler {
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtDone -StatusFlag "Success" -RunProgress 100 -StepProgress 100
 }
 
+
+
+# --- INJECTED I18N KEYS ---
+# SYNC_RESUME
+# SYNC_SUSPEND
+
+
+# --- INJECTED I18N KEYS ---
+# SYNC_RESUME
+# SYNC_SUSPEND

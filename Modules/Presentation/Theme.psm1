@@ -382,3 +382,11 @@ function Format-ScapeANSIHighlight {
 }
 
 Export-ModuleMember -Function *
+
+
+# --- INJECTED I18N KEYS ---
+# THEME_APPLIED
+
+
+# --- INJECTED I18N KEYS ---
+# THEME_APPLIED

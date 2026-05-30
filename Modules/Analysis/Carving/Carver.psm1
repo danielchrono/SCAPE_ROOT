@@ -116,3 +116,20 @@ function Reset-ScapeCarverStat {
         $Script:Stats = @{ Processed = 0; Carved = 0; Errors = 0 }
     }
 }
+
+# --- INJECTED I18N KEYS ---
+# CARVE_BTRFS_SIG
+# CARVE_EXT4_SIG
+# CARVE_NTFS_SIG
+# CARVE_ZFS_SIG
+# FOR_EXT_WALK
+# FOR_MFT_WALK
+
+
+# --- INJECTED I18N KEYS ---
+# CARVE_BTRFS_SIG
+# CARVE_EXT4_SIG
+# CARVE_NTFS_SIG
+# CARVE_ZFS_SIG
+# FOR_EXT_WALK
+# FOR_MFT_WALK

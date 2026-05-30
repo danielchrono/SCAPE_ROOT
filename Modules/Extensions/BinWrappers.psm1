@@ -67,3 +67,16 @@ function ConvertFrom-ScapeWinFROutput { param([string]$Raw) return @{ Recovered 
 function ConvertFrom-ScapeChkdskOutput { param([string]$Raw) return @{ BadSectors = if ($Raw -match "(?im)(\d+)\s+bad") { [int]$matches[1] } else { 0 }; Status = "OK" } }
 function ConvertFrom-ScapeFsutilOutput { param([string]$Raw) return @{ Entries = ([regex]::Matches($Raw, "(?im)^\d+\s+")).Count; Status = "OK" } }
 function ConvertFrom-ScapeStordiagOutput { param([string]$Raw) return @{ ReportPath = if ($Raw -match "(?im)Report\s+saved\s+to:\s+(.+)$") { $matches[1].Trim() } else { $null }; Status = "OK" } }
+
+# --- INJECTED I18N KEYS ---
+# ARCHIVE_BAR_TOTAL
+# ARCHIVE_COMPLETE
+# ARCHIVE_ENUMERATING
+# ARCHIVE_NO_FILES
+
+
+# --- INJECTED I18N KEYS ---
+# ARCHIVE_BAR_TOTAL
+# ARCHIVE_COMPLETE
+# ARCHIVE_ENUMERATING
+# ARCHIVE_NO_FILES

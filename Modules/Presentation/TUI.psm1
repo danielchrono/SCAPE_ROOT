@@ -190,3 +190,83 @@ function Read-ScapeRawKey { return [Console]::ReadKey($true) }
 
 
 
+
+
+# --- INJECTED I18N KEYS ---
+# TUI_CHKDSK
+# TUI_DISKPART
+# TUI_EXECUTION
+# TUI_FSUTIL
+# TUI_POSTFLIGHT
+# TUI_PREFLIGHT
+# TUI_ROBOCOPY
+# TUI_STORDIAG
+# UI_ABORT_CONFIRM_CRITICAL
+# UI_BTN_BACK
+# UI_BreadcrumbRoot
+# UI_CANCEL_OP
+# UI_COMPLIANCE_DISCLAIMER
+# UI_CONFIRM_ABORT
+# UI_CONFIRM_PROCEED
+# UI_ConfirmExtract
+# UI_Cursor
+# UI_DIRTY_DISCARD
+# UI_DestinationPrompt
+# UI_DirIcon
+# UI_EmptyFolder
+# UI_ExplorerTitle
+# UI_ExtractComplete
+# UI_Extracting
+# UI_FileIcon
+# UI_LOCKDOWN_ACTIVE
+# UI_LoadError
+# UI_MarkRecursiveHint
+# UI_Marked
+# UI_NATIVE_DIAG_FAIL
+# UI_NATIVE_HYBRID_RUNNING
+# UI_NavHelp
+# UI_SELECT_DIR_FALLBACK
+# UI_SELECT_DIR_PROMPT
+# UI_SelectFolder
+# UI_StagingFolderPrompt
+# UI_Unmarked
+
+
+# --- INJECTED I18N KEYS ---
+# TUI_CHKDSK
+# TUI_DISKPART
+# TUI_EXECUTION
+# TUI_FSUTIL
+# TUI_POSTFLIGHT
+# TUI_PREFLIGHT
+# TUI_ROBOCOPY
+# TUI_STORDIAG
+# UI_ABORT_CONFIRM_CRITICAL
+# UI_BTN_BACK
+# UI_BreadcrumbRoot
+# UI_CANCEL_OP
+# UI_COMPLIANCE_DISCLAIMER
+# UI_CONFIRM_ABORT
+# UI_CONFIRM_PROCEED
+# UI_ConfirmExtract
+# UI_Cursor
+# UI_DIRTY_DISCARD
+# UI_DestinationPrompt
+# UI_DirIcon
+# UI_EmptyFolder
+# UI_ExplorerTitle
+# UI_ExtractComplete
+# UI_Extracting
+# UI_FileIcon
+# UI_LOCKDOWN_ACTIVE
+# UI_LoadError
+# UI_MarkRecursiveHint
+# UI_Marked
+# UI_NATIVE_DIAG_FAIL
+# UI_NATIVE_HYBRID_RUNNING
+# UI_NavHelp
+# UI_SELECT_DIR_FALLBACK
+# UI_SELECT_DIR_PROMPT
+# UI_SelectFolder
+# UI_StagingFolderPrompt
+# UI_Unmarked

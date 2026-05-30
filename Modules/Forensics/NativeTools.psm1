@@ -171,3 +171,15 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.FileHash' -Handler {
 # No public functions to export directly.
 Export-ModuleMember -Function @()
 
+
+
+# --- INJECTED I18N KEYS ---
+# NATIVE_JOURNAL_EXPORTED
+# NATIVE_LINUX_DIAG
+# NATIVE_LINUX_ISOLATE
+
+
+# --- INJECTED I18N KEYS ---
+# NATIVE_JOURNAL_EXPORTED
+# NATIVE_LINUX_DIAG
+# NATIVE_LINUX_ISOLATE
