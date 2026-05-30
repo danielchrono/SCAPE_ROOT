@@ -149,9 +149,8 @@ function Invoke-ScapeRedrawRequestEvent {
     $iconLevel = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('IconLevel')) { [int]$vmStateSnapshot['IconLevel'] } else { 0 }
 
     # Viewport Calculation (Moved from Renderer for Pure View)
-    # Viewport calculation pushed to Renderer
-    $viewportStart = 0
-    $viewportEnd = $hydratedOpts.Count
+    $viewportStart = if ($routerState.ContainsKey('ViewportStart')) { $routerState['ViewportStart'] } else { 0 }
+    $viewportEnd = if ($routerState.ContainsKey('ViewportEnd')) { $routerState['ViewportEnd'] } else { $hydratedOpts.Count }
     
     if ($Script:LastViewportStart -ne $viewportStart) {
         $isFull = $true
@@ -360,8 +359,9 @@ function Initialize-ScapeStateObserver {
                     param($EventFrame)
                     $p = $EventFrame.Payload
                     $redrawType = 'PARTIAL'
-                    $redrawType = Test-ScapeRedrawScope -MutationKey $p.Key
-                     else {
+                    if (Get-Command Test-ScapeRedrawScope -ErrorAction SilentlyContinue) {
+                        $redrawType = Test-ScapeRedrawScope -MutationKey $p.Key
+                    } else {
                         $fullKeys = Get-ScapeConstant -Path "ui::Redraw::DestructiveKeys" -Fallback @('ThemePersona', 'ColorMode', 'Capability_TrueColor', 'IconLevel', 'FrameStyle', 'ProgressStyle', 'CurrentLanguage')
                         if ($p.Key -in $fullKeys) { $redrawType = 'FULL' }
                     }

@@ -19,36 +19,42 @@ function Find-ScapeNetworkNode {
     $timeout = Get-ScapeConstant -Path "network::PROTOCOLS::TIMEOUT_MS" -Fallback 80
     $ipRange = Get-ScapeConstant -Path "network::PROTOCOLS::SUBNET_RANGE" -Fallback (1..254)
 
-    $tasks = $ipRange | ForEach-Object {
-        $ip = "$SubnetRoot.$_"
-        Start-Job -ScriptBlock {
+    $pool = [runspacefactory]::CreateRunspacePool(1, [Environment]::ProcessorCount)
+    $pool.Open()
+    $tasks = [System.Collections.ArrayList]::new()
+    $results = @()
+
+    foreach ($i in $ipRange) {
+        $ip = "$SubnetRoot.$i"
+        $ps = [powershell]::Create().AddScript({
             param($tIP, $tPort, $tTime)
             $client = [System.Net.Sockets.TcpClient]::new()
-            try { 
+            try {
                 $asyncTask = $client.ConnectAsync($tIP, $tPort)
                 $deadline = [DateTime]::UtcNow.AddMilliseconds($tTime)
                 while (-not $asyncTask.IsCompleted -and [DateTime]::UtcNow -lt $deadline) {
-                    if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+                    [System.Threading.Thread]::Sleep(1)
                 }
-                if ($client.Connected) { return $tIP } 
+                if ($client.Connected) { return $tIP }
             } catch {} finally { $client.Close() }
-        } -ArgumentList $ip, $port, $timeout
+            return $null
+        }).AddArgument($ip).AddArgument($port).AddArgument($timeout)
+        $ps.RunspacePool = $pool
+        $handle = $ps.BeginInvoke()
+        $null = $tasks.Add(@{ PS = $ps; Handle = $handle })
     }
 
-    
-    # Async Job processing via event registration
-    $results = @()
     foreach ($t in $tasks) {
-        Register-ObjectEvent -InputObject $t -EventName StateChanged -Action {
-            if ($sender.State -eq 'Completed') {
-                $res = Receive-Job -Job $sender
-                Publish-ScapeEvent -Type "NET_SCAN_RESULT" -Payload $res
-            }
-        } | Out-Null
+        $res = $t.PS.EndInvoke($t.Handle)
+        if ($res) { 
+            $results += $res
+            Publish-ScapeEvent -Type "NET_SCAN_RESULT" -Payload $res
+        }
+        $t.PS.Dispose()
     }
-    return # Fire and forget
 
-    $tasks | Remove-Job -Force
+    $pool.Close()
+    $pool.Dispose()
 
     return @($results)
 }

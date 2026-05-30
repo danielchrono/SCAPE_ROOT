@@ -53,34 +53,34 @@ function Get-ScapeSettingDefault {
             RandomBaseHue              = $null
             ColorMode                  = $uiDefaults.ColorMode
             # Toggles do Robocopy
-            RC_E                       = $uiToggleLists.RC_E
-            RC_ZB                      = $uiToggleLists.RC_ZB
-            RC_M                       = $uiToggleLists.RC_M
-            RC_B                       = $uiToggleLists.RC_B
-            RC_COPYALL                 = $uiToggleLists.RC_COPYALL
-            RC_DCOPY_T                 = $uiToggleLists.RC_DCOPY_T
-            RC_NP                      = $uiToggleLists.RC_NP
-            RC_FFT                     = $uiToggleLists.RC_FFT
-            RC_XO                      = $uiToggleLists.RC_XO
-            RC_XN                      = $uiToggleLists.RC_XN
-            RC_XJ                      = $uiToggleLists.RC_XJ
-            RC_L                       = $uiToggleLists.RC_L
-            RC_V                       = $uiToggleLists.RC_V
-            RC_MT                      = (Get-ScapeConstant -Path "ui::CycleLists::RC_MT")[0]
-            RC_R                       = (Get-ScapeConstant -Path "ui::CycleLists::RC_R")[0]
-            RC_W                       = (Get-ScapeConstant -Path "ui::CycleLists::RC_W")[0]
+            RC_E                       = $uiToggleLists.RC_E.Value
+            RC_ZB                      = $uiToggleLists.RC_ZB.Value
+            RC_M                       = $uiToggleLists.RC_M.Value
+            RC_B                       = $uiToggleLists.RC_B.Value
+            RC_COPYALL                 = $uiToggleLists.RC_COPYALL.Value
+            RC_DCOPY_T                 = $uiToggleLists.RC_DCOPY_T.Value
+            RC_NP                      = $uiToggleLists.RC_NP.Value
+            RC_FFT                     = $uiToggleLists.RC_FFT.Value
+            RC_XO                      = $uiToggleLists.RC_XO.Value
+            RC_XN                      = $uiToggleLists.RC_XN.Value
+            RC_XJ                      = $uiToggleLists.RC_XJ.Value
+            RC_L                       = $uiToggleLists.RC_L.Value
+            RC_V                       = $uiToggleLists.RC_V.Value
+            RC_MT                      = (Get-ScapeConstant -Path "ui::CycleLists::RC_MT").Options[0]
+            RC_R                       = (Get-ScapeConstant -Path "ui::CycleLists::RC_R").Options[0]
+            RC_W                       = (Get-ScapeConstant -Path "ui::CycleLists::RC_W").Options[0]
             # Terminal Capabilities
-            Capability_TrueColor       = $termCaps.TrueColor
-            Capability_Hyperlinks      = $termCaps.Hyperlinks
-            Capability_BracketedPaste  = $termCaps.BracketedPaste
-            Capability_MouseTracking   = $termCaps.MouseTracking
-            Capability_AlternateScreen = $termCaps.AlternateScreen
-            Capability_FocusEvents     = $termCaps.FocusEvents
-            Capability_KittyKeyboard   = $termCaps.KittyKeyboard
-            Capability_SixelGraphics   = $termCaps.SixelGraphics
-            Capability_CSIuKeyboard    = $termCaps.CSIuKeyboard
-            Capability_Fallback256     = $termCaps.Fallback256
-            Capability_Fallback16      = $termCaps.Fallback16
+            Capability_TrueColor       = $termCaps.TrueColor.Value
+            Capability_Hyperlinks      = $termCaps.Hyperlinks.Value
+            Capability_BracketedPaste  = $termCaps.BracketedPaste.Value
+            Capability_MouseTracking   = $termCaps.MouseTracking.Value
+            Capability_AlternateScreen = $termCaps.AlternateScreen.Value
+            Capability_FocusEvents     = $termCaps.FocusEvents.Value
+            Capability_KittyKeyboard   = $termCaps.KittyKeyboard.Value
+            Capability_SixelGraphics   = $termCaps.SixelGraphics.Value
+            Capability_CSIuKeyboard    = $termCaps.CSIuKeyboard.Value
+            Capability_Fallback256     = $termCaps.Fallback256.Value
+            Capability_Fallback16      = $termCaps.Fallback16.Value
         }
     }
 }
@@ -321,7 +321,8 @@ function Optimize-ScapeSettingsState {
     $normalized = [ordered]@{}
     foreach ($k in $State.Keys) { $normalized[$k] = $State[$k] }
 
-    $engineModes = Get-ScapeConstant -Path "ui::CycleLists::EngineMode" -Fallback @("EFFICIENCY", "REDUNDANCY")
+    $engineModesRaw = Get-ScapeConstant -Path "ui::CycleLists::EngineMode"
+    $engineModes = if ($null -ne $engineModesRaw.Options) { $engineModesRaw.Options } else { @("EFFICIENCY", "REDUNDANCY") }
     $defaultEngine = if ($Defaults.Contains("EngineMode")) { [string]$Defaults["EngineMode"] } else { "EFFICIENCY" }
     $currEngine = $normalized["EngineMode"]
     if ($currEngine -is [bool]) {
@@ -335,7 +336,8 @@ function Optimize-ScapeSettingsState {
         $normalized["EngineMode"] = if ($engineCandidate -in $engineModes) { $engineCandidate } else { $defaultEngine }
     }
 
-    $colorModes = Get-ScapeConstant -Path "ui::CycleLists::ColorMode" -Fallback @("TrueColor", "ANSI16")
+    $colorModesRaw = Get-ScapeConstant -Path "ui::CycleLists::ColorMode"
+    $colorModes = if ($null -ne $colorModesRaw.Options) { $colorModesRaw.Options } else { @("TrueColor", "ANSI16") }
     $currColor = $normalized["ColorMode"]
     if ($currColor -is [bool]) {
         $normalized["ColorMode"] = if ($currColor) { "TrueColor" } else { "ANSI16" }
@@ -344,13 +346,15 @@ function Optimize-ScapeSettingsState {
         $normalized["ColorMode"] = if ($normalized["Capability_TrueColor"]) { "TrueColor" } else { "ANSI16" }
     }
 
-    $i18nList = Get-ScapeConstant -Path "ui::CycleLists::I18N" -Fallback @("en-US")
+    $i18nListRaw = Get-ScapeConstant -Path "ui::CycleLists::I18N"
+    $i18nList = if ($null -ne $i18nListRaw.Options) { $i18nListRaw.Options } else { @("en-US") }
     $currLang = [string]$normalized["CurrentLanguage"]
     if ([string]::IsNullOrWhiteSpace($currLang) -or $currLang -notin $i18nList) {
         $normalized["CurrentLanguage"] = if ($Defaults.Contains("CurrentLanguage")) { $Defaults["CurrentLanguage"] } else { "en-US" }
     }
 
-    $personaList = Get-ScapeConstant -Path "ui::CycleLists::ThemePersona" -Fallback @("PowerShell")
+    $personaListRaw = Get-ScapeConstant -Path "ui::CycleLists::ThemePersona"
+    $personaList = if ($null -ne $personaListRaw.Options) { $personaListRaw.Options } else { @("PowerShell") }
     $currPersona = [string]$normalized["ThemePersona"]
     if ([string]::IsNullOrWhiteSpace($currPersona) -or ($currPersona -notin $personaList -and $currPersona -ne "RANDOM")) {
         $normalized["ThemePersona"] = if ($Defaults.Contains("ThemePersona")) { $Defaults["ThemePersona"] } else { "PowerShell" }

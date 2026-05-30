@@ -11,6 +11,7 @@
         # 1. ANSI / VT100 REFERENCE COMPLETO (COMPATÍVEL COM PS 5.1)
         # ===========================================================================
         ANSI                 = @{
+                ESC               = "$([char]27)"
                 SGR               = @{
                         Reset = "$([char]27)[0m"; Bold = "$([char]27)[1m"; Dim = "$([char]27)[2m"
                         Italic = "$([char]27)[3m"; Underline = "$([char]27)[4m"; SlowBlink = "$([char]27)[5m"
@@ -297,17 +298,17 @@
         }
         TerminalCapabilities = @{
                 # Valores padrão das capacidades (serão sobrescritos pelas toggles do usuário)
-                TrueColor       = $true
-                Hyperlinks      = $true
-                BracketedPaste  = $true
-                MouseTracking   = $true
-                AlternateScreen = $true
-                FocusEvents     = $true
-                KittyKeyboard   = $false
-                SixelGraphics   = $false
-                CSIuKeyboard    = $true
-                Fallback256     = $true
-                Fallback16      = $true
+                TrueColor       = @{ Value = $true; I18NKey = "CAP_TRUECOLOR" }
+                Hyperlinks      = @{ Value = $true; I18NKey = "CAP_HYPERLINKS" }
+                BracketedPaste  = @{ Value = $true; I18NKey = "CAP_BRACKETEDPASTE" }
+                MouseTracking   = @{ Value = $true; I18NKey = "CAP_MOUSETRACKING" }
+                AlternateScreen = @{ Value = $true; I18NKey = "CAP_ALTERNATESCREEN" }
+                FocusEvents     = @{ Value = $true; I18NKey = "CAP_FOCUSEVENTS" }
+                KittyKeyboard   = @{ Value = $false; I18NKey = "CAP_KITTYKEYBOARD" }
+                SixelGraphics   = @{ Value = $false; I18NKey = "CAP_SIXELGRAPHICS" }
+                CSIuKeyboard    = @{ Value = $true; I18NKey = "CAP_CSIUKEYBOARD" }
+                Fallback256     = @{ Value = $true; I18NKey = "CAP_FALLBACK256" }
+                Fallback16      = @{ Value = $true; I18NKey = "CAP_FALLBACK16" }
         }
         Defaults             = @{
                 FrameStyle         = "Classic"
@@ -338,23 +339,26 @@
         # 11. CYCLE LISTS (para opções com mais de dois estados)
         # ===========================================================================
         CycleLists           = @{
-                I18N          = @('en-US', 'pt-BR')
-                EngineMode    = @('EFFICIENCY', 'REDUNDANCY')
-                ColorMode     = @('TrueColor', 'ANSI16')
-                HydrationMode = @('graphic', 'unicode', 'ascii')
-                IconLevel     = @(0, 1, 2)
-                FrameStyle    = @('Classic', 'Rounded', 'Minimal', 'ASCII', 'Block', 'Retro', 'Cyber', 'Heavy', 'Dotted', 'Borderless', 'PowerShell')
-                ProgressStyle = @('Default', 'Compact', 'BarOnly', 'Discrete', 'Braille', 'Line', 'Dot', 'Blocks')
-                ThemePersona  = @('Cyber', 'Corporate', 'Hacker', 'Minimal', 'Retro', 'HighVis', 'PowerShell', 'RANDOM')
-                ThemeColor    = @(
-                        'Blue', 'Green', 'Cyan', 'Magenta', 'Yellow', 'Red', 'Black', 'White',
-                        'Gray', 'Purple', 'Orange', 'Teal', 'Pink', 'Brown', 'Lime', 'Indigo',
-                        'Navy', 'Violet', 'Gold', 'Silver', 'Bronze',
-                        'Amber', 'Dim', 'Coral', 'Salmon', 'Lavender', 'Mint'
-                )
-                RC_MT         = @(1, 2, 4, 8, 16, 32, 64, 128)
-                RC_R          = @(0, 1, 3, 5, 10)
-                RC_W          = @(0, 1, 5, 10, 30)
+                I18N          = @{ Options = @('en-US', 'pt-BR'); I18NKey = "CYCLE_I18N" }
+                EngineMode    = @{ Options = @('EFFICIENCY', 'REDUNDANCY'); I18NKey = "CYCLE_ENGINEMODE" }
+                ColorMode     = @{ Options = @('TrueColor', 'ANSI16'); I18NKey = "CYCLE_COLORMODE" }
+                HydrationMode = @{ Options = @('graphic', 'unicode', 'ascii'); I18NKey = "CYCLE_HYDRATION" }
+                IconLevel     = @{ Options = @(0, 1, 2); I18NKey = "CYCLE_ICONLEVEL" }
+                FrameStyle    = @{ Options = @('Classic', 'Rounded', 'Minimal', 'ASCII', 'Block', 'Retro', 'Cyber', 'Heavy', 'Dotted', 'Borderless', 'PowerShell'); I18NKey = "CYCLE_FRAMESTYLE" }
+                ProgressStyle = @{ Options = @('Default', 'Compact', 'BarOnly', 'Discrete', 'Braille', 'Line', 'Dot', 'Blocks'); I18NKey = "CYCLE_PROGSTYLE" }
+                ThemePersona  = @{ Options = @('Cyber', 'Corporate', 'Hacker', 'Minimal', 'Retro', 'HighVis', 'PowerShell', 'RANDOM'); I18NKey = "CYCLE_PERSONA" }
+                ThemeColor    = @{
+                        Options = @(
+                                'Blue', 'Green', 'Cyan', 'Magenta', 'Yellow', 'Red', 'Black', 'White',
+                                'Gray', 'Purple', 'Orange', 'Teal', 'Pink', 'Brown', 'Lime', 'Indigo',
+                                'Navy', 'Violet', 'Gold', 'Silver', 'Bronze',
+                                'Amber', 'Dim', 'Coral', 'Salmon', 'Lavender', 'Mint'
+                        )
+                        I18NKey = "CYCLE_THEMECOLOR"
+                }
+                RC_MT         = @{ Options = @(1, 2, 4, 8, 16, 32, 64, 128); I18NKey = "RC_FLAG_MT" }
+                RC_R          = @{ Options = @(0, 1, 3, 5, 10); I18NKey = "RC_RETRY_R" }
+                RC_W          = @{ Options = @(0, 1, 5, 10, 30); I18NKey = "RC_RETRY_W" }
         }
 
         # ===========================================================================
@@ -362,32 +366,32 @@
         # ===========================================================================
         ToggleLists          = @{
                 # Flags do Robocopy (booleanas)
-                RC_E                = $true
-                RC_ZB               = $true
-                RC_M                = $false
-                RC_B                = $true
-                RC_COPYALL          = $true
-                RC_DCOPY_T          = $true
-                RC_NP               = $false
-                RC_FFT              = $false
-                RC_XO               = $false
-                RC_XN               = $false
-                RC_XJ               = $true
-                RC_L                = $false
-                RC_V                = $false
+                RC_E                = @{ Value = $true; I18NKey = "RC_FLAG_E" }
+                RC_ZB               = @{ Value = $true; I18NKey = "RC_FLAG_ZB" }
+                RC_M                = @{ Value = $false; I18NKey = "RC_FLAG_M" }
+                RC_B                = @{ Value = $true; I18NKey = "RC_FLAG_B" }
+                RC_COPYALL          = @{ Value = $true; I18NKey = "RC_FLAG_COPYALL" }
+                RC_DCOPY_T          = @{ Value = $true; I18NKey = "RC_FLAG_DCOPY_T" }
+                RC_NP               = @{ Value = $false; I18NKey = "RC_FLAG_NP" }
+                RC_FFT              = @{ Value = $false; I18NKey = "RC_FLAG_FFT" }
+                RC_XO               = @{ Value = $false; I18NKey = "RC_FLAG_XO" }
+                RC_XN               = @{ Value = $false; I18NKey = "RC_FLAG_XN" }
+                RC_XJ               = @{ Value = $true; I18NKey = "RC_FLAG_XJ" }
+                RC_L                = @{ Value = $false; I18NKey = "RC_FLAG_L" }
+                RC_V                = @{ Value = $false; I18NKey = "RC_FLAG_V" }
 
                 # Terminal Capabilities
-                CAP_TRUECOLOR       = $true
-                CAP_HYPERLINKS      = $true
-                CAP_BRACKETEDPASTE  = $true
-                CAP_MOUSETRACKING   = $true
-                CAP_ALTERNATESCREEN = $true
-                CAP_FOCUSEVENTS     = $true
-                CAP_KITTYKEYBOARD   = $false
-                CAP_SIXELGRAPHICS   = $false
-                CAP_CSIUKEYBOARD    = $true
-                CAP_FALLBACK256     = $true
-                CAP_FALLBACK16      = $true
+                CAP_TRUECOLOR       = @{ Value = $true; I18NKey = "CAP_TRUECOLOR" }
+                CAP_HYPERLINKS      = @{ Value = $true; I18NKey = "CAP_HYPERLINKS" }
+                CAP_BRACKETEDPASTE  = @{ Value = $true; I18NKey = "CAP_BRACKETEDPASTE" }
+                CAP_MOUSETRACKING   = @{ Value = $true; I18NKey = "CAP_MOUSETRACKING" }
+                CAP_ALTERNATESCREEN = @{ Value = $true; I18NKey = "CAP_ALTERNATESCREEN" }
+                CAP_FOCUSEVENTS     = @{ Value = $true; I18NKey = "CAP_FOCUSEVENTS" }
+                CAP_KITTYKEYBOARD   = @{ Value = $false; I18NKey = "CAP_KITTYKEYBOARD" }
+                CAP_SIXELGRAPHICS   = @{ Value = $false; I18NKey = "CAP_SIXELGRAPHICS" }
+                CAP_CSIUKEYBOARD    = @{ Value = $true; I18NKey = "CAP_CSIUKEYBOARD" }
+                CAP_FALLBACK256     = @{ Value = $true; I18NKey = "CAP_FALLBACK256" }
+                CAP_FALLBACK16      = @{ Value = $true; I18NKey = "CAP_FALLBACK16" }
         }
 
         # ===========================================================================

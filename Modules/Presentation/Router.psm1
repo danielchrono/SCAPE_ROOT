@@ -184,19 +184,6 @@ function Start-ScapeRouter {
                     $ViewportState.HasResized = $false
                 }
 
-                if ($State.NeedsFullRedraw -or $State.NeedsCursorUpdate) {
-                    $ns = $State.Clone()
-                    if ($State.NeedsFullRedraw -or -not $State.RawOptions) {
-                        $menuData = Get-ScapeMenuData -MenuId $State.CurrentMenu
-                        if ($null -eq $menuData -or $null -eq $menuData.Items) {
-                            Publish-ScapeEvent -Type "ROUTER_FATAL" -Severity "FATAL" -Payload "Menu starvation: '$($State.CurrentMenu)'"
-                            Publish-ScapeEvent -Type "ROUTER_FATAL" -Severity "FATAL" -Payload "Menu starvation: '$($State.CurrentMenu)'"
-                            $State.IsRunning = $false
-                            break
-                        }
-                        $ns.RawOptions = $menuData.Items
-                        $ns.TitleKey = $menuData.TitleKey
-                        if ($State.NeedsFullRedraw) { $ns.Cursor = 0; $ns.LastCursor = -1 }
                     }
 
                     $__rrType = $(if ($State.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' })
@@ -271,7 +258,7 @@ $Script:LocalI18N = @(
 
 
 
-$Script:LocalI18N = @(
+$Script:LocalI18N += @(
     "ROUTE_EXEC_FAIL",
 ) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 

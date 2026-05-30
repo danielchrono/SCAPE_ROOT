@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-    Domain: Presentation\Controller
-    Module: Scape.Presentation.Controller
+    Domain: Presentation\ViewModel
+    Module: Scape.Presentation.ViewModel
     Architecture: Functional Purity | Stateless | Immutable Hydration
 #>
 [CmdletBinding()] param()
@@ -18,7 +18,8 @@ function Get-ScapeInputIntent {
             if ($key -in @('UP', 'DOWN', 'LEFT', 'RIGHT', 'SELECT', 'BACK', 'EXIT', 'IDLE')) {
                 return $key
             }
-        } else {
+        }
+        else {
             $pollMs = Get-ScapeConstant -Path "ui::Input::PollMs" -Fallback 30
             $key = Read-ScapeKeyPress -TimeoutMilliseconds $pollMs
         }
@@ -124,10 +125,12 @@ function Update-ScapeMenuViewModel {
                     if ($glyphSet -is [array] -and $glyphSet.Count -gt 0) {
                         $idx = [Math]::Max(0, [Math]::Min([int]$iconLevel, $glyphSet.Count - 1))
                         $formattedDynText = " $($glyphSet[$idx])"
-                    } else {
+                    }
+                    else {
                         $formattedDynText = if ($isOn) { ' [X]' } else { ' [ ]' }
                     }
-                } else {
+                }
+                else {
                     if ($finalText -match '\{0\}') {
                         try { $finalText = $finalText -f $rawDyn } catch {}
                     }
@@ -135,7 +138,7 @@ function Update-ScapeMenuViewModel {
                 }
             }
 
-            $esc = Get-ScapeConstant -Path "ui::ANSI::ESC" -Fallback "$([char]27)"
+            $esc = Get-ScapeConstant -Path "ui::ANSI::ESC"
             $ansiStripPattern = if ($null -ne $Script:AnsiStrip) { $Script:AnsiStrip } else { [regex]"$esc\[[0-9;]*[a-zA-Z]" }
             $cleanStr = if ($finalText) { $ansiStripPattern.Replace($finalText, '') } else { '' }
             $cleanDyn = if ($formattedDynText) { $ansiStripPattern.Replace($formattedDynText, '') } else { '' }
@@ -257,7 +260,7 @@ function Send-ScapeVirtualInput {
 }
 
 Export-ModuleMember -Function 'Get-ScapeInputIntent',
-                              'Update-ScapeMenuViewModel',
-                              'Invoke-ScapeStateMutation',
-                              'Get-ScapeHydratedOptions',
-                              'Send-ScapeVirtualInput'
+'Update-ScapeMenuViewModel',
+'Invoke-ScapeStateMutation',
+'Get-ScapeHydratedOptions',
+'Send-ScapeVirtualInput'

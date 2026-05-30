@@ -13,12 +13,12 @@ function Add-ScapeDisplayList {
 function Add-ScapeDisplayListAt {
     param([int]$X, [int]$Y, [string]$Text)
     $posFormat = Get-ScapeConstant -Path "ui::ANSI::Cursor::Position"
-    if (-not $posFormat) { $posFormat = "$([char]27)[{0};{1}H" }
+    if (-not $posFormat) { $posFormat = "{0}[{1};{2}H" -f (Get-ScapeConstant -Path "ui::ANSI::ESC"), "{0}", "{1}" }
     $Script:DisplayList.Append(($posFormat -f ($Y + 1), ($X + 1))) | Out-Null
     $Script:DisplayList.Append($Text) | Out-Null
 }
 
-function Flush-ScapeDisplayList {
+function Out-ScapeDisplayList {
     if ($Script:DisplayList.Length -gt 0) {
         Write-Host $Script:DisplayList.ToString() -NoNewline
         $Script:DisplayList.Clear() | Out-Null
@@ -88,7 +88,7 @@ function Initialize-ScapeRenderer {
                 $p = $evt.Payload
                 Clear-ScapeDisplayList
                 Write-ScapeMenuBuffer -Options $p.Options -CursorIndex $p.CursorIndex -LastCursorIndex $p.LastCursorIndex -ViewportStart $p.ViewportStart -ViewportEnd $p.ViewportEnd -TitleKey $p.TitleKey -FullRedraw $p.FullRedraw -ForceRowRedraw $p.ForceRowRedraw -FrameStyle $p.FrameStyle -IconLevel $p.IconLevel
-                Flush-ScapeDisplayList
+                Out-ScapeDisplayList
             }
             Register-ScapeEventListener -EventMatch "VIEW_MODEL_TREE_READY" -Action {
                 param($evt)
@@ -96,7 +96,7 @@ function Initialize-ScapeRenderer {
                 $p = $evt.Payload
                 Clear-ScapeDisplayList
                 Write-ScapeTreeView -RenderConfig $p.RenderConfig -FrameStyle $p.FrameStyle
-                Flush-ScapeDisplayList
+                Out-ScapeDisplayList
             }
             Register-ScapeEventListener -EventMatch "VIEW_MODEL_ACTION_READY" -Action {
                 param($evt)
@@ -104,7 +104,7 @@ function Initialize-ScapeRenderer {
                 $p = $evt.Payload
                 Clear-ScapeDisplayList
                 Write-ScapeActionScreen -RenderConfig $p.RenderConfig -FrameStyle $p.FrameStyle
-                Flush-ScapeDisplayList
+                Out-ScapeDisplayList
             }
             Register-ScapeEventListener -EventMatch "VIEW_MODEL_TRANSIENT_READY" -Action {
                 param($evt)
@@ -112,7 +112,7 @@ function Initialize-ScapeRenderer {
                 $p = $evt.Payload
                 Clear-ScapeDisplayList
                 Write-ScapeTransientView -RenderConfig $p.RenderConfig -FrameStyle $p.FrameStyle
-                Flush-ScapeDisplayList
+                Out-ScapeDisplayList
             }
         }
     }
@@ -356,17 +356,17 @@ function Write-ScapeMenuRows {
             
             if ($isCurrent) {
                 $cleanLineWithEndPadding = $cleanStrFull + (" " * $padEnd)
-                $ESC = [char]27
+                $ESC = Get-ScapeConstant -Path "ui::ANSI::ESC"
                 if ($Script:ColorMode -eq "TrueColor") {
                     $rgb = Resolve-ScapeThemeColor -Flag $flag
                     $bgAnsi = Convert-ScapeRGBToAnsi -RGB $rgb -IsBackground
-                    $fgAnsi = (Get-ScapeConstant -Path "ui::ANSI::Colors::FgBlack" -Fallback "$([char]27)[30m")
+                    $fgAnsi = (Get-ScapeConstant -Path "ui::ANSI::Colors::FgBlack")
                     $fullLine = "${bgAnsi}${fgAnsi}${cleanLineWithEndPadding}${ESC}[0m"
                 }
                 else {
                     $fgAnsi16 = Get-ScapeAnsi16SequenceForFlag -Flag $flag
                     $bgAnsi16 = $fgAnsi16 -replace '\[3', '[4' -replace '\[9', '[10'
-                    $blackText = (Get-ScapeConstant -Path "ui::ANSI::Colors::FgBlack" -Fallback "$([char]27)[30m")
+                    $blackText = (Get-ScapeConstant -Path "ui::ANSI::Colors::FgBlack")
                     $fullLine = "${bgAnsi16}${blackText}${cleanLineWithEndPadding}${ESC}[0m"
                 }
             }
@@ -700,7 +700,7 @@ function Format-ScapeGridLayout {
     process {
         if ($null -eq $GridRows -or $GridRows.Count -eq 0) { return "" }
 
-        $ESC = [char]27
+        $ESC = Get-ScapeConstant -Path "ui::ANSI::ESC"
         $reset = "$ESC[0m"
         $sb = [System.Text.StringBuilder]::new()
 
@@ -768,7 +768,7 @@ function Format-ScapeThemifiedMenuBuffer {
     process {
         if ($null -eq $HydratedOptions -or $HydratedOptions.Count -eq 0) { return "" }
 
-        $ESC = [char]27
+        $ESC = Get-ScapeConstant -Path "ui::ANSI::ESC"
         $reset = "$ESC[0m"
         $sb = [System.Text.StringBuilder]::new()
 

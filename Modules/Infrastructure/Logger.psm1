@@ -124,10 +124,9 @@ function Initialize-ScapeLogger {
                         $timeout = $configRef.Limits["CRITICAL_SECTION_TIMEOUT_MS"]
                         if ($null -eq $timeout) { $timeout = 5000 }
                         $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
-                        while ($sem.CurrentCount -eq 0 -and [DateTime]::UtcNow -lt $deadline) {
-                            if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-                        }
-                        if (-not $sem.Wait(0)) { return }
+                        $timeToWait = [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds
+                        if ($timeToWait -gt 0 -and -not $sem.Wait($timeToWait)) { return }
+                        if ($timeToWait -le 0) { return }
                     }
 
                     try {
@@ -346,7 +345,7 @@ $Script:LocalI18N = @(
 
 
 
-$Script:LocalI18N = @(
+$Script:LocalI18N += @(
     "ERR_ADMIN_REQUIRED",
     "ERR_BOOT_SECTOR_READ",
     "ERR_DEPENDENCY_FAIL",

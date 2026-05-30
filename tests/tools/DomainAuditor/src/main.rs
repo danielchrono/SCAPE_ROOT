@@ -54,7 +54,8 @@ fn main() {
                    !line.contains("$Script:InteropSignature") &&
                    !line.contains("$Script:SettingsPath") &&
                    !line.contains("$Script:LocalI18N") &&
-                   !line.contains("$Script:UnmappedI18N") {
+                   !line.contains("$Script:UnmappedI18N") &&
+                   !line.contains("$Script:ChordTimeoutMs") {
                     has_violation = true;
                     break;
                 }

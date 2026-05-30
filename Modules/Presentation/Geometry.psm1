@@ -13,7 +13,7 @@ function Initialize-ScapeGeometry {
     param()
     process {
         # Geometry agora é Math-only. Locks/Viewport estatais devem ser
-        # chamados pela orquestração principal (Controller), não aqui.
+        # chamados pela orquestração principal (ViewModel), não aqui.
     }
 }
 

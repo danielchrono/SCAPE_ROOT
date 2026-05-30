@@ -77,10 +77,9 @@ function Initialize-ScapeAudit {
                     if ($null -eq $timeout) { $timeout = 5000 } # <<< PRESERVADO
 
                     $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
-                    while ($Script:Semaphore.CurrentCount -eq 0 -and [DateTime]::UtcNow -lt $deadline) {
-                        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-                    }
-                    if (-not $Script:Semaphore.Wait(0)) { return }
+                    $timeToWait = [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds
+                    if ($timeToWait -gt 0 -and -not $Script:Semaphore.Wait($timeToWait)) { return }
+                    if ($timeToWait -le 0) { return }
                 }
                 try {
                     $record = New-ScapeAuditRecord -EventFrame $IncomingEvt

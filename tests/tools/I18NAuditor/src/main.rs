@@ -51,7 +51,7 @@ fn main() {
     let mut unused_keys: Vec<_> = defined_keys.difference(&used_keys).collect();
     unused_keys.sort();
 
-    println!("--- I18NAuditor Report ---");
+    println!("--- I18NAuditor Report ---"); println!("Defined keys: {}, Used keys: {}", defined_keys.len(), used_keys.len());
     if unused_keys.is_empty() {
         println!("Unused Keys: None detected in strict mapping.");
     } else {

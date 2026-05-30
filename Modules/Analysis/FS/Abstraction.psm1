@@ -13,35 +13,35 @@ $Script:DetectionCache = @{}
 function Get-ScapeAbstractionConfig {
     $fs = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
     return @{
-        FS = $fs
+        FS      = $fs
         CARVING = Get-ScapeConstant -Path "storage::SIGNATURES" -Fallback @{}
-        HW = Get-ScapeConstant -Path "system::PROFILES" -Fallback @{}
-        LIMITS = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
+        HW      = Get-ScapeConstant -Path "system::PROFILES" -Fallback @{}
+        LIMITS  = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
         FS_SIGS = @{
-            NTFS_MFT = Convert-ScapeHexToByte -Hex ($fs["NTFS_MFT_SIG"].ToString("X8"))
-            NTFS_BOOT = Convert-ScapeHexToByte -Hex "4E54465320202020"
-            FAT_BOOT = [BitConverter]::GetBytes($fs["FAT_BOOT_SIG"])
-            EXFAT_VBR = Convert-ScapeHexToByte -Hex ($fs["EXFAT_VBR_SIG"].ToString("X16"))
-            EXT_SB = [BitConverter]::GetBytes($fs["EXT4_SB_SIG"])
-            BTRFS_SB = Convert-ScapeHexToByte -Hex ($fs["BTRFS_SB_SIG"].ToString("X16"))
-            XFS_SB = Convert-ScapeHexToByte -Hex ($fs["XFS_SB_SIG"].ToString("X8"))
-            ZFS_UBER = [BitConverter]::GetBytes($fs["ZFS_UBER_SIG"])
-            ZFS_LABEL = Convert-ScapeHexToByte -Hex ($fs["ZFS_LABEL_SIG"].ToString("X16"))
-            APFS_SB = Convert-ScapeHexToByte -Hex ($fs["APFS_SB_SIG"].ToString("X8"))
-            REFS_SB = Convert-ScapeHexToByte -Hex ($fs["REFS_SIG"].ToString("X8"))
-            HFS_PLUS = [BitConverter]::GetBytes($fs["HFS_PLUS_SIG"])
-            HFSX = [BitConverter]::GetBytes($fs["HFSX_SIG"])
-            UDF_VRS = Convert-ScapeHexToByte -Hex ($fs["UDF_SIG"].ToString("X8"))
-            F2FS_SB = [BitConverter]::GetBytes($fs["F2FS_SB_SIG"])
-            JFS_SUPER = Convert-ScapeHexToByte -Hex ($fs["JFS_SUPER_SIG"].ToString("X8"))
-            VMDK = Convert-ScapeHexToByte -Hex "4B444D56"
-            VHD = Convert-ScapeHexToByte -Hex "636F6E6563746978"
-            VHDX = Convert-ScapeHexToByte -Hex "7668647866696C65"
-            QCOW2 = Convert-ScapeHexToByte -Hex "514649FB"
-            DMG = Convert-ScapeHexToByte -Hex "7801730D626260"
-            ISO9660 = Convert-ScapeHexToByte -Hex "4344303031"
+            NTFS_MFT   = Convert-ScapeHexToByte -Hex ($fs["NTFS_MFT_SIG"].ToString("X8"))
+            NTFS_BOOT  = Convert-ScapeHexToByte -Hex "4E54465320202020"
+            FAT_BOOT   = [BitConverter]::GetBytes($fs["FAT_BOOT_SIG"])
+            EXFAT_VBR  = Convert-ScapeHexToByte -Hex ($fs["EXFAT_VBR_SIG"].ToString("X16"))
+            EXT_SB     = [BitConverter]::GetBytes($fs["EXT4_SB_SIG"])
+            BTRFS_SB   = Convert-ScapeHexToByte -Hex ($fs["BTRFS_SB_SIG"].ToString("X16"))
+            XFS_SB     = Convert-ScapeHexToByte -Hex ($fs["XFS_SB_SIG"].ToString("X8"))
+            ZFS_UBER   = [BitConverter]::GetBytes($fs["ZFS_UBER_SIG"])
+            ZFS_LABEL  = Convert-ScapeHexToByte -Hex ($fs["ZFS_LABEL_SIG"].ToString("X16"))
+            APFS_SB    = Convert-ScapeHexToByte -Hex ($fs["APFS_SB_SIG"].ToString("X8"))
+            REFS_SB    = Convert-ScapeHexToByte -Hex ($fs["REFS_SIG"].ToString("X8"))
+            HFS_PLUS   = [BitConverter]::GetBytes($fs["HFS_PLUS_SIG"])
+            HFSX       = [BitConverter]::GetBytes($fs["HFSX_SIG"])
+            UDF_VRS    = Convert-ScapeHexToByte -Hex ($fs["UDF_SIG"].ToString("X8"))
+            F2FS_SB    = [BitConverter]::GetBytes($fs["F2FS_SB_SIG"])
+            JFS_SUPER  = Convert-ScapeHexToByte -Hex ($fs["JFS_SUPER_SIG"].ToString("X8"))
+            VMDK       = Convert-ScapeHexToByte -Hex "4B444D56"
+            VHD        = Convert-ScapeHexToByte -Hex "636F6E6563746978"
+            VHDX       = Convert-ScapeHexToByte -Hex "7668647866696C65"
+            QCOW2      = Convert-ScapeHexToByte -Hex "514649FB"
+            DMG        = Convert-ScapeHexToByte -Hex "7801730D626260"
+            ISO9660    = Convert-ScapeHexToByte -Hex "4344303031"
             GPT_HEADER = Convert-ScapeHexToByte -Hex "4546492050415254"
-            MBR_SIG = [BitConverter]::GetBytes([uint16]0xAA55)
+            MBR_SIG    = [BitConverter]::GetBytes([uint16]0xAA55)
         }
     }
 }
@@ -369,7 +369,7 @@ function Invoke-ScapeBatchFSAnalysis {
     for ($i = 0; $i -lt $SectorBatch.Count; $i++) {
         while (-not $throttle.Wait(0)) {
             if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-            else { [System.Threading.Thread]::Sleep(1) }
+            else { `$throttle.Wait(10) | Out-Null }
         }
 
         # Isolando escopo local para o Linter e para o ThreadJob injetar com `$using:`
@@ -401,6 +401,8 @@ function Invoke-ScapeBatchFSAnalysis {
         }
     }
 
+    $deadline = [DateTime]::UtcNow.AddSeconds(300)
+    while ( ($tasks.State -match 'Running|NotStarted') -and [DateTime]::UtcNow -lt $deadline) { if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null } }
     $tasks | Remove-Job -Force
     $null = $throttle.Dispose()
 
@@ -469,7 +471,7 @@ $Script:LocalI18N = @(
     "FS_JFS",
     "FS_PART_TABLE",
     "FS_UDF",
-    "FS_XFS",
+    "FS_XFS"
 ) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
@@ -487,12 +489,12 @@ $Script:LocalI18N = @(
     "VOLUME_TYPE_NTFS",
     "VOLUME_TYPE_UNKNOWN",
     "VOLUME_TYPE_XFS",
-    "VOLUME_TYPE_ZFS",
+    "VOLUME_TYPE_ZFS"
 ) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
 $Script:LocalI18N = @(
-    "INVENTORY_LOGICAL_VOLUMES",
+    "INVENTORY_LOGICAL_VOLUMES"
 ) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 

@@ -21,7 +21,7 @@
         @{ Name = "Scape.Core.Interop"; LoadOrder = 17; IsVital = $true; Domain = "Core"; CompileOnce = $true }
         @{ Name = "Scape.Core.Security"; LoadOrder = 18; IsVital = $true; Domain = "Core" }
         @{ Name = "Scape.Core.Resolver"; LoadOrder = 19; IsVital = $true; Domain = "Core" }
-        @{ Name = "Scape.Core.ActionManager"; LoadOrder = 20; IsVital = $true; Domain = "Core"; DependsOn = @("Scape.Core.EventBus","Scape.Core.Constants") }
+        @{ Name = "Scape.Core.ActionManager"; LoadOrder = 20; IsVital = $true; Domain = "Core"; DependsOn = @("Scape.Core.EventBus", "Scape.Core.Constants") }
         @{ Name = "Scape.Core.HardwareProfile"; LoadOrder = 21; IsVital = $false; Domain = "Core" }
     )
 
@@ -78,7 +78,7 @@
         @{ Name = "Scape.Presentation.Dispatcher"; LoadOrder = 73; IsVital = $true; Domain = "Presentation" }
         @{ Name = "Scape.Presentation.Renderer"; LoadOrder = 74; IsVital = $true; Domain = "Presentation" }
         @{ Name = "Scape.Presentation.FilePicker"; LoadOrder = 75; IsVital = $false; Domain = "Presentation" }
-        @{ Name = "Scape.Presentation.Controller"; LoadOrder = 76; IsVital = $true; Domain = "Presentation" }
+        @{ Name = "Scape.Presentation.ViewModel"; LoadOrder = 76; IsVital = $true; Domain = "Presentation" }
         @{ Name = "Scape.Presentation.Responsivity"; LoadOrder = 77; IsVital = $true; Domain = "Presentation" }
         @{ Name = "Scape.Presentation.Router"; LoadOrder = 78; IsVital = $true; Domain = "Presentation" }
         @{ Name = "Scape.Presentation.StateObserver"; LoadOrder = 79; IsVital = $true; Domain = "Presentation" }

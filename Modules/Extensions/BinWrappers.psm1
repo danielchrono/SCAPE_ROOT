@@ -38,7 +38,7 @@ function Invoke-ScapeBinWrapper {
     $stdErr = $proc.StandardError.ReadToEnd()
     while (-not $proc.HasExited) {
         if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-        [System.Threading.Thread]::Sleep(50)
+        $proc.WaitForExit(50) | Out-Null
     }
     $exitCode = $proc.ExitCode
 
