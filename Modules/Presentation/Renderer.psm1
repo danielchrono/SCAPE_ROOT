@@ -67,6 +67,9 @@ function Close-ScapeRenderer {
             [Console]::CursorVisible = $true
             [Console]::Clear()
         } catch {}
+       if ($Script:RenderCache) {
+        $Script:RenderCache.LastTransientConfig = $null
+    }
         $Script:IconResolveCache.Clear()
         $Script:MenuLineCache.Clear()
         $Script:RenderCache.LastMenuHash = ""
@@ -326,113 +329,47 @@ function Write-ScapeMenuRows {
 # MAIN RENDER ORCHESTRATOR
 # ==============================================================================
 function Write-ScapeMenuBuffer {
+    [CmdletBinding()]
     param(
-        $Options,
-        $CursorIndex,
-        $LastCursorIndex = -1,
-        $TitleKey,
-        $FullRedraw,
-        [string]$FrameStyle = $null,
-        [int]$IconLevel = 0
+        [Parameter(Mandatory = $true)] [array] $Options,
+        [Parameter()] [int] $CursorIndex = 0,
+        [Parameter()] [int] $LastCursorIndex = -1,
+        [Parameter()] [int] $ViewportStart = 0,
+        [Parameter()] [int] $ViewportEnd = 0,
+        [Parameter()] [string] $TitleKey,
+        [Parameter()] [bool] $FullRedraw = $false,
+        [Parameter()] [bool] $ForceRowRedraw = $false,
+        [Parameter()] [string] $FrameStyle = $null,
+        [Parameter()] [int] $IconLevel = 0
     )
+    process {
+        if ($null -eq $CursorIndex) { $CursorIndex = 0 }
+        if ($null -eq $LastCursorIndex) { $LastCursorIndex = -1 }
+        
+        $ForceRowRedraw = ($FullRedraw -or $ForceRowRedraw)
 
-    $dims = Get-ScapeConsoleDimension -WithMargins
-    $layout = Get-ScapeConstant -Path "ui::Layout"
-    $itemCount = @($Options).Count
+        $dims = Get-ScapeConsoleDimension -WithMargins
+        $layout = Get-ScapeConstant -Path "ui::Layout"
+        $itemCount = @($Options).Count
 
-    # 1. State Resolution & Invalidation Check
-    if ($FullRedraw -or $Script:RenderCache.BoxWidth -ne $dims.Width -or $Script:RenderCache.BoxHeight -ne $dims.Height) {
-        $FullRedraw = $true
-        $Script:RenderCache.BoxWidth = $dims.Width
-        $Script:RenderCache.BoxHeight = $dims.Height
-        $Script:RenderCache.LastMenuHash = ""
-        $Script:RenderCache.LastDynamicHash = ""
-        $Script:RenderCache.LastCursor = -1
-    }
-
-    if ($null -eq $CursorIndex) {
-        $CursorIndex = if ($Script:RenderCache.LastCursor -ge 0) { $Script:RenderCache.LastCursor } else { 0 }
-    }
-
-    $dynamicHash = ""
-    foreach ($opt in $Options) {
-        if ($null -ne $opt.DynamicText) { $dynamicHash += $opt.DynamicText }
-    }
-
-    $menuHash = "$TitleKey|$itemCount|$CursorIndex"
-    $dataMutated = ($Script:RenderCache.LastDynamicHash -ne $dynamicHash)
-    
-    if (-not $FullRedraw -and -not $dataMutated -and $Script:RenderCache.LastMenuHash -eq $menuHash) {
-        return
-    }
-    $Script:RenderCache.LastMenuHash = $menuHash
-    $Script:RenderCache.LastDynamicHash = $dynamicHash
-
-    $actualLastCursor = $Script:RenderCache.LastCursor
-    if ($FullRedraw) {
-        $actualLastCursor = -1
-    }
-    
-    $ForceRowRedraw = ($FullRedraw -or $dataMutated)
-
-    # 2. Viewport Calculation
-    $verticalPadding = if ($layout.Padding) { $layout.Padding } else { 0 }
-    
-    $safeDimsHeight = [Math]::Max(10, $dims.Height - 1)
-    
-    $bannerVariant = if (Get-Command Get-ScapeBannerVariant -ErrorAction SilentlyContinue) {
-        Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight
-    } else {
-        if (($itemCount + $layout.HeaderHeight) -gt $safeDimsHeight) { 'Compact' } else { 'Standard' }
-    }
-    
-    $banner = Format-ScapeArtBlock -VariantKey $bannerVariant -ConsoleWidth $dims.Width
-    $bannerTrueHeight = $banner.Count
-    
-    $availableHeight = if ($Script:R_BoxCache -and -not $FullRedraw) { [int]$Script:R_BoxCache.Height } else { [Math]::Max(1, $safeDimsHeight - $bannerTrueHeight - $verticalPadding - 5) } # 5 for Frame borders + hints
-
-    $viewportRange = $null
-    if (Get-Command Get-ScapeViewportRange -ErrorAction SilentlyContinue) {
-        $viewportRange = Get-ScapeViewportRange -TotalItems $itemCount -CursorIndex $CursorIndex -AvailableHeight $availableHeight
-    }
-    if ($null -eq $viewportRange) {
-        $viewportRange = @{ Start = 0; End = [Math]::Min($itemCount, $availableHeight) }
-    }
-
-    $viewportStart = $viewportRange.Start
-    $viewportEnd = $viewportRange.End
-
-    if (-not $FullRedraw -and (($Script:RenderCache.LastViewportStart -ne $viewportStart) -or ($Script:RenderCache.LastViewportEnd -ne $viewportEnd))) {
-        $FullRedraw = $true
-    }
-
-    # 3. Layout Rendering (Static Box)
-    if ($FullRedraw) {
-        $visibleItems = $viewportEnd - $viewportStart
+        $safeDimsHeight = [Math]::Max(10, $dims.Height - 1)
         $safeDims = @{ Width = $dims.Width; Height = $safeDimsHeight }
-        $Script:R_BoxCache = Write-ScapeMenuLayout -Dims $safeDims -ItemCount $itemCount -VisibleItems $visibleItems -TitleKey $TitleKey -FrameStyle $FrameStyle -HeaderHeight $layout.HeaderHeight
-    }
-    $box = $Script:R_BoxCache
-    $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
 
-    # 4. Indicators Rendering
-    Write-ScapeScrollIndicatorsView -ViewportStart $viewportStart -ViewportEnd $viewportEnd -ItemCount $itemCount -FrameCoords $frameCoords -FrameStyle $FrameStyle
+        $visibleItems = $ViewportEnd - $ViewportStart
+        $box = Get-ScapeMenuLayout -MaxContentWidth 45 -ItemCount $visibleItems -ConsoleWidth $safeDims.Width -ConsoleHeight $safeDims.Height -HeaderHeight $layout.HeaderHeight
 
-    # 5. Rows Rendering (Dynamic Content)
-    Write-ScapeMenuRows -Box $box -Dims $dims -Options $Options -CursorIndex $CursorIndex -LastCursorIndex $actualLastCursor -ViewportStart $viewportStart -ViewportEnd $viewportEnd -IconLevel $IconLevel -ForceRedrawItems $ForceRowRedraw -FrameStyle $FrameStyle
-
-    # 6. Restore Transient View if it exists and is not expired
-    if ($Script:RenderCache.LastTransientConfig) {
-        $hold = $Script:RenderCache.LastTransientConfig.HoldUntil
-        if ($hold -and ([DateTime]::Now -lt $hold)) {
-            Write-ScapeTransientView -RenderConfig $Script:RenderCache.LastTransientConfig
+        # 3. Layout Rendering (Static Box)
+        if ($FullRedraw) {
+            Write-ScapeMenuLayout -Dims $safeDims -ItemCount $itemCount -VisibleItems $visibleItems -TitleKey $TitleKey -FrameStyle $FrameStyle -HeaderHeight $layout.HeaderHeight | Out-Null
         }
-    }
+        $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
 
-    # 7. Final State Commit
-    $Script:RenderCache.LastViewportStart = $viewportStart
-    $Script:RenderCache.LastViewportEnd = $viewportEnd
-    $Script:RenderCache.LastCursor = $CursorIndex
+        # 4. Indicators Rendering
+        Write-ScapeScrollIndicatorsView -ViewportStart $ViewportStart -ViewportEnd $ViewportEnd -ItemCount $itemCount -FrameCoords $frameCoords -FrameStyle $FrameStyle
+
+        # 5. Rows Rendering (Dynamic Content)
+        Write-ScapeMenuRows -Box $box -Dims $dims -Options $Options -CursorIndex $CursorIndex -LastCursorIndex $LastCursorIndex -ViewportStart $ViewportStart -ViewportEnd $ViewportEnd -IconLevel $IconLevel -ForceRedrawItems $ForceRowRedraw -FrameStyle $FrameStyle
+    }
 }
 
 # ==============================================================================

@@ -15,6 +15,7 @@ $Script:RedrawDebounce = @{
     RequestQueue = @()
     LastRouterState = $null
     LastTitleKey = $null
+    LastViewportStart = -1
 }
 $Script:RecentRedraws = [System.Collections.Concurrent.ConcurrentDictionary[string, DateTime]]::new()
 $Script:TransientState = @{
@@ -142,17 +143,45 @@ function Invoke-ScapeRedrawRequestEvent {
     $cursorIdx = $routerState.Cursor
     $lastIdx = if ($null -ne $routerState.LastCursor) { $routerState.LastCursor } else { -1 }
 
-    # Lazy hydration delegated to Resolver listener (SRP)
-
-    # Supressão de Duplicatas delegada inteiramente ao Request-ScapeRedraw (10ms)
-
     $vmStateSnapshot = Get-ScapeColdState
     $hydratedOpts = Update-ScapeMenuViewModel -MenuId $menuId -RawOptions $rawOpts -StateSnapshot $vmStateSnapshot
 
     $frameStyle = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('FrameStyle')) { [string]$vmStateSnapshot['FrameStyle'] } else { $null }
     $iconLevel = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('IconLevel')) { [int]$vmStateSnapshot['IconLevel'] } else { 0 }
 
-    Write-ScapeMenuBuffer -Options $hydratedOpts -CursorIndex $cursorIdx -LastCursorIndex $lastIdx -TitleKey $titleKey -FullRedraw $isFull -FrameStyle $frameStyle -IconLevel $iconLevel
+    # Viewport Calculation (Moved from Renderer for Pure View)
+    $dims = Get-ScapeConsoleDimension -WithMargins
+    $layout = Get-ScapeConstant -Path "ui::Layout"
+    $safeDimsHeight = [Math]::Max(10, $dims.Height - 1)
+    $itemCount = $hydratedOpts.Count
+    $bannerVariant = if (Get-Command Get-ScapeBannerVariant -ErrorAction SilentlyContinue) {
+        Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight
+    } else {
+        if (($itemCount + $layout.HeaderHeight) -gt $safeDimsHeight) { 'Compact' } else { 'Standard' }
+    }
+    $banner = Format-ScapeArtBlock -VariantKey $bannerVariant -ConsoleWidth $dims.Width
+    $availableHeight = [Math]::Max(1, $safeDimsHeight - $banner.Count - $layout.Padding - 5)
+
+    $viewportRange = $null
+    if (Get-Command Get-ScapeViewportRange -ErrorAction SilentlyContinue) {
+        $viewportRange = Get-ScapeViewportRange -TotalItems $itemCount -CursorIndex $cursorIdx -AvailableHeight $availableHeight
+    }
+    if ($null -eq $viewportRange) {
+        $viewportRange = @{ Start = 0; End = [Math]::Min($itemCount, $availableHeight) }
+    }
+    
+    $viewportStart = $viewportRange.Start
+    $viewportEnd = $viewportRange.End
+    
+    if ($Script:RedrawDebounce.LastViewportStart -ne $viewportStart) {
+        $isFull = $true
+    }
+    $Script:RedrawDebounce.LastViewportStart = $viewportStart
+    
+    $isDataMutated = ($type -eq 'DATA')
+    $forceRowRedraw = ($isFull -or $isDataMutated)
+
+    Write-ScapeMenuBuffer -Options $hydratedOpts -CursorIndex $cursorIdx -LastCursorIndex $lastIdx -ViewportStart $viewportStart -ViewportEnd $viewportEnd -TitleKey $titleKey -FullRedraw $isFull -ForceRowRedraw $forceRowRedraw -FrameStyle $frameStyle -IconLevel $iconLevel
 }
 
 function Invoke-ScapeTransientEvent {
@@ -335,6 +364,7 @@ function Request-ScapeRedraw {
     finally {
         $Script:RedrawDebounce.IsRendering = $false
     }
+    }
 }
 
 function Initialize-ScapeStateObserver {
@@ -380,7 +410,8 @@ function Initialize-ScapeStateObserver {
                     $menuId = if ($lastState) { $lastState.CurrentMenu } elseif ($st) { $st.CurrentMenu } else { $null }
                     
                     if ($menuId) {
-                        Request-ScapeRedraw -MenuId $menuId -Type $redrawType -RouterState $lastState -TitleKey $lastTitle
+                        $actualType = if ($redrawType -eq 'PARTIAL') { 'DATA' } else { $redrawType }
+                        Request-ScapeRedraw -MenuId $menuId -Type $actualType -RouterState $lastState -TitleKey $lastTitle
                     }
                 }
 
