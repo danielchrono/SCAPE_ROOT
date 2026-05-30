@@ -70,7 +70,7 @@ function Repair-ScapeTruncatedFooter {
         $Data = $Data[0..($ExpectedSize - 1)]
     }
 
-    $searchWindow = [Math]::Min(4096, $Data.Length)
+    $searchWindow = [Math]::Min((Get-ScapeConstant -Path "system::ANALYSIS::BLOCK_SIZE"), $Data.Length)
     $startIdx = [Math]::Max(0, $Data.Length - $searchWindow)
 
     for ($i = $startIdx; $i -le ($Data.Length - $expectedFooter.Length); $i++) {
@@ -107,7 +107,7 @@ function Repair-ScapeFragmentedRecord {
         return @{ Success = $false; Reason = "INSUFFICIENT_FRAGMENTS" }
     }
 
-    $gapThreshold = if ($MaxGapBytes -gt 0) { $MaxGapBytes } else { $Script:C.ENGINE["MAX_ORPHAN_GAP_KB"] * 1024 }
+    $gapThreshold = if ($MaxGapBytes -gt 0) { $MaxGapBytes } else { $Script:C.ENGINE["MAX_ORPHAN_GAP_KB"] * (Get-ScapeConstant -Path "system::ANALYSIS::BYTE_THRESHOLD_1024") }
     $sig = (Get-ScapeConstant -Path "storage::SIGNATURES")[$SignatureId]
 
     $sorted = $Fragments | Sort-Object { $_.Offset }
@@ -180,7 +180,7 @@ function Test-ScapeCarvedIntegrity {
 
     switch ($sig.Category) {
         "Image" {
-            if ($sig.Extension -eq ".jpg" -and $Data.Length -lt 20) { return @{ Valid = $false; Reason = "JPEG_TOO_SMALL" } }
+            if ($sig.Extension -eq ".jpg" -and $Data.Length -lt (Get-ScapeConstant -Path "system::ANALYSIS::BYTE_THRESHOLD_20")) { return @{ Valid = $false; Reason = "JPEG_TOO_SMALL" } }
         }
         "Archive" {
             if ($sig.Extension -in @(".zip", ".docx", ".xlsx")) {

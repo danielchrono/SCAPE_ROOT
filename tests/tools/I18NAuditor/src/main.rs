@@ -36,9 +36,13 @@ fn main() {
 
     let mut ps1_files = Vec::new();
     get_psm1_files(Path::new("C:\\Users\\danie\\SCAPE_ROOT\\Modules"), &mut ps1_files);
+    ps1_files.push(PathBuf::from("C:\\Users\\danie\\SCAPE_ROOT\\Data\\Constants\\ui.psd1"));
 
     let mut used_keys = HashSet::new();
     for f in &ps1_files {
+        if f.file_name().unwrap_or_default() == "I18N.psm1" {
+            continue;
+        }
         if let Ok(content) = fs::read_to_string(f) {
             for key in &defined_keys {
                 if content.contains(key) {
@@ -48,10 +52,12 @@ fn main() {
         }
     }
 
-    println!("Defined keys sample: {:?}", defined_keys.iter().take(5).collect::<Vec<_>>()); let mut unused_keys: Vec<_> = defined_keys.difference(&used_keys).collect();
+    let mut unused_keys: Vec<_> = defined_keys.difference(&used_keys).collect();
     unused_keys.sort();
 
-    println!("--- I18NAuditor Report ---"); println!("{:?}", defined_keys);
+    println!("--- I18NAuditor Report ---");
+    println!("Defined keys: {}", defined_keys.len());
+    println!("Used keys: {}", used_keys.len());
     if unused_keys.is_empty() {
         println!("Unused Keys: None detected in strict mapping.");
     } else {

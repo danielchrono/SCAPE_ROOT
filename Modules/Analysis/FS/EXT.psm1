@@ -57,7 +57,7 @@ function Resolve-ScapeEXTIndirectBlock {
     [OutputType([long[]])]
     param(
         [Parameter(Mandatory = $true)][byte[]]$InodeBuffer,
-        [Parameter()][int]$BlockSize = 4096
+        [Parameter()][int]$BlockSize = (Get-ScapeConstant -Path "system::ANALYSIS::BLOCK_SIZE")
     )
     $null = $BlockSize # PSReviewUnusedParameter
 

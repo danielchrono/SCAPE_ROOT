@@ -153,4 +153,15 @@
         SETTINGS         = "user-settings.json"
         LOG_FILE_PATTERN = "scape_{0:yyyyMMdd_HHmmss}.log"
     }
+    Analysis    = @{
+        BANNER_BREAKPOINT   = 30
+        SECTOR_SIZE         = 512
+        RAM_LIMIT           = 128
+        DEFAULT_INTERVAL    = 100
+        BLOCK_SIZE          = 4096
+        FAT_TYPE            = 32
+        MAX_ITERATIONS      = 100000
+        BYTE_THRESHOLD_1024 = 1024
+        BYTE_THRESHOLD_20   = 20
+    }
 }

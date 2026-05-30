@@ -218,7 +218,7 @@ function Get-ScapeBannerVariant {
     )
     process {
         $layout = Get-ScapeConstant -Path "ui::Layout"
-        $threshold = if ($layout -and $null -ne $layout.BannerBreakpoint) { $layout.BannerBreakpoint } else { 30 }
+        $threshold = if ($layout -and $null -ne $layout.BannerBreakpoint) { $layout.BannerBreakpoint } else { (Get-ScapeConstant -Path "system::ANALYSIS::BANNER_BREAKPOINT") }
         if ($ItemCount -ge 5 -or ($ItemCount + $HeaderHeight + 10) -ge $ConsoleHeight -or $ConsoleHeight -le $threshold) {
             return 'Compact'
         }

@@ -54,7 +54,7 @@ function Start-ScapeAnalysisStream {
         # Fallback para Carving
         $activeProfile = Get-ScapeActiveProfile
         $ramLimit = if ($activeProfile -and $activeProfile.ContainsKey('RAM_BUFFER_MB')) { [int]$activeProfile['RAM_BUFFER_MB'] } else { 0 }
-        $enableBP = $ramLimit -lt 128
+        $enableBP = $ramLimit -lt (Get-ScapeConstant -Path "system::ANALYSIS::RAM_LIMIT")
 
         $result = Invoke-ScapeRawCarving -Buffer $SectorBuffer -PhysicalOffset $PhysicalOffset -VolumeSerial $VolumeSerial -EnableBackpressure:$enableBP
 
@@ -82,14 +82,14 @@ function Invoke-ScapeBatchAnalysis {
         [Parameter(Mandatory = $true)] [byte[][]]$SectorBatch,
         [Parameter(Mandatory = $true)] [long]$BaseOffset,
         [Parameter(Mandatory = $true)] [string]$VolumeSerial,
-        [Parameter()][int]$SectorSize = 512
+        [Parameter()][int]$SectorSize = (Get-ScapeConstant -Path "system::ANALYSIS::SECTOR_SIZE")
     )
     process {
         if (-not $PSCmdlet.ShouldProcess("Batch of $($SectorBatch.Count) sectors", "Batch Analysis")) { return @() }
         if (-not $Script:Initialized) { Initialize-ScapeAnalyzer }
 
         $results = New-Object System.Collections.Generic.List[hashtable]
-        $progressInterval = [Math]::Max(100, [Math]::Floor($SectorBatch.Count / 10))
+        $progressInterval = [Math]::Max((Get-ScapeConstant -Path "system::ANALYSIS::DEFAULT_INTERVAL"), [Math]::Floor($SectorBatch.Count / 10))
 
         for ($i = 0; $i -lt $SectorBatch.Count; $i++) {
             $offset = $BaseOffset + ($i * $SectorSize)

@@ -51,10 +51,10 @@ function Trace-ScapeFATChain {
     param(
         [Parameter(Mandatory = $true)][int]$StartCluster,
         [Parameter(Mandatory = $true)][byte[]]$FATTable,
-        [Parameter()][int]$FatType = 32
+        [Parameter()][int]$FatType = (Get-ScapeConstant -Path "system::ANALYSIS::FAT_TYPE")
     )
     $clusters = New-Object System.Collections.Generic.List[int]
-    $current = $StartCluster; $maxIter = 100000
+    $current = $StartCluster; $maxIter = (Get-ScapeConstant -Path "system::ANALYSIS::MAX_ITERATIONS")
 
     for ($i = 0; $i -lt $maxIter; $i++) {
         if ($current -lt 2) { break }

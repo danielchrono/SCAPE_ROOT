@@ -37,6 +37,16 @@
     "SETTINGS_RESET_DEFAULTS"         = @{ T = 'Reset to Factory Defaults'; H = 'Option to reset all settings to defaults'; F = 'UI' }
     "SETTINGS_RESET_SUCCESS"          = @{ T = 'All settings restored to engine factory defaults (.psd1).'; H = 'Factory reset confirmation'; F = 'SYSTEM' }
 
+    "CYCLE_I18N"                      = @{ T = 'Language / Locale'; H = 'Cycle UI Language'; F = 'UI' }
+    "CYCLE_ENGINEMODE"                = @{ T = 'Engine Mode'; H = 'Cycle Engine Parsing Mode'; F = 'UI' }
+    "CYCLE_COLORMODE"                 = @{ T = 'Color Mode'; H = 'Cycle Color Mode'; F = 'UI' }
+    "CYCLE_HYDRATION"                 = @{ T = 'Hydration Mode'; H = 'Cycle Hydration Mode'; F = 'UI' }
+    "CYCLE_ICONLEVEL"                 = @{ T = 'Icon Level'; H = 'Cycle Icon Level'; F = 'UI' }
+    "CYCLE_FRAMESTYLE"                = @{ T = 'Frame Style'; H = 'Cycle Frame Style'; F = 'UI' }
+    "CYCLE_PROGSTYLE"                 = @{ T = 'Progress Style'; H = 'Cycle Progress Style'; F = 'UI' }
+    "CYCLE_PERSONA"                   = @{ T = 'Theme Persona'; H = 'Cycle Theme Persona'; F = 'UI' }
+    "CYCLE_THEMECOLOR"                = @{ T = 'Theme Color'; H = 'Cycle Theme Color'; F = 'UI' }
+
     # ─────────────────────────────────────────────────────────────────────
     # MAIN MENU
     # ─────────────────────────────────────────────────────────────────────

@@ -125,8 +125,16 @@ function Initialize-ScapeLogger {
                         if ($null -eq $timeout) { $timeout = 5000 }
                         $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
                         $timeToWait = [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds
-                        if ($timeToWait -gt 0 -and -not $sem.Wait($timeToWait)) { return }
-                        if ($timeToWait -le 0) { return }
+                        
+                        $acquired = $false
+                        while (-not $acquired -and $timeToWait -gt 0) {
+                            $acquired = $sem.Wait(0)
+                            if (-not $acquired) {
+                                if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null } else { [System.Threading.Thread]::Sleep(10) }
+                                $timeToWait = [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds
+                            }
+                        }
+                        if (-not $acquired) { return }
                     }
 
                     try {

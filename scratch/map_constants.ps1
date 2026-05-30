@@ -1,4 +1,4 @@
-$uiData = Import-PowerShellDataFile -Path "C:\Users\danie\SCAPE_ROOT\Data\Constants\ui.psd1"
+$uiData = Invoke-Expression (Get-Content -Path "C:\Users\danie\SCAPE_ROOT\Data\Constants\ui.psd1" -Encoding UTF8 -Raw)
 
 $allPaths = @()
 
@@ -8,10 +8,10 @@ function Get-Paths {
         $val = $hashtable[$key]
         $newPath = if ($currentPath) { "$currentPath`::$key" } else { "ui::$key" }
         if ($val -is [hashtable]) {
-            $allPaths += $newPath
+            $script:allPaths += $newPath
             Get-Paths -hashtable $val -currentPath $newPath
         } else {
-            $allPaths += $newPath
+            $script:allPaths += $newPath
         }
     }
 }

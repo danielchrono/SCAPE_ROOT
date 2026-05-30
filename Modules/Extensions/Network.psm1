@@ -19,14 +19,15 @@ function Find-ScapeNetworkNode {
     $timeout = Get-ScapeConstant -Path "network::PROTOCOLS::TIMEOUT_MS" -Fallback 80
     $ipRange = Get-ScapeConstant -Path "network::PROTOCOLS::SUBNET_RANGE" -Fallback (1..254)
 
-    $pool = [runspacefactory]::CreateRunspacePool(1, [Environment]::ProcessorCount)
+    $iss = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+    $pool = [System.Management.Automation.Runspaces.RunspaceFactory]::CreateRunspacePool(1, [Environment]::ProcessorCount, $iss, $null)
     $pool.Open()
     $tasks = [System.Collections.ArrayList]::new()
     $results = @()
 
     foreach ($i in $ipRange) {
         $ip = "$SubnetRoot.$i"
-        $ps = [powershell]::Create().AddScript({
+        $ps = [powershell]::Create($iss).AddScript({
             param($tIP, $tPort, $tTime)
             $client = [System.Net.Sockets.TcpClient]::new()
             try {
