@@ -52,7 +52,9 @@ fn main() {
                    !line.contains("$Script:Limits") &&
                    !line.contains("$Script:ActiveProfile") &&
                    !line.contains("$Script:InteropSignature") &&
-                   !line.contains("$Script:SettingsPath") {
+                   !line.contains("$Script:SettingsPath") &&
+                   !line.contains("$Script:LocalI18N") &&
+                   !line.contains("$Script:UnmappedI18N") {
                     has_violation = true;
                     break;
                 }
