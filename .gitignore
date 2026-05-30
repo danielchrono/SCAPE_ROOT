@@ -3,6 +3,7 @@
 UserSettings.json
 SCAPE_Deploy/
 temp/
+tests/
 .github/
 .vscode/
 openswarm/

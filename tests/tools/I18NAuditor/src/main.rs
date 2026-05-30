@@ -48,7 +48,7 @@ fn main() {
         }
     }
 
-    let mut unused_keys: Vec<_> = defined_keys.difference(&used_keys).collect();
+    println!("Defined keys sample: {:?}", defined_keys.iter().take(5).collect::<Vec<_>>()); let mut unused_keys: Vec<_> = defined_keys.difference(&used_keys).collect();
     unused_keys.sort();
 
     println!("--- I18NAuditor Report ---"); println!("{:?}", defined_keys);
