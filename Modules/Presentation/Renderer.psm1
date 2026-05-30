@@ -356,12 +356,20 @@ function Write-ScapeMenuBuffer {
         $safeDims = @{ Width = $dims.Width; Height = $safeDimsHeight }
 
         $visibleItems = $ViewportEnd - $ViewportStart
-        $box = Get-ScapeMenuLayout -MaxContentWidth 45 -ItemCount $visibleItems -ConsoleWidth $safeDims.Width -ConsoleHeight $safeDims.Height -HeaderHeight $layout.HeaderHeight
 
-        # 3. Layout Rendering (Static Box)
         if ($FullRedraw) {
-            Write-ScapeMenuLayout -Dims $safeDims -ItemCount $itemCount -VisibleItems $visibleItems -TitleKey $TitleKey -FrameStyle $FrameStyle -HeaderHeight $layout.HeaderHeight | Out-Null
+            $box = Write-ScapeMenuLayout -Dims $safeDims -ItemCount $itemCount -VisibleItems $visibleItems -TitleKey $TitleKey -FrameStyle $FrameStyle -HeaderHeight $layout.HeaderHeight
+        } else {
+            $bannerMode = if (Get-Command Get-ScapeBannerVariant -ErrorAction SilentlyContinue) {
+                Get-ScapeBannerVariant -ConsoleHeight $safeDims.Height -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight
+            } else {
+                if (($itemCount + $layout.HeaderHeight) -gt $safeDims.Height) { 'Compact' } else { 'Standard' }
+            }
+            $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $safeDims.Width
+            $y = 1 + $banner.Count
+            $box = Get-ScapeMenuLayout -MaxContentWidth 45 -ItemCount $visibleItems -ConsoleWidth $safeDims.Width -ConsoleHeight $safeDims.Height -HeaderHeight $y
         }
+
         $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
 
         # 4. Indicators Rendering

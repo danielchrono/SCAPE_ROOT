@@ -159,8 +159,12 @@ function Invoke-ScapeRedrawRequestEvent {
     } else {
         if (($itemCount + $layout.HeaderHeight) -gt $safeDimsHeight) { 'Compact' } else { 'Standard' }
     }
-    $banner = Format-ScapeArtBlock -VariantKey $bannerVariant -ConsoleWidth $dims.Width
-    $availableHeight = [Math]::Max(1, $safeDimsHeight - $banner.Count - $layout.Padding - 5)
+    $artMap = Get-ScapeConstant -Path "ui::Art::Variants"
+    $artKey = 'SmallLogo'
+    if ($artMap -and $artMap.ContainsKey($bannerVariant)) { $artKey = $artMap[$bannerVariant] }
+    $rawArt = Get-ScapeConstant -Path "ui::Art::$artKey"
+    $bannerLineCount = if ([string]::IsNullOrWhiteSpace($rawArt)) { 0 } else { ($rawArt -split '\r?\n' | Where-Object { $_.Trim() }).Count }
+    $availableHeight = [Math]::Max(1, $safeDimsHeight - $bannerLineCount - $layout.Padding - 5)
 
     $viewportRange = $null
     if (Get-Command Get-ScapeViewportRange -ErrorAction SilentlyContinue) {
@@ -181,7 +185,11 @@ function Invoke-ScapeRedrawRequestEvent {
     $isDataMutated = ($type -eq 'DATA')
     $forceRowRedraw = ($isFull -or $isDataMutated)
 
+    $lastIdx = if ($null -ne $Script:RedrawDebounce.LastCursorIndex) { $Script:RedrawDebounce.LastCursorIndex } else { -1 }
+
     Write-ScapeMenuBuffer -Options $hydratedOpts -CursorIndex $cursorIdx -LastCursorIndex $lastIdx -ViewportStart $viewportStart -ViewportEnd $viewportEnd -TitleKey $titleKey -FullRedraw $isFull -ForceRowRedraw $forceRowRedraw -FrameStyle $frameStyle -IconLevel $iconLevel
+
+    $Script:RedrawDebounce.LastCursorIndex = $cursorIdx
 }
 
 function Invoke-ScapeTransientEvent {
