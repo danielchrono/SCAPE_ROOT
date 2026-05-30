@@ -130,29 +130,13 @@ function Invoke-ScapeBatchAnalysis {
     }
 }
 
-$Script:LocalI18N = @(
-    "TOPOLOGY_TITLE",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "PIPE_ARCHAEOLOGY_COMPLETE",
-    "PIPE_ARCHAEOLOGY_START",
-    "PIPE_CARVING_PROGRESS",
-    "PIPE_EXTRACTION_PHASE",
-    "PIPE_EXTRACT_COUNTER",
-    "PIPE_FALLBACK_COUNTDOWN",
-    "PIPE_FALLBACK_ENGAGED",
-    "PIPE_FALLBACK_IMMINENT",
-    "PIPE_FALLBACK_WARNING",
-    "PIPE_STREAMING_DATA",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "FOR_EXT_WALK",
-    "FOR_MFT_WALK",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
 

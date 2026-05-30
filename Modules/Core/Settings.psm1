@@ -383,8 +383,5 @@ function Optimize-ScapeSettingsState {
     return $normalized
 }
 
-$Script:LocalI18N = @(
-    "SETTINGS_ENGINE_ONLINE",
-    "SETTINGS_RESET_DEFAULTS",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
 

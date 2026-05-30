@@ -111,8 +111,5 @@ function Update-ScapeHeartbeat {
     }
 }
 
-$Script:LocalI18N = @(
-    "SYNC_RESUME",
-    "SYNC_SUSPEND",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
 

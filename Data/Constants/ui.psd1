@@ -147,8 +147,15 @@
         }
 
         # ===========================================================================
-        # 4. LAYOUT & DIMENSÕES
+        # 4. CONFIG & LAYOUT
         # ===========================================================================
+        Config               = @{
+                MaxCanvasWidth  = 140
+                MaxCanvasHeight = 40
+                DefaultWidth    = 120
+                DefaultHeight   = 30
+                DefaultEventPriority = 99
+        }
         Layout               = @{
                 MinWidth     = 70       # Aumentei um pouco para dar respiro aos submenus
                 MaxWidth     = 0        # 0 = Dinâmico (Expande até o fim da tela 4k/8k)
@@ -261,8 +268,15 @@
         }
 
         # ===========================================================================
-        # 9. SCROLLBAR / MODAL / SOUND / RESIZE
+        # 9. SCROLLBAR / MODAL / SOUND / RESIZE / FEEDBACK / COLORS
         # ===========================================================================
+        ColorConfig          = @{
+                DefaultRGB = @(120, 120, 120)
+                BgRGB      = @(20, 20, 20)
+        }
+        Feedback             = @{
+                TransientActionHoldMs = 1800
+        }
         ScrollBar            = @{
                 TrackChar = "░"; ThumbChar = "█"; Width = 1; HideWhenFull = $true
                 Position = "right"; Style = "modern"; ArrowUp = "▲"; ArrowDown = "▼"

@@ -201,44 +201,13 @@ function Test-ScapeResourcePressure {
     }
 }
 
-$Script:LocalI18N = @(
-    "PERF_HIGH_IO_WARNING",
-    "PERF_LOW_MEM_WARNING",
-    "PERF_RAM_STRATEGY",
-    "PERF_THREAD_AUTO",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "HW_BAD_SECTOR_DETECT",
-    "HW_CACHE_FLUSH",
-    "HW_CONTROLLER_RESET",
-    "HW_CPU",
-    "HW_GPU",
-    "HW_HDD",
-    "HW_IO_RECOVERY",
-    "HW_IO_THRASHING",
-    "HW_NVME",
-    "HW_PRESSURE_RESUME",
-    "HW_PRESSURE_SUSPEND",
-    "HW_RAM",
-    "HW_SMART_FAIL",
-    "HW_SSD",
-    "HW_STORAGE_HEALTH",
-    "HW_TBW_CRITICAL",
-    "HW_TBW_WARN",
-    "HW_THERMAL_CRIT",
-    "HW_THERMAL_NORMALIZED",
-    "HW_USB",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "SPEC_LABEL_CPU",
-    "SPEC_LABEL_OS",
-    "SPEC_LABEL_RAM",
-    "SPEC_LABEL_VIRT",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
 

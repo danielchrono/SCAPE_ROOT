@@ -299,13 +299,5 @@ function Test-ScapeMetadataIntegrity {
     return $validYear
 }
 
-$Script:LocalI18N = @(
-    "META_ACCESSED",
-    "META_CREATED",
-    "META_FILENAME",
-    "META_MFT_CHANGED",
-    "META_MODIFIED",
-    "META_OFFSET",
-    "META_PID",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
 

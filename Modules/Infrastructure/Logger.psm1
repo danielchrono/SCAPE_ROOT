@@ -345,25 +345,9 @@ try {
 }
 catch { }
 
-$Script:LocalI18N = @(
-    "LOG_METRIC",
-    "LOG_SYSTEM",
-    "LOG_TRACE",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N += @(
-    "ERR_ADMIN_REQUIRED",
-    "ERR_BOOT_SECTOR_READ",
-    "ERR_DEPENDENCY_FAIL",
-    "ERR_DISK_FULL",
-    "ERR_DRIVE_LETTERS_EXHAUSTED",
-    "ERR_INTEGRITY_CHECK",
-    "ERR_NO_ITEMS_SELECTED",
-    "ERR_NO_STAGING",
-    "ERR_PATH_INVALID",
-    "ERR_SUPERBLOCK_READ",
-    "ERR_SYSTEM_DRIVE_LOCK",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
 

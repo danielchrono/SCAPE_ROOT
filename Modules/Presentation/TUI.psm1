@@ -15,8 +15,8 @@ function Get-ScapeConsoleDimension {
     $maxH = Get-ScapeConstant -Path "ui::Config::MaxCanvasHeight" -Fallback 40
     $layout = Get-ScapeConstant -Path "ui::Layout"
     
-    $width = 120
-    $height = 30
+    $width = Get-ScapeConstant -Path "ui::Config::DefaultWidth" -Fallback 120
+    $height = Get-ScapeConstant -Path "ui::Config::DefaultHeight" -Fallback 30
     
     try {
         $raw = Get-Host | Select-Object -ExpandProperty UI | Select-Object -ExpandProperty RawUI
@@ -176,56 +176,17 @@ function Test-ScapeKeyAvailable { return [Console]::KeyAvailable }
 function Read-ScapeRawKey { return [Console]::ReadKey($true) }
 
 
-$Script:LocalI18N = @(
-    "PROMPT_EXE_NAME",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "MISC_ABORT_PROMPT",
-    "MISC_ACCEPT_RISK",
-    "MISC_CANCELLED",
-    "MISC_DOWNLOAD_RETRY",
-    "MISC_ENTER_PATH_MANUALLY",
-    "MISC_EXIT_CONFIRM",
-    "MISC_LOG_AND_CONTINUE",
-    "MISC_NO",
-    "MISC_OPERATION_FAILED",
-    "MISC_OPERATION_SUCCESS",
-    "MISC_OR",
-    "MISC_PRESS_ENTER",
-    "MISC_PRESS_ENTER_CONTINUE",
-    "MISC_PRESS_ENTER_DEGRADED",
-    "MISC_PRESS_ENTER_EXIT",
-    "MISC_PRESS_ENTER_TERMINAL",
-    "MISC_PROGRESS",
-    "MISC_RESTART_STATE_MACHINE",
-    "MISC_WAITING",
-    "MISC_YES",
-    "MISC_YES_NO",
-    "MISC_YES_NO_UPPER",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "TUI_CHKDSK",
-    "TUI_DISKPART",
-    "TUI_EXECUTION",
-    "TUI_FSUTIL",
-    "TUI_POSTFLIGHT",
-    "TUI_PREFLIGHT",
-    "TUI_ROBOCOPY",
-    "TUI_STORDIAG",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "WAIT_ENTER_ACCEPT_RISK",
-    "WAIT_ENTER_CONTINUE",
-    "WAIT_ENTER_ESC_PROMPT",
-    "WAIT_ENTER_RETURN",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
+
 

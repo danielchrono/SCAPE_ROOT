@@ -400,7 +400,7 @@ function Convert-ScapeObservedEventData {
             $renderConfig = Convert-ScapeEventDataToRender -IncomingEventData $IncomingEventData
         }
 
-        $priority = 99
+        $priority = Get-ScapeConstant -Path "ui::Config::DefaultEventPriority" -Fallback 99
         if ($renderConfig -is [hashtable] -and $renderConfig.ContainsKey('Priority')) { $priority = $renderConfig['Priority'] }
 
         return @{

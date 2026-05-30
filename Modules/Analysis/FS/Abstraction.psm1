@@ -459,42 +459,13 @@ function Invoke-ScapeContainerParser {
     if ($innerResults.Count -gt 0) { return $innerResults.ToArray() } else { return $null }
 }
 
-$Script:LocalI18N = @(
-    "FS_DISK_IMAGE",
-    "FS_EXFAT",
-    "FS_EXT4",
-    "FS_F2FS",
-    "FS_FAT32",
-    "FS_HFS",
-    "FS_HFSX",
-    "FS_ISO9660",
-    "FS_JFS",
-    "FS_PART_TABLE",
-    "FS_UDF",
-    "FS_XFS"
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "VOLUME_ACCESS_DENIED",
-    "VOLUME_NO_TARGETS",
-    "VOLUME_SELECTION_INDEX",
-    "VOLUME_SELECTION_PROMPT",
-    "VOLUME_TYPE_APFS",
-    "VOLUME_TYPE_BTRFS",
-    "VOLUME_TYPE_EXFAT",
-    "VOLUME_TYPE_EXT4",
-    "VOLUME_TYPE_FAT32",
-    "VOLUME_TYPE_NTFS",
-    "VOLUME_TYPE_UNKNOWN",
-    "VOLUME_TYPE_XFS",
-    "VOLUME_TYPE_ZFS"
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
 
 
 
-$Script:LocalI18N = @(
-    "INVENTORY_LOGICAL_VOLUMES"
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
+
+
 

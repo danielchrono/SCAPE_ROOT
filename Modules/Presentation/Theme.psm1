@@ -120,8 +120,6 @@ function Initialize-ScapeTheme {
 
     # 1. Carregamento Seguro (Prevenção contra "Cannot index into a null array")
     $Script:ThemeCache = Get-ScapeConstant -Path "theme" -Fallback @{}
-    $Script:UICache = Get-ScapeConstant -Path "ui" -Fallback @{}
-    $Script:IconCache = Get-ScapeConstant -Path "ui::Icons" -Fallback @{}
 
     # 2. Detecção de Terminal
     if ($env:WT_SESSION -or $env:TERM_PROGRAM -eq "vscode" -or $env:ConEmuPID -or $env:COLORTERM -eq "truecolor") {
@@ -154,14 +152,13 @@ function Get-ScapeIcon {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$IconName)
     process {
-        if ($null -eq $Script:IconCache) { Initialize-ScapeTheme }
-
         # Resolve o nível atual (0=Graphic, 1=Unicode, 2=ASCII)
         # O Fallback aqui é o seu detector automático se o ColdState falhar
         $level = Get-ScapeConstant -Path "IconLevel" -Fallback (Get-ScapeDefaultIconLevel)
 
-        if ($Script:IconCache.Contains($IconName)) {
-            return $Script:IconCache[$IconName][$level]
+        $iconArr = Get-ScapeConstant -Path "ui::Icons::$IconName"
+        if ($null -ne $iconArr -and $iconArr -is [array] -and $iconArr.Count -gt $level) {
+            return $iconArr[$level]
         }
         return ""
     }
@@ -233,7 +230,8 @@ function Invoke-ScapeDarkfy {
 }
 
 function Get-ScapeSafeColor {
-    param([int[]]$RGB, [int[]]$BgRGB = @(20, 20, 20))
+    param([int[]]$RGB, [int[]]$BgRGB = $null)
+    if ($null -eq $BgRGB) { $BgRGB = Get-ScapeConstant -Path "ui::ColorConfig::BgRGB" -Fallback @(20, 20, 20) }
     $lumFg = Get-ScapeLuminance -R $RGB[0] -G $RGB[1] -B $RGB[2]
     $lumBg = Get-ScapeLuminance -R $BgRGB[0] -G $BgRGB[1] -B $BgRGB[2]
     if ([Math]::Abs($lumFg - $lumBg) -lt 60) {
@@ -351,7 +349,7 @@ function Resolve-ScapeRawRGB {
             }
         }
     }
-    return @(120, 120, 120)
+    return Get-ScapeConstant -Path "ui::ColorConfig::DefaultRGB" -Fallback @(120, 120, 120)
 }
 
 function Resolve-ScapeThemeColor {
@@ -361,7 +359,7 @@ function Resolve-ScapeThemeColor {
         $rgb = Resolve-ScapeRawRGB -RawValue $Script:LiveFlagMap[$Flag].RGB
         return Get-ScapeSafeColor -RGB $rgb
     }
-    return @(120, 120, 120)
+    return Get-ScapeConstant -Path "ui::ColorConfig::DefaultRGB" -Fallback @(120, 120, 120)
 }
 
 function Get-ScapeAnsi16SequenceForFlag {
@@ -447,14 +445,12 @@ function Get-ScapeResolvedIcon {
         [Parameter()][int]$IconLevel = 0
     )
     process {
-        if ($null -eq $Script:IconCache) { Initialize-ScapeTheme }
-
         # 1. Resolve nome semântico via ui::SemanticMap (fonte da verdade)
-        $semanticMap = $Script:UICache['SemanticMap']
+        $semanticMap = Get-ScapeConstant -Path "ui::SemanticMap"
         $iconName = if ($semanticMap -and $semanticMap.ContainsKey($RouteId)) { $semanticMap[$RouteId] } else { $RouteId }
 
-        # 2. Busca array de ícones no cache do Theme
-        $iconArr = $Script:IconCache[$iconName]
+        # 2. Busca array de ícones na ui.psd1
+        $iconArr = Get-ScapeConstant -Path "ui::Icons::$iconName"
         if ($null -eq $iconArr -or $iconArr -isnot [array] -or $iconArr.Count -eq 0) { return "" }
 
         # MVVM estrito: IconLevel deve ser input read-only

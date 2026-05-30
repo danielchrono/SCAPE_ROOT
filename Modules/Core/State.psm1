@@ -130,14 +130,5 @@ function Get-ScapeManifest {
     }
 }
 
-$Script:LocalI18N = @(
-    "SYS_ACCESS_DENIED_DRIVE",
-    "SYS_ASSET_WARN",
-    "SYS_BARE_METAL",
-    "SYS_BOOT_OK",
-    "SYS_HOST_DETECTED",
-    "SYS_MEM_CRITICAL",
-    "SYS_NA",
-    "SYS_VM_DETECTED",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
 

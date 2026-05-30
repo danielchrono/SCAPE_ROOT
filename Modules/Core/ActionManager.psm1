@@ -327,11 +327,5 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.Network' -Handler {
 
 
 
-$Script:LocalI18N = @(
-    "DOMAIN_ANALYSIS",
-    "DOMAIN_ARCHAEOLOGY",
-    "DOMAIN_HARVESTER",
-    "DOMAIN_INFRA",
-    "DOMAIN_PARSING",
-) | ForEach-Object { Get-ScapeI18NNode -Key $_ }
+
 
