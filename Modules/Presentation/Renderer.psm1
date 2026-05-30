@@ -41,19 +41,25 @@ function Initialize-ScapeRenderer {
             [Console]::CursorVisible = $false
         } catch {}
 
-        if (Get-Command Initialize-ScapeGeometry -ErrorAction SilentlyContinue) {
-            try { Initialize-ScapeGeometry | Out-Null }
-            catch { Write-Verbose "Geometry init failed: $_" }
-        }
+        try { Initialize-ScapeGeometry | Out-Null }
+        catch { Write-Verbose "Geometry init failed: $_" }
 
         if (-not ("Scape.Core.Native.VT100Enabler" -as [type])) {
-            if (Get-Command Initialize-ScapeInterop -ErrorAction SilentlyContinue) {
-                try { Initialize-ScapeInterop | Out-Null }
-                catch { Write-Verbose "Interop init failed: $_" }
-            }
+            try { Initialize-ScapeInterop | Out-Null }
+            catch { Write-Verbose "Interop init failed: $_" }
         }
         if ("Scape.Core.Native.VT100Enabler" -as [type]) {
             try { [Scape.Core.Native.VT100Enabler]::Enable() } catch { Write-Verbose "VT100 enable failed: $_" }
+        }
+
+        # Decoupled Event Listener for ViewModel Rendering
+        if (Get-Command Register-ScapeEventListener -ErrorAction SilentlyContinue) {
+            Register-ScapeEventListener -EventMatch "VIEW_MODEL_READY" -Action {
+                param($evt)
+                if ($null -eq $evt.Payload) { return }
+                $p = $evt.Payload
+                Write-ScapeMenuBuffer -Options $p.Options -CursorIndex $p.CursorIndex -LastCursorIndex $p.LastCursorIndex -ViewportStart $p.ViewportStart -ViewportEnd $p.ViewportEnd -TitleKey $p.TitleKey -FullRedraw $p.FullRedraw -ForceRowRedraw $p.ForceRowRedraw -FrameStyle $p.FrameStyle -IconLevel $p.IconLevel
+            }
         }
     }
 }
@@ -130,8 +136,7 @@ function Format-ScapeArtBlock {
 function Write-ScapeScrollIndicator {
     param([string]$Direction, [int]$X, [int]$Y, [string]$Flag)
     process {
-        if (-not (Get-Command Format-ScapeANSIMessage -ErrorAction SilentlyContinue)) { return }
-        if (-not (Get-Command Set-ScapeCursorPosition -ErrorAction SilentlyContinue)) { return }
+
 
         $arrow = if ($Direction -eq 'up') { '▲' } else { '▼' }
         $dimPrefix = "$([char]27)[2m"
@@ -158,11 +163,8 @@ function Write-ScapeMenuLayout {
     $clearSeq = Get-ScapeConstant -Path "ui::ANSI::Screen::ClearFull"
     if ($clearSeq) { [Console]::Write($clearSeq) } else { [Console]::Write("$([char]27)[H$([char]27)[2J") }
 
-    $bannerMode = if (Get-Command Get-ScapeBannerVariant -ErrorAction SilentlyContinue) {
-        Get-ScapeBannerVariant -ConsoleHeight $Dims.Height -ItemCount $ItemCount -HeaderHeight $HeaderHeight
-    } else {
-        if (($ItemCount + $HeaderHeight) -gt $Dims.Height) { 'Compact' } else { 'Standard' }
-    }
+    $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $Dims.Height -ItemCount $ItemCount -HeaderHeight $HeaderHeight
+
     $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $Dims.Width
     $y = 1
     foreach ($line in $banner) {
@@ -287,31 +289,41 @@ function Write-ScapeMenuRows {
             $finalVisW = if ($visStrW -gt $maxTextW) { $maxTextW } else { $visStrW }
             $padText = [Math]::Max(0, $maxTextW - $finalVisW)
 
-            $fmtSel = Format-ScapeANSIMessage -Text $strSel -Flag $flag -Bold:$isCurrent
-            $fmtIcon = Format-ScapeANSIMessage -Text $strIcon -Flag $flag
-            $fmtText = Format-ScapeANSIMessage -Text $clippedText -Flag $flag -Bold:$isCurrent -IncludeBackground:$isCurrent
-            $fmtDyn = if ($formattedDynText) { Format-ScapeANSIMessage -Text $formattedDynText -Flag $flag -Bold:$isCurrent -IncludeBackground:$isCurrent } else { "" }
+            $padIcon = [Math]::Max(1, $coords.IconX - $coords.SelectorX - (Get-ScapeVisualWidth $strSel))
+            $padTextSpace = [Math]::Max(1, $coords.TextX - $coords.IconX - (Get-ScapeVisualWidth $strIcon))
+            $formattedDynStr = if ($formattedDynText) { $formattedDynText } else { "" }
 
-            $usableClearWidth = [Math]::Min($Box.UsableWidth, [Math]::Max(1, [Console]::WindowWidth - $coords.SelectorX - 1))
-
-            if (Get-Command Clear-ScapeRegion -ErrorAction SilentlyContinue) {
-                Clear-ScapeRegion -Left $coords.SelectorX -Top $coords.Y -Width $usableClearWidth -Height 1
+            $cleanStrFull = "${strSel}$(" " * $padIcon)${strIcon}$(" " * $padTextSpace)${clippedText}$(" " * $padText)${formattedDynStr}"
+            $cleanStrPlain = $cleanStrFull -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
+            $visW = Get-ScapeVisualWidth $cleanStrPlain
+            
+            $usableClearWidth = [Math]::Max(1, $frameCoords.RightWallX - $coords.SelectorX - 1)
+            $padEnd = [Math]::Max(0, $usableClearWidth - $visW)
+            
+            if ($isCurrent) {
+                $cleanLineWithEndPadding = $cleanStrFull + (" " * $padEnd)
+                $ESC = [char]27
+                if ($Script:ColorMode -eq "TrueColor") {
+                    $rgb = Resolve-ScapeThemeColor -Flag $flag
+                    $bgAnsi = Convert-ScapeRGBToAnsi -RGB $rgb -IsBackground
+                    $fgAnsi = "${ESC}[30m"
+                    $fullLine = "${bgAnsi}${fgAnsi}${cleanLineWithEndPadding}${ESC}[0m"
+                } else {
+                    $fgAnsi16 = Get-ScapeAnsi16SequenceForFlag -Flag $flag
+                    $bgAnsi16 = $fgAnsi16 -replace '\[3', '[4' -replace '\[9', '[10'
+                    $blackText = "${ESC}[30m"
+                    $fullLine = "${bgAnsi16}${blackText}${cleanLineWithEndPadding}${ESC}[0m"
+                }
             } else {
-                Set-ScapeCursorPosition -Left $coords.SelectorX -Top $coords.Y
-                [Console]::Write(" " * $usableClearWidth)
+                $fmtSel = Format-ScapeANSIMessage -Text $strSel -Flag $flag
+                $fmtIcon = Format-ScapeANSIMessage -Text $strIcon -Flag $flag
+                $fmtText = Format-ScapeANSIMessage -Text $clippedText -Flag $flag
+                $fmtDyn = if ($formattedDynStr) { Format-ScapeANSIMessage -Text $formattedDynStr -Flag $flag } else { "" }
+                $fullLine = "${fmtSel}$(" " * $padIcon)${fmtIcon}$(" " * $padTextSpace)${fmtText}$(" " * $padText)${fmtDyn}$(" " * $padEnd)"
             }
 
             Set-ScapeCursorPosition -Left $coords.SelectorX -Top $coords.Y
-            $padIcon = [Math]::Max(1, $coords.IconX - $coords.SelectorX - $(if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $strSel } else { 1 }))
-            $padTextSpace = [Math]::Max(1, $coords.TextX - $coords.IconX - $(if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $strIcon } else { 1 }))
-            
-            $rawLine = "${fmtSel}$(" " * $padIcon)${fmtIcon}$(" " * $padTextSpace)${fmtText}$(" " * $padText)${fmtDyn}"
-            $cleanStrFull = $rawLine -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
-            $visW = if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $cleanStrFull } else { $cleanStrFull.Length }
-            $usableClearWidth = [Math]::Max(1, $frameCoords.RightWallX - $coords.SelectorX - 1)
-            $padEnd = [Math]::Max(0, $usableClearWidth - $visW)
-            $fullLine = $rawLine + (" " * $padEnd)
-            [Console]::Write($fullLine)
+            [Console]::Write("$([char]27)[0m$fullLine")
 
             if ($isCurrent -and $hintStr) {
                 $hintY = $frameCoords.BottomY + 2
@@ -365,11 +377,7 @@ function Write-ScapeMenuBuffer {
         if ($FullRedraw) {
             $box = Write-ScapeMenuLayout -Dims $safeDims -ItemCount $itemCount -VisibleItems $visibleItems -TitleKey $TitleKey -FrameStyle $FrameStyle -HeaderHeight $layout.HeaderHeight
         } else {
-            $bannerMode = if (Get-Command Get-ScapeBannerVariant -ErrorAction SilentlyContinue) {
-                Get-ScapeBannerVariant -ConsoleHeight $safeDims.Height -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight
-            } else {
-                if (($itemCount + $layout.HeaderHeight) -gt $safeDims.Height) { 'Compact' } else { 'Standard' }
-            }
+            $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight
             $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $safeDims.Width
             $y = 1 + $banner.Count
             $box = Get-ScapeMenuLayout -MaxContentWidth 45 -ItemCount $visibleItems -ConsoleWidth $safeDims.Width -ConsoleHeight $safeDims.Height -HeaderHeight $y
@@ -382,6 +390,15 @@ function Write-ScapeMenuBuffer {
 
         # 5. Rows Rendering (Dynamic Content)
         Write-ScapeMenuRows -Box $box -Dims $dims -Options $Options -CursorIndex $CursorIndex -LastCursorIndex $LastCursorIndex -ViewportStart $ViewportStart -ViewportEnd $ViewportEnd -IconLevel $IconLevel -ForceRedrawItems $ForceRowRedraw -FrameStyle $FrameStyle
+
+        if ($FullRedraw) {
+            $clearW = [Math]::Max(1, $safeDims.Width - 1)
+            $wipeStart = $frameCoords.BottomY + 4  # +4 to leave space for hints
+            for ($cy = $wipeStart; $cy -le $safeDims.Height; $cy++) {
+                Set-ScapeCursorPosition -Left 0 -Top $cy
+                [Console]::Write(" " * $clearW)
+            }
+        }
     }
 }
 
@@ -447,28 +464,23 @@ function Write-ScapeTreeView {
     $items = $RenderConfig.Config.Items
     $totalItems = @($items).Count
 
-    $bannerMode = if (Get-Command Get-ScapeBannerVariant -ErrorAction SilentlyContinue) { Get-ScapeBannerVariant -ConsoleHeight $dims.Height -ItemCount $totalItems -HeaderHeight 1 } else { 'SmallLogo' }
+    $safeDimsHeight = [Math]::Max(10, $dims.Height - 1)
+    $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $totalItems -HeaderHeight 1
     $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $dims.Width
     $y = 1
     foreach ($line in $banner) { Set-ScapeCursorPosition -Left 0 -Top $y; [Console]::Write($line); $y++ }
-    $maxAvailableHeight = $dims.Height - $y - 2
+    $maxAvailableHeight = $safeDimsHeight - $y - 2
     $visibleItems = [Math]::Min($totalItems, $maxAvailableHeight)
 
     $cursorIndex = if ($RenderConfig.Config.CursorIndex) { $RenderConfig.Config.CursorIndex } else { 0 }
 
-    $viewportRange = if (Get-Command Get-ScapeViewportRange -ErrorAction SilentlyContinue) {
-        Get-ScapeViewportRange -TotalItems $totalItems -CursorIndex $cursorIndex -AvailableHeight $maxAvailableHeight
-    }
-    else {
-        @{ Start = 0; End = $visibleItems }
-    }
+    $viewportRange = Get-ScapeViewportRange -TotalItems $totalItems -CursorIndex $cursorIndex -AvailableHeight $maxAvailableHeight
 
     $visibleSlice = @()
     if ($viewportRange.End -gt $viewportRange.Start -and $totalItems -gt 0) {
         $visibleSlice = @($items[$viewportRange.Start..($viewportRange.End - 1)])
     }
-    $box = Get-ScapeMenuLayout -MaxContentWidth 80 -ItemCount $visibleItems -ConsoleWidth $dims.Width -ConsoleHeight $dims.Height -HeaderHeight $y
-
+    $box = Get-ScapeMenuLayout -MaxContentWidth 80 -ItemCount $visibleItems -ConsoleWidth $dims.Width -ConsoleHeight $safeDimsHeight -HeaderHeight $y
     $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
 
     $effectiveFrameStyle = if (-not [string]::IsNullOrWhiteSpace($FrameStyle)) { $FrameStyle } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
@@ -534,11 +546,12 @@ function Write-ScapeActionScreen {
     if ($hasStep) { $progressRows += 2 }
     if ($progressRows -gt 0) { $progressRows += 1 }
 
-    $bannerMode = if (Get-Command Get-ScapeBannerVariant -ErrorAction SilentlyContinue) { Get-ScapeBannerVariant -ConsoleHeight $dims.Height -ItemCount ($totalItems + $progressRows) -HeaderHeight 1 } else { 'SmallLogo' }
+    $safeDimsHeight = [Math]::Max(10, $dims.Height - 1)
+    $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount ($totalItems + $progressRows) -HeaderHeight 1
     $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $dims.Width
     $y = 1
     foreach ($line in $banner) { Set-ScapeCursorPosition -Left 0 -Top $y; [Console]::Write($line); $y++ }
-    $box = Get-ScapeMenuLayout -MaxContentWidth 80 -ItemCount ($totalItems + $progressRows) -ConsoleWidth $dims.Width -ConsoleHeight $dims.Height -HeaderHeight $y
+    $box = Get-ScapeMenuLayout -MaxContentWidth 80 -ItemCount ($totalItems + $progressRows) -ConsoleWidth $dims.Width -ConsoleHeight $safeDimsHeight -HeaderHeight $y
     $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
 
     $effectiveFrameStyle = if (-not [string]::IsNullOrWhiteSpace($FrameStyle)) { $FrameStyle } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
@@ -624,6 +637,12 @@ function Write-ScapeActionScreen {
             $yOffset++
         }
     }
+
+    $clearW = [Math]::Max(1, $dims.Width - 1)
+    for ($cy = $frameCoords.BottomY + 1; $cy -le $safeDimsHeight; $cy++) {
+        Set-ScapeCursorPosition -Left 0 -Top $cy
+        [Console]::Write(" " * $clearW)
+    }
 }
 
 function Format-ScapeGridLayout {
@@ -657,7 +676,7 @@ function Format-ScapeGridLayout {
         foreach ($item in $GridRows) {
             $itemText = if ($item -is [string]) { $item } else { [string]$item }
             $cleanText = $Script:AnsiStrip.Replace($itemText, '')
-            $visW = if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $cleanText } else { $cleanText.Length }
+            $visW = Get-ScapeVisualWidth $cleanText
             $padded = if ($visW -gt $ColumnWidth) { Invoke-ScapeStringClip -Text $itemText -MaxWidth $ColumnWidth } else { $itemText + (" " * ($ColumnWidth - $visW)) }
 
             $formatted = if ($item.PSObject.Properties['ThemeFlag']) {

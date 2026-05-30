@@ -28,15 +28,17 @@ function Invoke-ScapeRouterReducer {
     [OutputType([hashtable])]
     param([hashtable]$State, [string]$Intent)
     process {
-        $opts = $State.RawOptions
+        $ns = $State.Clone()
+        $ns.RouteStack = [System.Collections.Generic.List[string]]::new([string[]]$State.RouteStack)
+        $opts = $ns.RawOptions
         $max = $opts.Count
-        $State.LastCursor = $State.Cursor
+        $ns.LastCursor = $ns.Cursor
         $selAction = $null; $selId = $null; $selTarget = $null; $selPayload = $null; $selWake = $null
         $mutationDirection = $null
 
         $resolveSelection = {
             if ($max -eq 0) { return $null }
-            $sel = $opts[$State.Cursor]
+            $sel = $opts[$ns.Cursor]
             return @{
                 Action  = if ($sel -is [hashtable]) { $sel['Action'] } else { $sel.Action }
                 Id      = if ($sel -is [hashtable]) { $sel['Id'] } else { $sel.Id }
@@ -48,19 +50,19 @@ function Invoke-ScapeRouterReducer {
 
         switch ($Intent) {
             'UP' {
-                if ($State.Cursor -gt 0) { $State.Cursor-- } else { $State.Cursor = [Math]::Max(0, $max - 1) }
-                $State.NeedsCursorUpdate = $true
-                return $State
+                if ($ns.Cursor -gt 0) { $ns.Cursor-- } else { $ns.Cursor = [Math]::Max(0, $max - 1) }
+                $ns.NeedsCursorUpdate = $true
+                return $ns
             }
             'DOWN' {
-                if ($max -gt 0 -and $State.Cursor -lt ($max - 1)) { $State.Cursor++ } else { $State.Cursor = 0 }
-                $State.NeedsCursorUpdate = $true
-                return $State
+                if ($max -gt 0 -and $ns.Cursor -lt ($max - 1)) { $ns.Cursor++ } else { $ns.Cursor = 0 }
+                $ns.NeedsCursorUpdate = $true
+                return $ns
             }
             'BACK' { $selAction = 'BACK'; $selId = 'CANCEL' }
             'SELECT' {
                 $resolved = & $resolveSelection
-                if ($null -eq $resolved) { return $State }
+                if ($null -eq $resolved) { return $ns }
                 $selAction = $resolved.Action
                 $selId = $resolved.Id
                 $selTarget = $resolved.Target
@@ -69,55 +71,59 @@ function Invoke-ScapeRouterReducer {
             }
             'LEFT' {
                 $resolved = & $resolveSelection
-                if ($null -eq $resolved -or $resolved.Action -ne 'MUTATE') { return $State }
+                if ($null -eq $resolved -or $resolved.Action -ne 'MUTATE') { return $ns }
                 $selAction = $resolved.Action
                 $selId = $resolved.Id
                 $selTarget = $resolved.Target
                 $selPayload = $resolved.Payload
                 $selWake = $resolved.Layer
                 $mutationDirection = 'PREV'
-                $State.NeedsCursorUpdate = $true
+                $ns.NeedsCursorUpdate = $true
             }
             'RIGHT' {
                 $resolved = & $resolveSelection
-                if ($null -eq $resolved -or $resolved.Action -ne 'MUTATE') { return $State }
+                if ($null -eq $resolved -or $resolved.Action -ne 'MUTATE') { return $ns }
                 $selAction = $resolved.Action
                 $selId = $resolved.Id
                 $selTarget = $resolved.Target
                 $selPayload = $resolved.Payload
                 $selWake = $resolved.Layer
                 $mutationDirection = 'NEXT'
-                $State.NeedsCursorUpdate = $true
+                $ns.NeedsCursorUpdate = $true
             }
-            default { return $State }
+            default { return $ns }
         }
 
-        if ($selId -eq 'EXIT' -or $selAction -eq 'TERMINATE') { $State.IsRunning = $false; return $State }
+        if ($selId -eq 'EXIT' -or $selAction -eq 'TERMINATE') { $ns.IsRunning = $false; return $ns }
 
         if ($selAction -or $selId) {
-            Publish-ScapeEvent -Type "UI_SELECTION" -Severity "INFO" -Payload @{
-                MenuId = $State.CurrentMenu; SelectionId = $selId; Action = $selAction
-                Target = $selTarget; Payload = $selPayload; ActionPayload = $selPayload; Layer = $selWake; MutationDirection = $mutationDirection
-                Cursor = $State.Cursor
+            $ns.EventToPublish = @{
+                Type = "UI_SELECTION"
+                Severity = "INFO"
+                Payload = @{
+                    MenuId = $ns.CurrentMenu; SelectionId = $selId; Action = $selAction
+                    Target = $selTarget; Payload = $selPayload; ActionPayload = $selPayload; Layer = $selWake; MutationDirection = $mutationDirection
+                    Cursor = $ns.Cursor
+                }
             }
         }
 
         if ($selAction -eq 'BACK' -or $selId -in @('RETURN', 'CANCEL')) {
-            if ($State.RouteStack.Count -gt 1) {
-                $State.RouteStack.RemoveAt($State.RouteStack.Count - 1)
-                $State.CurrentMenu = $State.RouteStack[-1]
-                $State.NeedsFullRedraw = $true
+            if ($ns.RouteStack.Count -gt 1) {
+                $ns.RouteStack.RemoveAt($ns.RouteStack.Count - 1)
+                $ns.CurrentMenu = $ns.RouteStack[-1]
+                $ns.NeedsFullRedraw = $true
             } else {
-                $State.IsRunning = $false
+                $ns.IsRunning = $false
             }
-            return $State
+            return $ns
         }
         if ($selAction -eq 'NAVIGATE' -and $selTarget) {
-            $State.RouteStack.Add($selTarget)
-            $State.CurrentMenu = $selTarget
-            $State.NeedsFullRedraw = $true
+            $ns.RouteStack.Add($selTarget)
+            $ns.CurrentMenu = $selTarget
+            $ns.NeedsFullRedraw = $true
         }
-        return $State
+        return $ns
     }
 }
 
@@ -150,12 +156,16 @@ function Start-ScapeRouter {
                 Invoke-ScapeIdlePump | Out-Null
 
                 # PLUG DE RESPONSIVIDADE: Checa redimensionamento em tempo real
-                if (Get-Command Test-ScapeViewportChanged -ErrorAction SilentlyContinue) {
-                    if (Test-ScapeViewportChanged -ViewportState $ViewportState) {
-                        if (Get-Command Set-ScapeViewportLocks -ErrorAction SilentlyContinue) { Set-ScapeViewportLocks | Out-Null }
-                        $State.NeedsFullRedraw = $true
-                        Clear-ScapeInputBuffer -ErrorAction SilentlyContinue # Limpa input fantasma gerado pelo redimensionamento no Windows
-                    }
+                $resizeCheck = Test-ScapeViewportChanged -LastWidth $ViewportState.LastWidth -LastHeight $ViewportState.LastHeight
+                if ($resizeCheck.HasResized) {
+                    $ViewportState.LastWidth = $resizeCheck.NewWidth
+                    $ViewportState.LastHeight = $resizeCheck.NewHeight
+                    $ViewportState.HasResized = $true
+                    if (Get-Command Set-ScapeViewportLocks -ErrorAction SilentlyContinue) { Set-ScapeViewportLocks | Out-Null }
+                    $State.NeedsFullRedraw = $true
+                    Clear-ScapeInputBuffer -ErrorAction SilentlyContinue # Limpa input fantasma gerado pelo redimensionamento no Windows
+                } else {
+                    $ViewportState.HasResized = $false
                 }
 
                 # PLUG DE I18N: Checa mudança de idioma
@@ -189,9 +199,13 @@ function Start-ScapeRouter {
                 $intent = Get-ScapeInputIntent -CurrentMenuState $State
                 if ($intent -ne 'IDLE') {
                     $State = Invoke-ScapeRouterReducer -State $State -Intent $intent
+                    if ($State.EventToPublish) {
+                        Publish-ScapeEvent -Type $State.EventToPublish.Type -Severity $State.EventToPublish.Severity -Payload $State.EventToPublish.Payload
+                        $State.EventToPublish = $null
+                    }
                     Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
                 }
-                Start-Sleep -Milliseconds 15
+                [System.Threading.Thread]::Sleep(15)
             }
         }
         finally {

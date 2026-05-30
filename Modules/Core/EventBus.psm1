@@ -5,8 +5,8 @@
 #>
 
 $Script:EventQueue = [System.Collections.Concurrent.ConcurrentQueue[object]]::new()
-$Script:EventSubscribers = [System.Collections.Generic.List[hashtable]]::new()
-$Script:PumpActive = $false
+$Script:EventSubscribers = [System.Collections.Concurrent.ConcurrentQueue[hashtable]]::new()
+$Script:PumpActive = 0 # 0 = false, 1 = true
 
 function Publish-ScapeEvent {
     [CmdletBinding()]
@@ -136,15 +136,14 @@ function Register-ScapeEventListener {
     [CmdletBinding()]
     param([string]$EventMatch, [scriptblock]$Action)
     $sub = @{ Match = $EventMatch; Action = $Action }
-    $Script:EventSubscribers.Add($sub)
+    $Script:EventSubscribers.Enqueue($sub)
 }
 
 function Invoke-ScapeIdlePump {
     [CmdletBinding()]
     param()
 
-    if ($Script:PumpActive) { return }
-    $Script:PumpActive = $true
+    if ([System.Threading.Interlocked]::CompareExchange([ref]$Script:PumpActive, 1, 0) -ne 0) { return }
 
     try {
         $eventFrame = $null
@@ -181,6 +180,6 @@ function Invoke-ScapeIdlePump {
         }
     }
     finally {
-        $Script:PumpActive = $false
+        [System.Threading.Interlocked]::Exchange([ref]$Script:PumpActive, 0) | Out-Null
     }
 }

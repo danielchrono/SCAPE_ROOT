@@ -140,12 +140,12 @@ function Invoke-ScapeStringClip {
 
         if ($CenterClip) {
             $cut = [Math]::Floor(($len - $MaxWidth) / 2)
-            return $Text.Substring($cut, $MaxWidth)
+            return $plain.Substring($cut, $MaxWidth)
         }
         else {
             if ($MaxWidth -le 5) { return "..." }
             $overflow = $len - $MaxWidth
-            return "..." + $Text.Substring($overflow + 3)
+            return "..." + $plain.Substring($overflow + 3)
         }
     }
 }
@@ -157,16 +157,14 @@ function Get-ScapeClampedCoordinate {
     param(
         [Parameter(Mandatory = $true)][int]$Left,
         [Parameter(Mandatory = $true)][int]$Top,
-        [Parameter(Mandatory = $false)][int]$MinWidth = 0,
-        [Parameter(Mandatory = $false)][int]$MinHeight = 0
+        [Parameter(Mandatory = $true)][int]$ConsoleWidth,
+        [Parameter(Mandatory = $true)][int]$ConsoleHeight
     )
     process {
-        $dims = Get-ScapeConsoleDimension
         $layout = Get-ScapeConstant -Path "ui::Layout"
-
         return @{
-            Left = [Math]::Max($layout.Margin, [Math]::Min($Left, $dims.Width - $layout.Margin - 1))
-            Top  = [Math]::Max($layout.HeaderHeight, [Math]::Min($Top, $dims.Height - 1))
+            Left = [Math]::Max($layout.Margin, [Math]::Min($Left, $ConsoleWidth - $layout.Margin - 1))
+            Top  = [Math]::Max($layout.HeaderHeight, [Math]::Min($Top, $ConsoleHeight - 1))
         }
     }
 }
@@ -187,16 +185,12 @@ function Get-ScapeVisualWidth {
     process {
         if ([string]::IsNullOrEmpty($Text)) { return 0 }
         $clean = $Text -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
-        $width = 0
-        $enumerator = [System.Globalization.StringInfo]::GetTextElementEnumerator($clean)
-        while ($enumerator.MoveNext()) {
-            $elem = $enumerator.GetTextElement()
-            if ($elem.Length -gt 1) { $width += 2 } else {
-                $c = [int][char]$elem[0]
-                if ($c -ge 0x2E80) { $width += 2 } else { $width += 1 }
-            }
-        }
-        return $width
+        if ([string]::IsNullOrEmpty($clean)) { return 0 }
+        
+        $len = $clean.Length
+        # Match wide characters in common CJK ranges and others
+        $wideCount = [regex]::Matches($clean, '[\x{2E80}-\x{9FFF}\x{AC00}-\x{D7AF}\x{F900}-\x{FAFF}]').Count
+        return $len + $wideCount
     }
 }
 

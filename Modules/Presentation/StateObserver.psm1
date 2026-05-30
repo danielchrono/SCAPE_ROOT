@@ -187,8 +187,18 @@ function Invoke-ScapeRedrawRequestEvent {
 
     $lastIdx = if ($null -ne $Script:RedrawDebounce.LastCursorIndex) { $Script:RedrawDebounce.LastCursorIndex } else { -1 }
 
-    Write-ScapeMenuBuffer -Options $hydratedOpts -CursorIndex $cursorIdx -LastCursorIndex $lastIdx -ViewportStart $viewportStart -ViewportEnd $viewportEnd -TitleKey $titleKey -FullRedraw $isFull -ForceRowRedraw $forceRowRedraw -FrameStyle $frameStyle -IconLevel $iconLevel
-
+    Publish-ScapeEvent -Type "VIEW_MODEL_READY" -Severity "TRACE" -Payload @{
+        Options = $hydratedOpts
+        CursorIndex = $cursorIdx
+        LastCursorIndex = $lastIdx
+        ViewportStart = $viewportStart
+        ViewportEnd = $viewportEnd
+        TitleKey = $titleKey
+        FullRedraw = $isFull
+        ForceRowRedraw = $forceRowRedraw
+        FrameStyle = $frameStyle
+        IconLevel = $iconLevel
+    }
     $Script:RedrawDebounce.LastCursorIndex = $cursorIdx
 }
 
@@ -197,36 +207,6 @@ function Invoke-ScapeTransientEvent {
     param($IncomingEventData)
 
     if ($IncomingEventData.Type -match '^(LAZY_WAKEUP|UI_REDRAW_REQUEST|RENDER_OBSERVED|ROUTER_STOP|SYSTEM_CRASH|TREE_UPDATE|ACTION_SCREEN_UPDATE|LISTENER_FAULT|LOGGER_INITIALIZED|MODULE_LOADED|ASSET_READY|RESOLVER_REDRAW_SYNC|LAYER_IGNITION|CAPABILITY_FAULT|COMPLIANCE_REJECTION|LOG_ROTATED|LOGGER_HANDOVER_CHILD|LOGGER_HANDOVER_FALLBACK|LANG_SWITCH|LANG_FLUSHED|LANG_SWITCH_FAILED|MENU_LANGUAGE_SWITCH|PIPELINE_DROPPED|SYSTEM_READY|MODULE_WAKED)$') { return }
-
-    $shouldFilter = $false
-    try {
-        $cfg = Get-ScapeConstant -Path "infrastructure::Logger" -Fallback @{}
-        $minLevelName = $cfg["DEFAULT_LEVEL_NAME"] -or "INFO"
-
-        if ($null -eq $minLevelName) { $minLevelName = "INFO" }
-
-        if ($env:SCAPE_LOG_LEVEL) {
-            $minLevelName = $env:SCAPE_LOG_LEVEL
-        }
-        else {
-            try {
-                $cs = Get-ScapeColdState
-                if ($cs -and $cs.ContainsKey('LOG_LEVEL_OVERRIDE')) { $minLevelName = $cs['LOG_LEVEL_OVERRIDE'] }
-            }
-            catch { }
-        }
-
-        $severityMap = @{ TRACE = 0; DEBUG = 1; INFO = 2; WARN = 3; ERROR = 4; FATAL = 5; METRIC = -1 }
-        $minValue = $severityMap[$minLevelName] -or 2
-        $currValue = $severityMap[$IncomingEventData.Severity -replace '^LOG_', ''] -or 2
-
-        $shouldFilter = ($IncomingEventData.Severity -eq 'METRIC') -or ($currValue -lt $minValue)
-    }
-    catch {
-        $shouldFilter = $true
-    }
-
-    if ($shouldFilter) { return }
 
     $now = [DateTime]::Now
     $evtType = [string]$IncomingEventData.Type

@@ -129,7 +129,7 @@
             @{ Id = "PROGRESS_STYLE"; TitleKey = "MENU_OPTION_PROGRESS_STYLE"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "ProgressStyle"; Value = "CYCLE" }; DynamicText = @{ Type = "CycleState"; Key = "ProgressStyle"; List = "ui::CycleLists::ProgressStyle" } }
             @{ Id = "THEME_PERSONA"; TitleKey = "MENU_OPTION_THEME_PERSONA"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "ThemePersona"; Value = "CYCLE" }; DynamicText = @{ Type = "CycleState"; Key = "ThemePersona"; List = "ui::CycleLists::ThemePersona" } }
             @{ Id = "THEME_COLOR"; TitleKey = "MENU_OPTION_COLOR_MODE"; Type = "Normal"; Action = "MUTATE"; Payload = @{ Key = "ColorMode"; Value = "CYCLE"; List = "ui::CycleLists::ColorMode" }; DynamicText = @{ Type = "CycleState"; Key = "ColorMode"; List = "ui::CycleLists::ColorMode" } }
-            @{ Id = "RANDOM_THEME"; TitleKey = "MENU_RANDOM_THEME"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Presentation"; Target = "Scape.Presentation.Theme"; Task = "PROCEDURAL" } }
+            @{ Id = "RANDOM_THEME"; TitleKey = "MENU_RANDOM_THEME"; Type = "Highlight"; Action = "TRIGGER"; Payload = @{ Domain = "Core"; Target = "Scape.Core.Settings"; Task = "PROCEDURAL" } }
             @{ Id = "RETURN"; TitleKey = "MENU_OPTION_RETURN"; Type = "Destructive"; Action = "BACK" }
         )
     }

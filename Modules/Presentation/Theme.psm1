@@ -180,11 +180,11 @@ function Invoke-ScapeDaltonismMatrix {
 # --- SETTERS E RESOLVERS ---
 
 function Set-ScapePersona {
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    param([Parameter(Mandatory = $true)][string]$Name, [switch]$Silent)
+    [CmdletBinding()]
+    param([Parameter(Mandatory = $true)][string]$Name)
     
     $result = @{}
-    if ($PSCmdlet.ShouldProcess("Theme System", "Set Persona $Name")) {
+    
         if (-not $Script:ThemeCache) { Initialize-ScapeTheme }
         $persona = $Script:ThemeCache.Persona[$Name]
         if ($persona) {
@@ -208,19 +208,14 @@ function Set-ScapePersona {
             if ($persona.Progress) { $result["ProgressStyle"] = $persona.Progress }
             if ($null -ne $persona.Animation) { $result["AnimationEnabled"] = [bool]$persona.Animation }
             if ($persona.Contrast) { $result["ContrastMode"] = $persona.Contrast }
-            
-            if (-not $Silent) { Publish-ScapeEvent -Type "THEME_PERSONA_APPLIED" -Severity "INFO" -Payload @{ Persona = $Name } }
-        }
-    }
-    return $result
+        }return $result
 }
 
 function Set-ScapeColorMode {
     [CmdletBinding()]
-    param([bool]$UseTrueColor, [switch]$Silent)
+    param([bool]$UseTrueColor)
     if ($UseTrueColor) { $Script:ColorMode = "TrueColor" }
     else { $Script:ColorMode = "ANSI16" }
-    if (-not $Silent) { Publish-ScapeEvent -Type "COLOR_MODE_CHANGED" -Severity "INFO" -Payload @{ Mode = $Script:ColorMode } }
 }
 
 function Resolve-ScapeRawRGB {
@@ -346,13 +341,5 @@ function Get-ScapeResolvedIcon {
         if ($level -ge $iconArr.Count) { $level = $iconArr.Count -1 }
 
         return [string]$iconArr[$level]
-    }
-}
-Register-ScapeActionHandler -Target 'Scape.Presentation.Theme' -Handler {
-    param($Task, $PayloadDef, $Target)
-    if ($Task -eq 'PROCEDURAL') {
-        $rand = [Random]::new()
-        Set-ScapeSettingMutation -Key "RandomBaseHue" -Value ($rand.NextDouble() * 360) | Out-Null
-        Set-ScapeSettingMutation -Key "ThemePersona" -Value "RANDOM" | Out-Null
     }
 }

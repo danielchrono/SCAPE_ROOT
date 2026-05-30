@@ -203,7 +203,7 @@ function Set-ScapeSettingMutation {
                 $json = $settingsToSave | ConvertTo-Json -Depth 3 -Compress -WarningAction SilentlyContinue
                 $dir = Split-Path -Path (Get-ScapeSettingsPath) -Parent
                 if (-not (Test-Path -Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
-                [System.IO.File]::WriteAllText((Get-ScapeSettingsPath), $json, [System.Text.UTF8Encoding]::new($false))
+                [System.IO.File]::WriteAllTextAsync((Get-ScapeSettingsPath), $json, [System.Text.UTF8Encoding]::new($false)) | Out-Null
             } | Out-Null
 
             Update-ScapeColdState -NewProperties @{ $Key = $effectiveValue } | Out-Null
@@ -221,10 +221,18 @@ function Set-ScapeSettingMutation {
             }
 
             # 2. Persona de Tema
-            if ($Key -eq "ThemePersona" -and (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue)) {
-                $personaData = Set-ScapePersona -Name $effectiveValue
-                if ($null -ne $personaData -and $personaData.Count -gt 0) {
-                    Update-ScapeColdState -NewProperties $personaData | Out-Null
+            if ($Key -eq "ThemePersona") {
+                if ($effectiveValue -eq "RANDOM") {
+                    $rawHue = Get-ScapeProperty -Object $state -PropertyName "RandomBaseHue"
+                    $baseHue = if ($rawHue -is [double] -or $rawHue -is [float] -or $rawHue -is [int]) { [double]$rawHue } else { ([Random]::new()).NextDouble() * 360 }
+                    if (Get-Command Invoke-ScapeProceduralTheme -ErrorAction SilentlyContinue) {
+                        Invoke-ScapeProceduralTheme -BaseHue $baseHue
+                    }
+                } elseif (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
+                    $personaData = Set-ScapePersona -Name $effectiveValue
+                    if ($null -ne $personaData -and $personaData.Count -gt 0) {
+                        Update-ScapeColdState -NewProperties $personaData | Out-Null
+                    }
                 }
             }
 

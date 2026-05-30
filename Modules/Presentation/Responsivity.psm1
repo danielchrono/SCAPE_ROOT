@@ -24,21 +24,24 @@ function Initialize-ScapeViewportState {
 
 function Test-ScapeViewportChanged {
     [CmdletBinding()]
-    [OutputType([bool])]
-    param([Parameter(Mandatory = $true)][hashtable]$ViewportState)
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true)][int]$LastWidth,
+        [Parameter(Mandatory = $true)][int]$LastHeight
+    )
     process {
         $current = Get-ScapeConsoleDimension -WithMargins
-        $widthChanged = $current.Width -ne $ViewportState.LastWidth
-        $heightChanged = $current.Height -ne $ViewportState.LastHeight
+        $widthChanged = $current.Width -ne $LastWidth
+        $heightChanged = $current.Height -ne $LastHeight
 
         if ($widthChanged -or $heightChanged) {
-            $ViewportState.LastWidth = $current.Width
-            $ViewportState.LastHeight = $current.Height
-            $ViewportState.HasResized = $true
-            return $true
+            return @{
+                HasResized = $true
+                NewWidth = $current.Width
+                NewHeight = $current.Height
+            }
         }
-        $ViewportState.HasResized = $false
-        return $false
+        return @{ HasResized = $false }
     }
 }
 

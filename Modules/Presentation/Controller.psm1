@@ -106,8 +106,8 @@ function Update-ScapeMenuViewModel {
             $dynCfg = if ($opt -is [hashtable]) { $opt['DynamicText'] } else { $opt.DynamicText }
             $fmtArgs = if ($opt -is [hashtable]) { $opt['FormatArgs'] } else { $opt.FormatArgs }
 
-            $i18nNode = Get-ScapeI18NNode -Key $titleKey
-            $finalText = if ($i18nNode -and $i18nNode.Text) { $i18nNode.Text } else { $titleKey }
+            $i18nNode = try { Get-ScapeI18NNode -Key $titleKey } catch { $null }
+            $finalText = if ($i18nNode -and (-not [string]::IsNullOrWhiteSpace($i18nNode.Text))) { $i18nNode.Text } else { $titleKey }
             if ($null -ne $fmtArgs) {
                 try { $finalText = $finalText -f $fmtArgs } catch {}
             }
@@ -128,6 +128,9 @@ function Update-ScapeMenuViewModel {
                         $formattedDynText = if ($isOn) { ' [X]' } else { ' [ ]' }
                     }
                 } else {
+                    if ($finalText -match '\{0\}') {
+                        try { $finalText = $finalText -f $rawDyn } catch {}
+                    }
                     $formattedDynText = " [$rawDyn]"
                 }
             }
@@ -136,8 +139,8 @@ function Update-ScapeMenuViewModel {
             $cleanStr = if ($finalText) { $finalText -replace $ansiStrip, '' } else { '' }
             $cleanDyn = if ($formattedDynText) { $formattedDynText -replace $ansiStrip, '' } else { '' }
 
-            $visStrW = if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $cleanStr } else { $cleanStr.Length }
-            $dynLen = if (Get-Command Get-ScapePlainTextLength -ErrorAction SilentlyContinue) { Get-ScapePlainTextLength -Text $formattedDynText } else { $cleanDyn.Length }
+            $visStrW = if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { try { Get-ScapeVisualWidth $cleanStr } catch { $cleanStr.Length } } else { $cleanStr.Length }
+            $dynLen = if (Get-Command Get-ScapePlainTextLength -ErrorAction SilentlyContinue) { try { Get-ScapePlainTextLength -Text $formattedDynText } catch { $cleanDyn.Length } } else { $cleanDyn.Length }
 
             [PSCustomObject]@{
                 Id          = $id

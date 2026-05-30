@@ -8,7 +8,7 @@
 #>
 [CmdletBinding()] param()
 
-$Script:ActionRegistry = @{}
+$Script:ActionRegistry = [System.Collections.Concurrent.ConcurrentDictionary[string, scriptblock]]::new()
 
 function Register-ScapeActionHandler {
     [CmdletBinding()]
