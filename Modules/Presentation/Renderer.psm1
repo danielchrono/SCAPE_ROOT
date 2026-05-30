@@ -305,7 +305,12 @@ function Write-ScapeMenuRows {
             $padIcon = [Math]::Max(1, $coords.IconX - $coords.SelectorX - $(if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $strSel } else { 1 }))
             $padTextSpace = [Math]::Max(1, $coords.TextX - $coords.IconX - $(if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $strIcon } else { 1 }))
             
-            $fullLine = "${fmtSel}$(" " * $padIcon)${fmtIcon}$(" " * $padTextSpace)${fmtText}$(" " * $padText)${fmtDyn}"
+            $rawLine = "${fmtSel}$(" " * $padIcon)${fmtIcon}$(" " * $padTextSpace)${fmtText}$(" " * $padText)${fmtDyn}"
+            $cleanStrFull = $rawLine -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
+            $visW = if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $cleanStrFull } else { $cleanStrFull.Length }
+            $usableClearWidth = [Math]::Max(1, $frameCoords.RightWallX - $coords.SelectorX - 1)
+            $padEnd = [Math]::Max(0, $usableClearWidth - $visW)
+            $fullLine = $rawLine + (" " * $padEnd)
             [Console]::Write($fullLine)
 
             if ($isCurrent -and $hintStr) {

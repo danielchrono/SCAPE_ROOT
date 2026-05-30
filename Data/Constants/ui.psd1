@@ -640,7 +640,7 @@
         SemanticMap          = @{
                 # NÚCLEO & TAREFAS PRINCIPAIS
                 SCAN = "Search"; PARSING = "Target"; ARCHAEOLOGY = "Pickaxe"; HARVESTER = "Bucket"
-                FORENSICS = "EyeOpen"; SETTINGS = "Wrench"; LOGISTICS = "DeliveryTruck"; LABORATORY = "TestTube"
+                FORENSICS = "EyeOpen"; SETTINGS = "Wrench"; CAPABILITIES = "Monitor"; LOGISTICS = "DeliveryTruck"; LABORATORY = "TestTube"
                 "EXIT" = "Power"; HOME = "Home"; DASHBOARD = "WindowTile"; OVERVIEW = "Info"
                 STATUS = "Info"; ABOUT = "Help"; HELP = "Help"; DOCS = "FileCode"
                 SUPPORT = "Critical"; FEEDBACK = "MailSend"
