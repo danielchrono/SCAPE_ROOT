@@ -6,13 +6,22 @@
 #>
 [CmdletBinding()] param()
 
+$Script:VirtualInputQueue = New-Object 'System.Collections.Generic.Queue[string]'
+
 function Get-ScapeInputIntent {
     [CmdletBinding()]
     [OutputType([string])]
     param([Parameter(Mandatory = $true)][hashtable]$CurrentMenuState)
     process {
-        $pollMs = Get-ScapeConstant -Path "ui::Input::PollMs" -Fallback 30
-        $key = Read-ScapeKeyPress -TimeoutMilliseconds $pollMs
+        if ($Script:VirtualInputQueue.Count -gt 0) {
+            $key = $Script:VirtualInputQueue.Dequeue()
+            if ($key -in @('UP', 'DOWN', 'LEFT', 'RIGHT', 'SELECT', 'BACK', 'EXIT', 'IDLE')) {
+                return $key
+            }
+        } else {
+            $pollMs = Get-ScapeConstant -Path "ui::Input::PollMs" -Fallback 30
+            $key = Read-ScapeKeyPress -TimeoutMilliseconds $pollMs
+        }
         if ($null -eq $key) { return 'IDLE' }
 
         if (Get-Command Resolve-ScapeInputToAction -ErrorAction SilentlyContinue) {
@@ -32,7 +41,6 @@ function Get-ScapeInputIntent {
 }
 
 
-# EXTRAÍDO PARA SRP
 function Resolve-ScapeDynamicText {
     param($DynCfg, $StateSnapshot)
 
@@ -41,30 +49,8 @@ function Resolve-ScapeDynamicText {
     $dynType = $DynCfg['Type']
     $dynKey = $DynCfg['Key']
 
-    $formatStateValue = {
-        param($Value)
-        if ($Value -is [bool]) {
-            $key = if ($Value) { 'MENU_VALUE_ENABLED' } else { 'MENU_VALUE_DISABLED' }
-            return (Get-ScapeLogMsg -Key $key)
-        }
-        return [string]$Value
-    }
-
-    $resolveToggleGlyph = {
-        param([bool]$IsOn)
-        $iconLevel = Get-ScapeProperty -Object $StateSnapshot -PropertyName 'IconLevel' -Fallback 2
-        $iconPath = if ($IsOn) { 'ui::Icons::CheckboxOn' } else { 'ui::Icons::CheckboxOff' }
-        $glyphSet = Get-ScapeConstant -Path $iconPath -Fallback @()
-        if ($glyphSet -is [array] -and $glyphSet.Count -gt 0) {
-            $idx = [Math]::Max(0, [Math]::Min([int]$iconLevel, $glyphSet.Count - 1))
-            return " $($glyphSet[$idx])"
-        }
-        return if ($IsOn) { ' [X]' } else { ' [ ]' }
-    }
-
     if ($dynType -eq 'StateValue') {
-        $stateValue = Get-ScapeProperty -Object $StateSnapshot -PropertyName $dynKey
-        return & $formatStateValue $stateValue
+        return Get-ScapeProperty -Object $StateSnapshot -PropertyName $dynKey
     }
     elseif ($dynType -eq 'ToggleState') {
         $val = Get-ScapeProperty -Object $StateSnapshot -PropertyName $dynKey
@@ -74,27 +60,19 @@ function Resolve-ScapeDynamicText {
             elseif ($val -match '^(?i:true|yes|on|1)$') { $val = $true }
             elseif ($val -match '^(?i:false|no|off|0)$') { $val = $false }
         }
-        return & $resolveToggleGlyph ([bool]$val)
+        return [bool]$val
     }
     elseif ($dynType -eq 'CycleState') {
         $cycle = Get-ScapeConstant -Path $DynCfg['List']
         if ($cycle -is [array]) {
             $curr = Get-ScapeProperty -Object $StateSnapshot -PropertyName $dynKey
             if ($curr -is [bool]) {
-                if ($cycle -contains 'TrueColor' -and $cycle -contains 'ANSI16') {
-                    $curr = if ($curr) { 'TrueColor' } else { 'ANSI16' }
-                }
-                elseif ($cycle -contains 'REDUNDANCY' -and $cycle -contains 'EFFICIENCY') {
-                    $curr = if ($curr) { 'REDUNDANCY' } else { 'EFFICIENCY' }
-                }
-                elseif ($cycle.Count -gt 1) {
-                    $curr = if ($curr) { $cycle[1] } else { $cycle[0] }
-                }
+                if ($cycle -contains 'TrueColor' -and $cycle -contains 'ANSI16') { $curr = if ($curr) { 'TrueColor' } else { 'ANSI16' } }
+                elseif ($cycle -contains 'REDUNDANCY' -and $cycle -contains 'EFFICIENCY') { $curr = if ($curr) { 'REDUNDANCY' } else { 'EFFICIENCY' } }
+                elseif ($cycle.Count -gt 1) { $curr = if ($curr) { $cycle[1] } else { $cycle[0] } }
             }
-            elseif ([string]::IsNullOrWhiteSpace([string]$curr) -and $cycle.Count -gt 0) {
-                $curr = $cycle[0]
-            }
-            return " [$( & $formatStateValue $curr )]"
+            elseif ([string]::IsNullOrWhiteSpace([string]$curr) -and $cycle.Count -gt 0) { $curr = $cycle[0] }
+            return $curr
         }
     }
     elseif ($dynType -eq 'CycleLabel') {
@@ -103,7 +81,7 @@ function Resolve-ScapeDynamicText {
             $curr = Get-ScapeProperty -Object $StateSnapshot -PropertyName $dynKey
             $idx = if ($null -ne $curr -and $curr -is [int]) { [int]$curr } else { 0 }
             if ($idx -lt 0 -or $idx -ge $labels.Count) { $idx = 0 }
-            return " [$($labels[$idx])]"
+            return $labels[$idx]
         }
     }
     return $null
@@ -126,18 +104,51 @@ function Update-ScapeMenuViewModel {
             $titleKey = if ($opt -is [hashtable]) { $opt['TitleKey'] } else { $opt.TitleKey }
             $type = if ($opt -is [hashtable]) { $opt['Type'] } else { $opt.Type }
             $dynCfg = if ($opt -is [hashtable]) { $opt['DynamicText'] } else { $opt.DynamicText }
+            $fmtArgs = if ($opt -is [hashtable]) { $opt['FormatArgs'] } else { $opt.FormatArgs }
 
             $i18nNode = Get-ScapeI18NNode -Key $titleKey
+            $finalText = if ($i18nNode -and $i18nNode.Text) { $i18nNode.Text } else { $titleKey }
+            if ($null -ne $fmtArgs) {
+                try { $finalText = $finalText -f $fmtArgs } catch {}
+            }
+
             $iconLevel = if ($st -and $st.ContainsKey('IconLevel')) { [int]$st['IconLevel'] } else { 0 }
+
+            $rawDyn = Resolve-ScapeDynamicText -DynCfg $dynCfg -StateSnapshot $st
+            $formattedDynText = ""
+            if ($null -ne $rawDyn) {
+                if ($rawDyn -is [bool]) {
+                    $isOn = [bool]$rawDyn
+                    $iconPath = if ($isOn) { 'ui::Icons::CheckboxOn' } else { 'ui::Icons::CheckboxOff' }
+                    $glyphSet = Get-ScapeConstant -Path $iconPath -Fallback @()
+                    if ($glyphSet -is [array] -and $glyphSet.Count -gt 0) {
+                        $idx = [Math]::Max(0, [Math]::Min([int]$iconLevel, $glyphSet.Count - 1))
+                        $formattedDynText = " $($glyphSet[$idx])"
+                    } else {
+                        $formattedDynText = if ($isOn) { ' [X]' } else { ' [ ]' }
+                    }
+                } else {
+                    $formattedDynText = " [$rawDyn]"
+                }
+            }
+
+            $ansiStrip = "$([char]27)\[[0-9;]*[a-zA-Z]"
+            $cleanStr = if ($finalText) { $finalText -replace $ansiStrip, '' } else { '' }
+            $cleanDyn = if ($formattedDynText) { $formattedDynText -replace $ansiStrip, '' } else { '' }
+
+            $visStrW = if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) { Get-ScapeVisualWidth $cleanStr } else { $cleanStr.Length }
+            $dynLen = if (Get-Command Get-ScapePlainTextLength -ErrorAction SilentlyContinue) { Get-ScapePlainTextLength -Text $formattedDynText } else { $cleanDyn.Length }
 
             [PSCustomObject]@{
                 Id          = $id
                 TitleKey    = $titleKey
-                Text        = $i18nNode.Text
+                Text        = $finalText
                 Type        = $type
                 Icon        = Get-ScapeResolvedIcon -RouteId $id -IconLevel $iconLevel
-                DynamicText = Resolve-ScapeDynamicText -DynCfg $dynCfg -StateSnapshot $st
-                Hint        = $i18nNode.Hint
+                DynamicText = $formattedDynText
+                TextWidth   = $visStrW
+                DynWidth    = $dynLen
+                Hint        = if ($i18nNode) { $i18nNode.Hint } else { $null }
             }
         }
         return $hydratedOptions
@@ -232,118 +243,12 @@ function Get-ScapeHydratedOptions {
     }
 }
 
-function Format-ScapeGridLayout {
+function Send-ScapeVirtualInput {
     [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)][array]$GridRows,
-        [int]$Columns = 2,
-        [int]$ColumnWidth = 30,
-        [string]$FrameStyle = 'Classic',
-        [switch]$WithBorder
-    )
+    [OutputType([void])]
+    param([Parameter(Mandatory = $true)][string]$Key)
     process {
-        if ($null -eq $GridRows -or $GridRows.Count -eq 0) { return "" }
-
-        $ESC = [char]27
-        $reset = "$ESC[0m"
-        $sb = [System.Text.StringBuilder]::new()
-
-        $frame = Get-ScapeConstant -Path "ui::Frames::$FrameStyle"
-        if ($null -eq $frame) { $frame = Get-ScapeConstant -Path "ui::Frames::Classic" }
-
-        if ($WithBorder) {
-            $borderTop = $frame.TL + ($frame.HL * (($ColumnWidth * $Columns) + ($Columns - 1))) + $frame.TR
-            [void]$sb.AppendLine((Format-ScapeANSIMessage -Text $borderTop -Flag 'MENU'))
-        }
-
-        $cellCount = 0
-        $rowContent = ""
-
-        foreach ($item in $GridRows) {
-            $itemText = if ($item -is [string]) { $item } else { [string]$item }
-            $padded = $itemText.PadRight($ColumnWidth).Substring(0, [Math]::Min($ColumnWidth, $itemText.Length + 5))
-
-            $formatted = if ($item.PSObject.Properties['ThemeFlag']) {
-                Format-ScapeANSIMessage -Text $padded -Flag $item.ThemeFlag
-            } else {
-                Format-ScapeANSIMessage -Text $padded -Flag 'MENU'
-            }
-
-            $rowContent += $formatted
-
-            if ($WithBorder -and $cellCount -lt ($Columns - 1)) {
-                $rowContent += (Format-ScapeANSIMessage -Text " | " -Flag 'HINT')
-            }
-
-            $cellCount++
-            if ($cellCount -ge $Columns) {
-                [void]$sb.AppendLine($rowContent)
-                $rowContent = ""
-                $cellCount = 0
-            }
-        }
-
-        if ($rowContent.Length -gt 0) {
-            [void]$sb.AppendLine($rowContent)
-        }
-
-        if ($WithBorder) {
-            $borderBottom = $frame.BL + ($frame.HL * (($ColumnWidth * $Columns) + ($Columns - 1))) + $frame.BR
-            [void]$sb.AppendLine((Format-ScapeANSIMessage -Text $borderBottom -Flag 'MENU'))
-        }
-
-        return $sb.ToString()
-    }
-}
-
-function Format-ScapeThemifiedMenuBuffer {
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)][string]$MenuId,
-        [Parameter(Mandatory = $true)][array]$HydratedOptions,
-        [int]$CursorIndex = 0,
-        [string]$TitleKey,
-        [string]$FrameStyle = 'Classic'
-    )
-    process {
-        if ($null -eq $HydratedOptions -or $HydratedOptions.Count -eq 0) { return "" }
-
-        $ESC = [char]27
-        $reset = "$ESC[0m"
-        $sb = [System.Text.StringBuilder]::new()
-
-        $frame = Get-ScapeConstant -Path "ui::Frames::$FrameStyle"
-        if ($null -eq $frame) { $frame = Get-ScapeConstant -Path "ui::Frames::Classic" }
-
-        if ($null -ne $TitleKey) {
-            $titleNode = Get-ScapeI18NNode -Key $TitleKey
-            $title = $titleNode.Text -replace '^\[\s*|\s*\]$', ''
-            $titleLine = $frame.TL + $title.PadRight(45, $frame.HL) + $frame.TR
-            [void]$sb.AppendLine((Format-ScapeANSIMessage -Text $titleLine -Flag 'BANNER'))
-        }
-
-        for ($i = 0; $i -lt $HydratedOptions.Count; $i++) {
-            $opt = $HydratedOptions[$i]
-            $isSelected = ($i -eq $CursorIndex)
-
-            $icon = if ($opt.PSObject.Properties['Icon']) { $opt.Icon } else { "" }
-            $text = if ($opt.PSObject.Properties['Text']) { $opt.Text } else { $opt.TitleKey }
-            $dynText = if ($opt.PSObject.Properties['DynamicText']) { $opt.DynamicText } else { "" }
-
-            $selector = if ($isSelected) { "▶ " } else { "  " }
-            $line = "$selector$icon $text"
-
-            if ($dynText) { $line += " $dynText" }
-
-            $flag = if ($opt.PSObject.Properties['ThemeFlag']) { $opt.ThemeFlag } else { 'MENU' }
-            $formatted = Format-ScapeANSIMessage -Text $line -Flag $flag -Bold:$isSelected -IncludeBackground:$isSelected
-
-            [void]$sb.AppendLine($formatted)
-        }
-
-        return $sb.ToString()
+        $Script:VirtualInputQueue.Enqueue($Key)
     }
 }
 
@@ -351,5 +256,4 @@ Export-ModuleMember -Function 'Get-ScapeInputIntent',
                               'Update-ScapeMenuViewModel',
                               'Invoke-ScapeStateMutation',
                               'Get-ScapeHydratedOptions',
-                              'Format-ScapeGridLayout',
-                              'Format-ScapeThemifiedMenuBuffer'
+                              'Send-ScapeVirtualInput'

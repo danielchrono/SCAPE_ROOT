@@ -13,10 +13,12 @@ function Publish-ScapeEvent {
     param(
         [Parameter(Mandatory = $true)][string]$Type,
         [Parameter(Mandatory = $true)][object]$Payload,
-        [string]$Severity = "LOG_INFO"
+        [string]$Severity = "LOG_INFO",
+        [string]$Source = "SYSTEM_CORE"
     )
 
-    $maxQueue = 10000
+    $sysConfig = Get-ScapeConstant -Path "infrastructure::Logger" -Fallback @{}
+    $maxQueue = if ($sysConfig["MAX_QUEUE"]) { $sysConfig["MAX_QUEUE"] } else { 10000 }
     if ($Script:EventQueue.Count -ge $maxQueue) {
         # Only drop TRACE/DEBUG/METRIC if explicitly set in config, otherwise queue them
         try {
@@ -45,20 +47,9 @@ function Publish-ScapeEvent {
     }
 
     # IDENTIFICAÇÃO DE ORIGEM (CALLER ID REAL)
-    $caller = "SYSTEM_CORE"
-    $stack = Get-PSCallStack
-    if ($null -ne $stack) {
-        # Ignora a própria publicação e os blocos anônimos dos listeners para achar o dono da ação
-        for ($i = 1; $i -lt $stack.Count; $i++) {
-            $cmd = $stack[$i].Command
-            if ($cmd -notmatch 'Publish-ScapeEvent|<ScriptBlock>') {
-                $caller = $cmd
-                break
-            }
-        }
-    }
+    $caller = if (-not [string]::IsNullOrWhiteSpace($Source)) { $Source } else { "SYSTEM_CORE" }
 
-    $timeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ"
+    $timeFormat = if ($sysConfig["TIME_FORMAT"]) { $sysConfig["TIME_FORMAT"] } else { "yyyy-MM-ddTHH:mm:ss.fffZ" }
     $EventFrame = [PSCustomObject]@{
         Timestamp = [datetime]::UtcNow.ToString($timeFormat)
         Type      = $Type
@@ -123,16 +114,19 @@ function Publish-ScapeFault {
     param(
         [Parameter(Mandatory = $true)] [System.Management.Automation.ErrorRecord]$ErrorRecord,
         [string]$Context = "Unknown",
-        [string]$Severity = "LOG_WARN"
+        [string]$Severity = "LOG_WARN",
+        [string]$Message = ""
     )
     try {
         if (Get-Command "Publish-ScapeEvent" -ErrorAction SilentlyContinue) {
-            Publish-ScapeEvent -Type "SYSTEM_FAULT" -Severity $Severity -Payload @{
+            $payload = @{
                 Context   = $Context
                 Exception = $ErrorRecord.Exception.Message
                 Line      = $ErrorRecord.InvocationInfo.ScriptLineNumber
                 Command   = $ErrorRecord.InvocationInfo.MyCommand.Name
             }
+            if (-not [string]::IsNullOrWhiteSpace($Message)) { $payload.Message = $Message }
+            Publish-ScapeEvent -Type "SYSTEM_FAULT" -Severity $Severity -Payload $payload
         }
     }
     catch { Write-Verbose "FAULT [$Context]: $($ErrorRecord.Exception.Message)" }

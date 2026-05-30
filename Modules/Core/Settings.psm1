@@ -13,9 +13,12 @@ function Get-ScapeSettingsPath {
     [CmdletBinding()] [OutputType([string])]
     param()
     if ($null -eq $Script:SettingsPath) {
-        $root = (Get-ScapeColdState)["ROOT"]
-        if ($null -eq $root) { throw "ColdState ROOT not initialized" }
-        $Script:SettingsPath = Join-Path -Path $root -ChildPath "Data\UserSettings.json"
+        $state = Get-ScapeColdState
+        $wsRoot = $state["WORKSPACE_ROOT"]
+        if ($null -eq $wsRoot) { throw "WORKSPACE_ROOT not initialized" }
+        $settingsDirName = Get-ScapeConstant -Path "system::Directories::SETTINGS" -Fallback "Config"
+        $settingsFileName = Get-ScapeConstant -Path "system::Defaults::SETTINGS" -Fallback "user-settings.json"
+        $Script:SettingsPath = Join-Path -Path $wsRoot -ChildPath "$settingsDirName\$settingsFileName"
     }
     return $Script:SettingsPath
 }
@@ -36,9 +39,9 @@ function Get-ScapeSettingDefault {
             UiMargin                   = Get-ScapeConstant -Path "ui::Layout::Margin"
             EngineMode                 = Get-ScapeConstant -Path "system::DEFAULTS::MODE"
             OutPath                    = Get-ScapeConstant -Path "system::DEFAULTS::OUT_DIR"
-            LogLevel                   = Get-ScapeConstant -Path "infrastructure::Audit::DEFAULT_LEVEL_NAME" # Corrigido
-            MaxRetries                 = Get-ScapeConstant -Path "system::system::RETRY_MAX_ATTEMPTS"
-            WatchdogAction             = Get-ScapeConstant -Path "system::system::WATCHDOG_ACTION"
+            LogLevel                   = Get-ScapeConstant -Path "infrastructure::Logger::DEFAULT_LEVEL_NAME"
+            MaxRetries                 = Get-ScapeConstant -Path "system::Behavior::RETRY_MAX_ATTEMPTS"
+            WatchdogAction             = Get-ScapeConstant -Path "system::Behavior::WATCHDOG_ACTION"
             SmbTimeoutMs               = Get-ScapeConstant -Path "network::PROTOCOLS::TIMEOUT_MS"
             IoChunkSize                = Get-ScapeConstant -Path "storage::BUFFER::CHUNK_READ"
             RobocopyThreads            = Get-ScapeConstant -Path "system::LIMITS::ROBOCOPY_THREAD_AUTO"
@@ -98,7 +101,11 @@ function Initialize-ScapeSetting {
         Update-ScapeColdState -NewProperties $state | Out-Null
         Update-ScapeColdState -NewProperties @{ Config = @{ Language = $state["CurrentLanguage"] } } | Out-Null
         if (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
-            Set-ScapePersona -Name $state["ThemePersona"] -Silent
+            $personaData = Set-ScapePersona -Name $state["ThemePersona"] -Silent
+            if ($null -ne $personaData -and $personaData.Count -gt 0) {
+                foreach ($k in $personaData.Keys) { $state[$k] = $personaData[$k] }
+                Update-ScapeColdState -NewProperties $personaData | Out-Null
+            }
         }
         $useTrueColor = $state["Capability_TrueColor"] -eq $true
         if (Get-Command Set-ScapeColorMode -ErrorAction SilentlyContinue) {
@@ -143,7 +150,10 @@ function Sync-ScapeThemeHydration {
                     Invoke-ScapeProceduralTheme -BaseHue $baseHue
                 }
             } elseif (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
-                Set-ScapePersona -Name $persona -Silent
+                $personaData = Set-ScapePersona -Name $persona -Silent
+                if ($null -ne $personaData -and $personaData.Count -gt 0) {
+                    Update-ScapeColdState -NewProperties $personaData | Out-Null
+                }
             }
         }
 
@@ -200,6 +210,8 @@ function Set-ScapeSettingMutation {
 
             # --- ROTEAMENTO E AÇÕES PÓS-MUTAÇÃO ---
 
+            Publish-ScapeEvent -Type "SETTING_MUTATED" -Severity "TRACE" -Payload @{ Key = $Key; Value = $effectiveValue }
+
             # 1. Idioma
             if ($Key -eq "CurrentLanguage") {
                 $configObj = Get-ScapeProperty -Object $state -PropertyName "Config" -Fallback @{}
@@ -210,8 +222,10 @@ function Set-ScapeSettingMutation {
 
             # 2. Persona de Tema
             if ($Key -eq "ThemePersona" -and (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue)) {
-                Set-ScapePersona -Name $effectiveValue
-                Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{ Type = 'FULL'; MenuId = $state.CurrentMenu }
+                $personaData = Set-ScapePersona -Name $effectiveValue
+                if ($null -ne $personaData -and $personaData.Count -gt 0) {
+                    Update-ScapeColdState -NewProperties $personaData | Out-Null
+                }
             }
 
             # 3. Color Mode e Capabilities Visuais (Sincronização Bidirecional)
@@ -240,12 +254,6 @@ function Set-ScapeSettingMutation {
                 }
                 $strMode = if ($useTrueColor) { "TrueColor" } else { "ANSI16" }
                 Update-ScapeColdState -NewProperties @{ ColorMode = $strMode; Capability_TrueColor = $useTrueColor } | Out-Null
-                Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{ Type = 'FULL'; MenuId = $state.CurrentMenu }
-            }
-
-            # 4. Modificadores Visuais Imediatos (Requerem repintura instantânea)
-            if ($Key -match "^(IconLevel|FrameStyle|ProgressStyle)$") {
-                Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{ Type = 'FULL'; MenuId = $state.CurrentMenu }
             }
 
             # 5. Outras Capabilities
@@ -276,7 +284,10 @@ function Reset-ScapeSettingToFactory {
         Update-ScapeColdState -NewProperties $defaults | Out-Null
         Update-ScapeColdState -NewProperties @{ Config = @{ Language = $defaults["CurrentLanguage"] } } | Out-Null
         if (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
-            Set-ScapePersona -Name $defaults["ThemePersona"] -Silent
+            $personaData = Set-ScapePersona -Name $defaults["ThemePersona"] -Silent
+            if ($null -ne $personaData -and $personaData.Count -gt 0) {
+                Update-ScapeColdState -NewProperties $personaData | Out-Null
+            }
         }
         $useTrueColor = $defaults["Capability_TrueColor"] -eq $true
         if (Get-Command Set-ScapeColorMode -ErrorAction SilentlyContinue) {
@@ -286,11 +297,8 @@ function Reset-ScapeSettingToFactory {
         $msgReset = Get-ScapeLogMsg -Key "SETTINGS_RESET_SUCCESS" -MsgArgs @()
         Publish-ScapeEvent -Type "SYS_CORE" -Severity "LOG_WARN" -Payload @{ Key = "SETTINGS_RESET_SUCCESS"; Message = $msgReset }
         
-        # Trigger full redraw to reflect reset defaults
-        $state = Get-ScapeColdState
-        if ($state -and $state.CurrentMenu) {
-            Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{ Type = "FULL"; MenuId = $state.CurrentMenu }
-        }
+        # Trigger generic state mutation instead of hardcoding UI Redraw
+        Publish-ScapeEvent -Type "SETTING_MUTATED" -Severity "INFO" -Payload @{ Key = "ThemePersona" }
     }
 }
 

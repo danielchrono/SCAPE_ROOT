@@ -131,6 +131,7 @@ function Start-ScapeRouter {
         }
 
         Initialize-ScapeRenderer
+        if (Get-Command Set-ScapeViewportLocks -ErrorAction SilentlyContinue) { Set-ScapeViewportLocks | Out-Null }
         Initialize-ScapeStateObserver -AutoRegister | Out-Null
 
         $State = @{
@@ -151,6 +152,7 @@ function Start-ScapeRouter {
                 # PLUG DE RESPONSIVIDADE: Checa redimensionamento em tempo real
                 if (Get-Command Test-ScapeViewportChanged -ErrorAction SilentlyContinue) {
                     if (Test-ScapeViewportChanged -ViewportState $ViewportState) {
+                        if (Get-Command Set-ScapeViewportLocks -ErrorAction SilentlyContinue) { Set-ScapeViewportLocks | Out-Null }
                         $State.NeedsFullRedraw = $true
                         Clear-ScapeInputBuffer -ErrorAction SilentlyContinue # Limpa input fantasma gerado pelo redimensionamento no Windows
                     }

@@ -182,6 +182,8 @@ function Invoke-ScapeDaltonismMatrix {
 function Set-ScapePersona {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param([Parameter(Mandatory = $true)][string]$Name, [switch]$Silent)
+    
+    $result = @{}
     if ($PSCmdlet.ShouldProcess("Theme System", "Set Persona $Name")) {
         if (-not $Script:ThemeCache) { Initialize-ScapeTheme }
         $persona = $Script:ThemeCache.Persona[$Name]
@@ -202,29 +204,15 @@ function Set-ScapePersona {
                 }
             }
             
-            # Apply FrameStyle
-            if ($persona.Frame) {
-                Set-ScapeSettingMutation -Key "FrameStyle" -Value $persona.Frame | Out-Null
-            }
-            
-            # Apply ProgressStyle
-            if ($persona.Progress) {
-                Set-ScapeSettingMutation -Key "ProgressStyle" -Value $persona.Progress | Out-Null
-            }
-            
-            # Apply Animation setting
-            if ($null -ne $persona.Animation) {
-                Set-ScapeSettingMutation -Key "AnimationEnabled" -Value [bool]$persona.Animation | Out-Null
-            }
-            
-            # Apply Contrast hint (store for UI to apply)
-            if ($persona.Contrast) {
-                Set-ScapeSettingMutation -Key "ContrastMode" -Value $persona.Contrast | Out-Null
-            }
+            if ($persona.Frame) { $result["FrameStyle"] = $persona.Frame }
+            if ($persona.Progress) { $result["ProgressStyle"] = $persona.Progress }
+            if ($null -ne $persona.Animation) { $result["AnimationEnabled"] = [bool]$persona.Animation }
+            if ($persona.Contrast) { $result["ContrastMode"] = $persona.Contrast }
             
             if (-not $Silent) { Publish-ScapeEvent -Type "THEME_PERSONA_APPLIED" -Severity "INFO" -Payload @{ Persona = $Name } }
         }
     }
+    return $result
 }
 
 function Set-ScapeColorMode {
@@ -358,5 +346,13 @@ function Get-ScapeResolvedIcon {
         if ($level -ge $iconArr.Count) { $level = $iconArr.Count -1 }
 
         return [string]$iconArr[$level]
+    }
+}
+Register-ScapeActionHandler -Target 'Scape.Presentation.Theme' -Handler {
+    param($Task, $PayloadDef, $Target)
+    if ($Task -eq 'PROCEDURAL') {
+        $rand = [Random]::new()
+        Set-ScapeSettingMutation -Key "RandomBaseHue" -Value ($rand.NextDouble() * 360) | Out-Null
+        Set-ScapeSettingMutation -Key "ThemePersona" -Value "RANDOM" | Out-Null
     }
 }

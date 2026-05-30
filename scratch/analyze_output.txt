@@ -1,0 +1,321 @@
+--- DUPLICATES ---
+✅: ['Success', 'Ready']
+❌: ['Failure', 'BadSector', 'PSError']
+⚠: ['Warning', 'Tampered', 'PendingSector', 'PSWarning']
+ℹ: ['Info', 'PSAbout']
+❓: ['Question', 'Unknown']
+─: ['Separator', 'SliderMid', 'SepDash', 'BoxH']
+🔴: ['DotRed', 'ToggleOff']
+🟢: ['DotGreen', 'ToggleOn']
+⚪: ['DotWhite', 'RadioOff']
+🆕: ['BadgeNew', 'New', 'PSNew']
+🔄: ['BadgeUpdated', 'Overwritten', 'Reallocated', 'Refresh']
+🔥: ['BadgeHot', 'Fire']
+❄: ['BadgeCold', 'Snowflake']
+🔐: ['BadgeLock', 'Encrypted', 'KeyPair', 'LockedKey']
+🔓: ['BadgeUnlock', 'Decrypted', 'Unlock']
+🧪: ['BadgeBeta', 'Test', 'TestTube']
+🎩: ['ThemeCorporate', 'TopHat']
+🕶: ['ThemeHacker', 'Sunglasses']
+👕: ['ThemeMinimal', 'TShirt']
+⛑: ['ThemeHighVis', 'RescueHelmet']
+📸: ['ThemePowerShell', 'CameraFlash']
+🌙: ['ThemeDark', 'Moon']
+☀: ['ThemeLight', 'Sun']
+🎨: ['Palette', 'Color16']
+🪞: ['Persona', 'Mirror']
+🖌: ['ColorPicker', 'Paintbrush']
+🔲: ['SlackSpace', 'Chip']
+⚙: ['Fragmented', 'FileConfig', 'CPU', 'Service', 'Settings', 'Gear', 'PSFunction', 'Processing']
+💎: ['Intact', 'GemStone']
+🩹: ['Partial', 'BytePatch', 'Bandage']
+🗑: ['Deleted', 'Trash', 'Delete', 'Wastebasket', 'PSRemove']
+⚰: ['Unrecoverable', 'Coffin']
+🧩: ['Carve', 'Reconstruct', 'PSModule']
+💿: ['ImageDisk', 'Install', 'OpticalDisk']
+☑: ['Verify', 'CheckboxOn']
+🛑: ['WriteBlock', 'StopSign']
+🔀: ['HashCalc', 'Shuffle', 'GitMerge']
+🧹: ['Wipe', 'Broom', 'PSClear']
+🧽: ['Scrub', 'Sponge']
+🛠: ['BruteForce', 'Build', 'HammerWrench']
+🩻: ['XRayScan', 'XRay']
+🗃: ['MFT', 'CardBox']
+🔢: ['Inode', 'HexView', 'InputNumber']
+🖲: ['Superblock', 'BinaryView', 'Trackball']
+📐: ['GPTHeader', 'RulerTriangle']
+📟: ['MBR', 'Pager']
+🗂: ['FATTable', 'Combobox', 'GroupBy', 'CardDividers']
+📓: ['Journal', 'Notebook']
+⤢: ['Extent', 'WindowSplitV']
+🧫: ['Sector', 'PetriDish']
+🌈: ['Color256', 'Rainbow']
+📉: ['SSDWear', 'ChartDown']
+💼: ['Evidence', 'Briefcase']
+⛓: ['ChainOfCustody', 'Chains']
+🔏: ['Sealed', 'LockedPen']
+🪪: ['IDCard', 'IDCardIcon']
+⬆: ['ArrowUp', 'Update', 'GitPush']
+⬇: ['ArrowDown', 'GitPull']
+⬅: ['ArrowLeft', 'ArrowDoubleLeft']
+➡: ['ArrowRight', 'ArrowDoubleRight']
+⤴: ['ArrowCurveRight', 'ArrowJump', 'Jump']
+▶: ['CaretRight', 'Play']
+▾: ['CaretSmallDown', 'Dropdown']
+◂: ['CaretSmallLeft', 'Back']
+▸: ['CaretSmallRight', 'Submenu']
+🏠: ['Home', 'NetworkLocal']
+↩: ['Return', 'Undo']
+❔: ['Help', 'PSHelp']
+🪟: ['WindowTile', 'Window']
+🔍: ['FocusIn', 'Search', 'MagnifyLeft']
+🔎: ['FocusOut', 'MagnifyRight']
+🔖: ['Mention', 'Bookmark']
+📝: ['InputText', 'MailDraft', 'Memo']
+📅: ['InputDate', 'Calendar']
+📧: ['InputEmail', 'Email']
+🔑: ['InputPassword', 'Key']
+📋: ['Listbox', 'Copy', 'Clipboard', 'PSEnum']
+🚀: ['Rocket', 'Upgrade']
+🚢: ['Ship', 'Deploy']
+📁: ['Folder', 'FileFolder']
+📂: ['FolderOpen', 'Open', 'Load', 'OpenFolder']
+📄: ['File', 'PageUp']
+⌨: ['FileCode', 'KeyboardDev']
+📜: ['FileLog', 'Scroll', 'PSModuleScript']
+🗜: ['FileArchive', 'Clamp']
+⚡: ['FileExec', 'DiskSSD', 'Charging', 'Execute', 'Lightning']
+🎬: ['FileMedia', 'ClapperBoard']
+🖥: ['Server', 'Desktop']
+🗄: ['ServerRack', 'FileCabinet']
+🔌: ['NetworkWired', 'DiskUSB', 'API', 'Plug']
+☁: ['NetworkCloud', 'Cloud']
+💾: ['Disk', 'Save', 'FloppyDisk']
+💽: ['DiskHDD', 'Uninstall', 'ComputerDisk']
+🔋: ['BatteryFull', 'Battery']
+🪫: ['BatteryHalf', 'BatteryLow', 'LowBattery']
+👑: ['Admin', 'Crown']
+💻: ['Terminal', 'Laptop']
+📦: ['Container', 'Package']
+🪝: ['Webhook', 'Hook']
+⏳: ['Hourglass', 'Funnel', 'Loading']
+🔧: ['Config', 'Wrench']
+🎛: ['Preferences', 'ControlKnobs']
+🔽: ['Filter', 'SortDesc']
+🔁: ['Sync', 'Repeat']
+🔊: ['VolumeMax', 'SpeakerHigh']
+🔉: ['VolumeMed', 'SpeakerMed']
+🔈: ['VolumeMin', 'SpeakerLow']
+🔇: ['VolumeMute', 'MutedSpeaker']
+🎤: ['MicOn', 'Microphone']
+📷: ['CameraOn', 'Camera']
+🖨: ['Print', 'Printer']
+📠: ['Scan', 'Fax', 'FaxMachine']
+📤: ['MailSend', 'Export', 'OutboxTray', 'PSOutput', 'PSSet']
+📥: ['MailReceive', 'Import', 'InboxTray', 'PSInput', 'PSGet']
+🔗: ['Share', 'Link']
+✂: ['Unlink', 'Cut', 'Scissors']
+📌: ['Paste', 'CodeCommit', 'Pushpin']
+🧰: ['Tools', 'Toolbox']
+🏗: ['Construction', 'PSClass']
+🏷: ['Label', 'Tag', 'PSAlias']
+📬: ['MailboxOpenUp', 'PSJob']
+
+--- BAD UNICODES ---
+ThemeMinimal: 👕 -> ◦
+ThemePowerShell: 📸 -> ⌘
+Overwritten: 🔄 -> ⌫
+Intact: 💎 -> ◈
+CompassN: 🧭N -> ◧
+CompassS: 🧭S -> ◨
+CompassW: 🧭W -> ◪
+Normalize: 🗗 -> ▣
+WindowTile: 🪟 -> ⊞
+TabClose: 🗙 -> ⊠
+CheckboxHalf: 🟪 -> ⊟
+RadioOn: 🔘 -> ◉
+SliderStart: 🔹 -> ⊢
+SliderHandle: 🔶 -> ◈
+InputDate: 📅 -> ◪
+Combobox: 🗂️ -> ⊟
+Helicopter: 🚁 -> ⍙
+BusStop: 🚏 -> ⊡
+TrafficLightV: 🚦 -> ⍙
+BabySymbol: 🚼 -> ⍙
+Customs: 🛃 -> ⊗
+RailwayTrack: 🛤 -> 🛤︎
+FolderOpen: 📂 -> ◪
+NetworkWired: 🔌 -> ☍
+Disk: 💾 -> ▣
+BatteryLow: 🪫 -> ▯
+API: 🔌 -> ☍
+Calendar: 📅 -> ◪
+Search: 🔍 -> ⌕
+GroupBy: 🗂️ -> ⊟
+VolumeMax: 🔊 -> ◧
+VolumeMed: 🔉 -> ◨
+Share: 🔗 -> ☍
+Link: 🔗 -> ☍
+Save: 💾 -> ▣
+Trash: 🗑️ -> ⌫
+Open: 📂 -> ◪
+Load: 📂 -> ◪
+Uninstall: 💽 -> ⊠⚡︎
+Plunger: 🪠 -> ⍙
+GraduationCap: 🎓 -> ◬
+Dress: 👗 -> ◌
+ClutchBag: 👝 -> ⊡
+Handbag: 👜 -> ⊠
+TShirt: 👕 -> ◦
+WomansSandal: 👡 -> ⊓
+Lipstick: 💄 -> ⌕
+WomansClothes: 👚 -> ◬
+WomansBoot: 👢 -> ⊟
+Ring: 💍 -> ◉
+Kimono: 👘 -> ◈
+GemStone: 💎 -> ◈
+Glasses: 👓 -> ⌐
+Jeans: 👖 -> ◭
+Necktie: 👔 -> ⌙
+HighHeel: 👠 -> ⊔
+PrayerBeads: 📿 -> ⊗
+WomansHat: 👒 -> ◊
+Sunglasses: 🕶️ -> ⊝
+ShoppingBags: 🛍️ -> ⊟⊟
+BilledCap: 🧢 -> ⊓
+Scarf: 🧣 -> ⌇
+Sari: 🥻 -> ◬
+HikingBoot: 🥾 -> ⊟
+FlatShoe: 🥿 -> ⊓
+BalletShoes: 🩰 -> ⊢
+Swimsuit: 🩱 -> ⌆
+Briefs: 🩲 -> ▯
+Shorts: 🩳 -> ▭
+PostalHorn: 📯 -> ⌺
+SpeakerLow: 🔈 -> ◬
+SpeakerMed: 🔉 -> ◭
+SpeakerHigh: 🔊 -> ◮
+Drum: 🥁 -> ◉
+Accordion: 🪗 -> ⌇⌇
+LongDrum: 🪘 -> ◉
+Maracas: 🪇 -> ⊡
+MobilePhone: 📱 -> ⌘
+Dvd: 📀 -> ◉
+OpticalDisk: 💿 -> ◉
+FloppyDisk: 💾 -> ▣
+ComputerDisk: 💽 -> ▣
+ComputerMouse: 🖱️ -> ◉
+Trackball: 🖲️ -> ◉
+Desktop: 🖥️ -> ⌘
+Plug: 🔌 -> ☍
+LowBattery: 🪫 -> ▯
+MovieCamera: 🎥 -> ◰
+Lantern: 🏮 -> ◌
+VideoCamera: 📹 -> ◰
+LightBulb: 💡 -> ◌
+Videocassette: 📼 -> ◧
+FilmProjector: 📽️ -> ◰
+Candle: 🕯️ -> ⌇
+MagnifyRight: 🔎 -> ⌕
+MagnifyLeft: 🔍 -> ⌕
+DiyaLamp: 🪔 -> ◌
+PageCurl: 📃 -> ⌇
+OpenBook: 📖 -> ◰
+Scroll: 📜 -> ⌇
+DollarNote: 💵 -> $
+Receipt: 🧾 -> ⌇
+Coin: 🪙 -> ◉
+MailboxDown: 📪 -> ◬
+MailboxUp: 📫 -> ◬
+MailboxOpenUp: 📬 -> ◬
+MailboxOpenDown: 📭 -> ◬
+RulerTriangle: 📐 -> ⌐
+RoundPushpin: 📍 -> ◉
+TearCalendar: 📆 -> ◪
+OpenFolder: 📂 -> ◪
+SpiralCalendar: 🗓️ -> ◪
+Wastebasket: 🗑️ -> ⌫
+Bomb: 💣 -> ◉
+Ladder: 🪜 -> ⌇
+Shovel: 🪏 -> ⌆
+Satellite: 🛰️ -> ◉
+Microscope: 🔬 -> ◉
+PetriDish: 🧫 -> ◌
+Dna: 🧬 -> ⌇
+Pill: 💊 -> ◉
+Stethoscope: 🩺 -> ⌕
+Bandage: 🩹 -> ⌇
+BloodDrop: 🩸 -> ◉
+Bathtub: 🛁 -> ⌇
+Elevator: 🛗 -> ◉
+Shower: 🚿 -> ⌇
+Bed: 🛏️ -> ⌇
+Toilet: 🚽 -> ◉
+LotionBottle: 🧴 -> ◌
+Soap: 🧼 -> ◌
+PaperRoll: 🧻 -> ⌇
+Mousetrap: 🪤 -> ◉
+Mirror: 🪞 -> ◌
+Bubbles: 🫧 -> ◌
+Moai: 🗿 -> ◌
+Cigarette: 🚬 -> ⌇
+NazarAmulet: 🧿 -> ◉
+FuneralUrn: ⚱️ -> ◉
+HeartEmpty: ♡ -> ♡︎
+Rainbow: 🌈 -> ◮
+PSVariable: $ -> $︎
+PSVariableConst: 🔒$ -> 🔒$︎
+PSVariableEnv: 🌍$ -> ⌾$
+PSModuleCore: 💠 -> ◈
+PSRemove: 🗑️ -> ⌫
+
+--- GRAPHIC IN UNICODE ---
+BadgeUpdated: 🔄 -> 🔄︎
+BadgeUnlock: 🔓 -> 🔓︎
+Partial: 🩹 -> 🩹︎
+Decrypted: 🔓 -> 🔓︎
+Carve: 🧩 -> 🧩︎
+Reconstruct: 🧩 -> 🧩︎
+Scrub: 🧽 -> 🧽︎
+BytePatch: 🩹 -> 🩹︎
+XRayScan: 🩻 -> 🩻︎
+BootSector: 🦾 -> 🦾︎
+Sector: 🧫 -> 🧫︎
+Reallocated: 🔄 -> 🔄︎
+ChainOfCustody: ⛓️ -> ⛓︎
+IDCard: 🪪 -> 🪪︎
+ToggleOff: 🔴 -> 🔴︎
+Lock: 🔒 -> 🔒︎
+Unlock: 🔓 -> 🔓︎
+Bug: 🪲 -> 🪲︎
+Webhook: 🪝 -> 🪝︎
+Refresh: 🔄 -> 🔄︎
+Tools: 🧰 -> 🧰︎
+Screwdriver: 🪛 -> 🪛︎
+Saw: 🪚 -> 🪚︎
+Axe: 🪓 -> 🪓︎
+Broom: 🧹 -> 🧹︎
+Sponge: 🧽 -> 🧽︎
+Gloves: 🧤 -> 🧤︎
+Coat: 🧥 -> 🧥︎
+LabCoat: 🥼 -> 🥼︎
+Banjo: 🪕 -> 🪕︎
+Abacus: 🧮 -> 🧮︎
+Package: 📦 -> 📦︎
+Magnet: 🧲 -> 🧲︎
+Toolbox: 🧰 -> 🧰︎
+Boomerang: 🪃 -> 🪃︎
+Chains: ⛓️ -> ⛓︎
+Crutch: 🩼 -> 🩼︎
+XRay: 🩻 -> 🩻︎
+FireExtinguisher: 🧯 -> 🧯︎
+SafetyPin: 🧷 -> 🧷︎
+Toothbrush: 🪥 -> 🪥︎
+Window: 🪟 -> 🪟︎
+Chair: 🪑 -> 🪑︎
+Razor: 🪒 -> 🪒︎
+Placard: 🪧 -> 🪧︎
+Headstone: 🪦 -> 🪦︎
+IDCardIcon: 🪪 -> 🪪︎
+PSModule: 🧩 -> 🧩︎
+PSRunspace: 🧵 -> 🧵︎

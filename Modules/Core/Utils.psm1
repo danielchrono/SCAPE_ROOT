@@ -33,32 +33,7 @@ function Invoke-ScapeIO {
     }
 }
 
-function Get-ScapePlainTextLength {
-    [CmdletBinding()]
-    [OutputType([int])]
-    param([Parameter(Mandatory = $false)][AllowEmptyString()][string]$Text = '')
-    process {
-        if ([string]::IsNullOrWhiteSpace($Text)) { return 0 }
-        return ($Text -replace '\x1B\[[0-9;]*[a-zA-Z]', '').Length
-    }
-}
 
-function Get-ScapeJustifiedPadding {
-    [CmdletBinding()]
-    [OutputType([string])]
-    param(
-        [Parameter(Mandatory = $true)][string]$LeftText,
-        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$RightText,
-        [Parameter(Mandatory = $true)][int]$TotalWidth
-    )
-    process {
-        $lenL = Get-ScapePlainTextLength -Text $LeftText
-        $lenR = Get-ScapePlainTextLength -Text $RightText
-        $padCount = $TotalWidth - ($lenL + $lenR)
-        if ($padCount -le 0) { return " " }
-        return " " * $padCount
-    }
-}
 
 function Get-ScapeProperty {
     [CmdletBinding()]
@@ -226,53 +201,78 @@ function Test-ScapePath {
     }
 }
 
-function Publish-ScapeTreeUpdate {
+
+
+function Invoke-ScapeI18NFormat {
     [CmdletBinding()]
+    [OutputType([string])]
     param(
-        [Parameter(Mandatory = $true)][string]$TreeId, # Ex: 'Build_Extract', 'Analysis_FS'
-        [Parameter(Mandatory = $true)][hashtable[]]$Nodes,
-        [string]$TitleKey = 'TREE_DEFAULT_TITLE'
+        [Parameter(Mandatory = $true)][string]$Key,
+        [Parameter(Mandatory = $false)][array]$Args = @()
     )
     process {
-        Publish-ScapeEvent -Type "TREE_UPDATE" -Severity "INFO" -Payload @{
-            TreeId   = $TreeId
-            Nodes    = $Nodes
-            TitleKey = $TitleKey
+        if (Get-Command Get-ScapeLogMsg -ErrorAction SilentlyContinue) {
+            return Get-ScapeLogMsg -Key $Key -MsgArgs $Args
+        }
+        if ($null -ne $Args -and $Args.Count -gt 0) {
+            return "$Key -f $($Args -join ',')"
+        }
+        return $Key
+    }
+}
+
+function Format-ScapeTemplate {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)][string]$Template,
+        [Parameter(Mandatory = $true)][array]$Tokens
+    )
+    process {
+        if ([string]::IsNullOrWhiteSpace($Template)) { return "" }
+        if ($null -eq $Tokens -or $Tokens.Count -eq 0) { return $Template }
+        try { return $Template -f $Tokens } catch { return $Template }
+    }
+}
+
+function Get-ScapeUtcTimestamp {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param()
+    process {
+        $sys = Get-ScapeConstant -Path "system"
+        $fmt = if ($sys -and $sys.LogTimeFormat) { $sys.LogTimeFormat } else { "yyyy-MM-ddTHH:mm:ss.fffZ" }
+        return [datetime]::UtcNow.ToString($fmt)
+    }
+}
+
+function Convert-ScapeSeverityToInt {
+    [CmdletBinding()]
+    [OutputType([int])]
+    param([Parameter(Mandatory = $true)][string]$Severity)
+    process {
+        switch ($Severity.ToUpper()) {
+            "FATAL"     { return 0 }
+            "CRITICAL"  { return 1 }
+            "ERROR"     { return 2 }
+            "LOG_ERR"   { return 2 }
+            "WARN"      { return 3 }
+            "LOG_WARN"  { return 3 }
+            "INFO"      { return 4 }
+            "LOG_INFO"  { return 4 }
+            "DEBUG"     { return 5 }
+            "LOG_DEBUG" { return 5 }
+            "TRACE"     { return 6 }
+            default     { return 4 }
         }
     }
 }
 
-function Invoke-ScapeProgressWrapper {
+function Test-ScapeNullOrWhiteSpace {
     [CmdletBinding()]
-    [OutputType([array])]
-    param(
-        [Parameter(Mandatory = $true)][array]$Items,
-        [Parameter(Mandatory = $true)][string]$StageLabel,
-        [Parameter(Mandatory = $true)][ScriptBlock]$ActionBlock
-    )
+    [OutputType([bool])]
+    param([string]$Text)
     process {
-        $total = $Items.Count
-        if ($total -eq 0) { return @() }
-
-        $results = New-Object System.Collections.Generic.List[object]
-        for ($i = 0; $i -lt $total; $i++) {
-            Publish-ScapeEvent -Type "PROGRESS" -Severity "LOG_INFO" -Payload @{
-                Stage   = $StageLabel
-                Current = $i
-                Total   = $total
-            }
-            if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) {
-                Invoke-ScapeIdlePump | Out-Null
-            }
-            $res = & $ActionBlock $Items[$i]
-            if ($null -ne $res) { $results.Add($res) }
-        }
-        Publish-ScapeEvent -Type "PROGRESS" -Severity "LOG_INFO" -Payload @{
-            Stage   = $StageLabel
-            Current = $total
-            Total   = $total
-        }
-        Invoke-ScapeIdlePump | Out-Null
-        return $results.ToArray()
+        return [string]::IsNullOrWhiteSpace($Text)
     }
 }

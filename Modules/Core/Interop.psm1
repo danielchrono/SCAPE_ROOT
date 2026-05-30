@@ -162,7 +162,7 @@ function Initialize-ScapeInterop {
     }
 }
 
-function global:Enable-ScapeVT100 {
+function Enable-ScapeVT100 {
     [CmdletBinding()]
     param()
     try {
@@ -176,3 +176,6 @@ function global:Enable-ScapeVT100 {
         return $false
     }
 }
+
+Export-ModuleMember -Function 'Initialize-ScapeInterop',
+                              'Enable-ScapeVT100'

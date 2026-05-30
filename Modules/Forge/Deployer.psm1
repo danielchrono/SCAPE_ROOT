@@ -84,7 +84,7 @@ function Set-MainScript {
     [void]$sb.AppendLine('if ([string]::IsNullOrWhiteSpace($Global:AppRoot)) { $Global:AppRoot = Split-Path $MyInvocation.MyCommand.Path -Parent }')
     [void]$sb.AppendLine('if ([string]::IsNullOrWhiteSpace($Global:AppRoot)) { $Global:AppRoot = (Get-Location).Path }')
     [void]$sb.AppendLine('$Global:BootRoot = $Global:AppRoot')
-    [void]$sb.AppendLine('$workspaceRootName = "SCAPE_Storage"; $workspaceLogsName = "Logs"; $workspaceTempName = "Temp"; $workspaceDeployName = "Build"')
+    [void]$sb.AppendLine('$workspaceRootName = "Workspace"; $workspaceLogsName = "Logs"; $workspaceTempName = "Temp"; $workspaceDeployName = "Build"')
     [void]$sb.AppendLine('$systemConstPath = Join-Path $Global:AppRoot "Data\Constants\system.psd1"')
     [void]$sb.AppendLine('$forgeConstPath = Join-Path $Global:AppRoot "Data\Constants\forge.psd1"')
     [void]$sb.AppendLine('if (Test-Path -LiteralPath $systemConstPath) {')
@@ -291,7 +291,7 @@ function Invoke-ScapeDeployWorkflow {
     $sysWorkspace = Get-ScapeConstant -Path "system::Workspace" -Fallback @{}
     $forgePaths = Get-ScapeConstant -Path "forge::Paths" -Fallback @{}
 
-    $workspaceRootName = if ($sysWorkspace -is [hashtable] -and $sysWorkspace.ContainsKey("ROOT")) { $sysWorkspace["ROOT"] } else { "SCAPE_Storage" }
+    $workspaceRootName = if ($sysWorkspace -is [hashtable] -and $sysWorkspace.ContainsKey("ROOT")) { $sysWorkspace["ROOT"] } else { "Workspace" }
     $deployDirName = if ($sysWorkspace -is [hashtable] -and $sysWorkspace.ContainsKey("DEPLOY")) { $sysWorkspace["DEPLOY"] } else { "Build" }
     if ($forgePaths -is [hashtable] -and $forgePaths.ContainsKey("DeployWorkspaceDir") -and -not [string]::IsNullOrWhiteSpace($forgePaths["DeployWorkspaceDir"])) {
         $deployDirName = $forgePaths["DeployWorkspaceDir"]

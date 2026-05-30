@@ -1,4 +1,5 @@
 <# SCAPE OPERATIONAL MAIN #>
+param([switch]$SimulateUX)
 $ErrorActionPreference = "Stop"
 Get-Module -Name "Scape.*" | Remove-Module -Force -ErrorAction SilentlyContinue
 
@@ -6,7 +7,7 @@ $Global:AppRoot = $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($Global:AppRoot)) { $Global:AppRoot = Split-Path $MyInvocation.MyCommand.Path -Parent }
 if ([string]::IsNullOrWhiteSpace($Global:AppRoot)) { $Global:AppRoot = (Get-Location).Path }
 $Global:BootRoot = $Global:AppRoot
-$workspaceRootName = "SCAPE_Storage"; $workspaceLogsName = "Logs"; $workspaceTempName = "Temp"; $workspaceDeployName = "Build"
+$workspaceRootName = "Workspace"; $workspaceLogsName = "Logs"; $workspaceTempName = "Temp"; $workspaceDeployName = "Build"
 $systemConstPath = Join-Path $Global:AppRoot "Data\Constants\system.psd1"
 $forgeConstPath = Join-Path $Global:AppRoot "Data\Constants\forge.psd1"
 if (Test-Path -LiteralPath $systemConstPath) {
@@ -109,6 +110,13 @@ $navCheck = Get-ScapeAsset -Category "Manifests" -AssetId "navigation"
 if ($null -eq $navCheck) { throw "HANDOFF_FATAL: Navigation manifest failed to mount in RAM." }
 
 try {
+    if ($SimulateUX) {
+        if (Get-Command Resolve-ScapeManifestLayer -ErrorAction SilentlyContinue) { Resolve-ScapeManifestLayer -LayerKey "Diagnostics" | Out-Null }
+        if (Get-Command Invoke-ScapeWakeAssets -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAssets -Domain "Diagnostics" | Out-Null }
+        if (Get-Command Start-ScapeUXSimulation -ErrorAction SilentlyContinue) {
+            Start-ScapeUXSimulation -Steps 20 -DelayMs 250
+        }
+    }
     Start-ScapeRouter -InitialMenu "MainMenu"
 }
 catch {

@@ -23,7 +23,8 @@ function Initialize-ScapeBridge {
                 if (-not $result.Success) { return $false }
             }
             else {
-                Publish-ScapeEvent -Type "BRIDGE_INIT_FAIL" -Severity "FATAL" -Payload "Core.Interop not available"
+                $err = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "CORE_INTEROP_FAIL"  } else { "Core.Interop not available" }
+                Publish-ScapeEvent -Type "BRIDGE_INIT_FAIL" -Severity "FATAL" -Payload $err
                 return $false
             }
         }

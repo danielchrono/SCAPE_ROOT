@@ -43,9 +43,9 @@ function _GetRawI18NEntry {
             if ($prop) { return $prop.Value }
         }
     } catch {
-        Write-Verbose "[I18N] Translation missing for key $Key : $($_.Exception.Message)" -ErrorAction SilentlyContinue
+        throw "I18N_ERROR: Failed to resolve key '$Key' -> $($_.Exception.Message)"
     }
-    return $null
+    throw "I18N_MISSING_KEY: Translation key '$Key' not found in dictionary."
 }
 
 function Get-ScapeI18NNode {

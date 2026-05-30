@@ -17,37 +17,7 @@ function Initialize-ScapeGeometry {
     }
 }
 
-function Get-ScapeConsoleDimension {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param([switch]$WithMargins)
-    process {
-        $layout = Get-ScapeConstant -Path "ui::Layout"
-        try {
-            $raw = $Host.UI.RawUI
-            $w = $raw.WindowSize.Width
-            $h = $raw.WindowSize.Height
 
-            $margin = if ($WithMargins) { $layout.Margin * 2 } else { 0 }
-
-            $calcW = $w - $margin
-            $calcH = $h - $layout.HeaderHeight
-
-            # Se MaxWidth for 0, deixa usar a largura infinita da tela
-            $finalW = if ($layout.MaxWidth -gt 0) { [Math]::Min($calcW, $layout.MaxWidth) } else { $calcW }
-            $finalH = if ($layout.MaxHeight -gt 0) { [Math]::Min($calcH, $layout.MaxHeight) } else { $calcH }
-
-            return @{
-                Width  = [Math]::Max($layout.MinWidth, $finalW)
-                Height = [Math]::Max($layout.MinHeight, $finalH)
-            }
-        }
-        catch {
-            # Fallback seguro
-            return @{ Width = 80; Height = 20; ViewportStart = 0; ViewportEnd = 20 }
-        }
-    }
-}
 
 function Get-ScapeMenuLayout {
     [CmdletBinding()]
@@ -118,12 +88,12 @@ function Get-ScapeGridCoordinates {
 
         $selectorX = $baseX + 1
         $iconColStart = $selectorX + 2
-        $iconColWidth = 5
+        $iconColWidth = if ($layout.IconColumnWidth) { $layout.IconColumnWidth } else { 5 }
 
         $plainIconLen = 0
         if (-not [string]::IsNullOrWhiteSpace($ActiveIcon)) {
-            if (Get-Command Get-ScapePlainTextLength -ErrorAction SilentlyContinue) {
-                $plainIconLen = Get-ScapePlainTextLength -Text $ActiveIcon
+            if (Get-Command Get-ScapeVisualWidth -ErrorAction SilentlyContinue) {
+                $plainIconLen = Get-ScapeVisualWidth -Text $ActiveIcon
             } else {
                 $plainIconLen = ($ActiveIcon -replace '\x1B\[[0-9;]*[a-zA-Z]', '').Length
             }
@@ -198,5 +168,69 @@ function Get-ScapeClampedCoordinate {
             Left = [Math]::Max($layout.Margin, [Math]::Min($Left, $dims.Width - $layout.Margin - 1))
             Top  = [Math]::Max($layout.HeaderHeight, [Math]::Min($Top, $dims.Height - 1))
         }
+    }
+}
+function Get-ScapePlainTextLength {
+    [CmdletBinding()]
+    [OutputType([int])]
+    param([Parameter(Mandatory = $false)][AllowEmptyString()][string]$Text = '')
+    process {
+        if ([string]::IsNullOrWhiteSpace($Text)) { return 0 }
+        return ($Text -replace '\x1B\[[0-9;]*[a-zA-Z]', '').Length
+    }
+}
+
+function Get-ScapeVisualWidth {
+    [CmdletBinding()]
+    [OutputType([int])]
+    param([Parameter(Mandatory = $true)][string]$Text)
+    process {
+        if ([string]::IsNullOrEmpty($Text)) { return 0 }
+        $clean = $Text -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
+        $width = 0
+        $enumerator = [System.Globalization.StringInfo]::GetTextElementEnumerator($clean)
+        while ($enumerator.MoveNext()) {
+            $elem = $enumerator.GetTextElement()
+            if ($elem.Length -gt 1) { $width += 2 } else {
+                $c = [int][char]$elem[0]
+                if ($c -ge 0x2E80) { $width += 2 } else { $width += 1 }
+            }
+        }
+        return $width
+    }
+}
+
+function Get-ScapeJustifiedPadding {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)][string]$LeftText,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$RightText,
+        [Parameter(Mandatory = $true)][int]$TotalWidth
+    )
+    process {
+        $lenL = Get-ScapePlainTextLength -Text $LeftText
+        $lenR = Get-ScapePlainTextLength -Text $RightText
+        $padCount = $TotalWidth - ($lenL + $lenR)
+        if ($padCount -le 0) { return " " }
+        return " " * $padCount
+    }
+}
+
+function Get-ScapeBannerVariant {
+    [CmdletBinding()]
+    [OutputType([string])]
+    param(
+        [Parameter(Mandatory = $true)][int]$ConsoleHeight,
+        [Parameter(Mandatory = $true)][int]$ItemCount,
+        [Parameter(Mandatory = $true)][int]$HeaderHeight
+    )
+    process {
+        $layout = Get-ScapeConstant -Path "ui::Layout"
+        $threshold = if ($layout -and $null -ne $layout.BannerBreakpoint) { $layout.BannerBreakpoint } else { 30 }
+        if (($ItemCount + $HeaderHeight) -gt $ConsoleHeight -or $ConsoleHeight -le $threshold) {
+            return 'Compact'
+        }
+        return 'Standard'
     }
 }

@@ -186,7 +186,7 @@ function Invoke-ScapeWakeAssets {
 
     $reg = $state["Registry"]
     $requestedDomain = [string]$Domain
-    $domainAliases = @{
+    $domainAliases = Get-ScapeConstant -Path "system::DomainAliases" -Fallback @{
         "Extensions" = @("Extensions", "Extended")
         "Extended"   = @("Extensions", "Extended")
         "Extension"  = @("Extensions", "Extended")
@@ -313,7 +313,7 @@ function Initialize-ScapeResolver {
                 Resolve-ScapeManifestLayer -LayerKey $wake | Out-Null
             }
             Invoke-ScapeWakeAssets -Domain $wake | Out-Null
-            Publish-ScapeEvent -Type "LAZY_WAKEUP" -Severity "TRACE" -Payload "Hydrated Domain: $wake"
+            # Publish-ScapeEvent -Type "LAZY_WAKEUP" -Severity "TRACE" -Payload "Hydrated Domain: $wake"
         }
 
         $action = if ($p -is [hashtable]) { $p['Action'] } elseif ($null -ne $p.PSObject) { $p.Action } else { $null }
@@ -337,32 +337,5 @@ function Initialize-ScapeResolver {
         }
     }
 
-    # --- LISTENER 4: UI_REDRAW_REQUEST (Híbrido) ---
-    Register-ScapeEventListener -EventMatch "UI_REDRAW_REQUEST" -Action {
-        param($EventFrame)
-        $p = $EventFrame.Payload
-        if ($null -eq $p) { return }
-
-        $menuId = if ($p -is [hashtable]) { $p['MenuId'] } elseif ($null -ne $p.PSObject) { $p.MenuId } else { $null }
-        $rawType = if ($p -is [hashtable]) { $p['Type'] } elseif ($null -ne $p.PSObject) { $p.Type } else { 'PARTIAL' }
-        $isFull = ($rawType -eq 'FULL')
-
-        if ($menuId -and $isFull) {
-            $navData  = Get-ScapeConstant -Path "navigation::$menuId" -Fallback @{}
-            $navItems = if ($navData -is [hashtable] -and $navData.ContainsKey('Items')) { @($navData['Items']) }
-                        elseif ($null -ne $navData.PSObject -and $navData.PSObject.Properties['Items']) { @($navData.Items) }
-                        else { @() }
-
-            $domains = @($navItems | ForEach-Object {
-                $val = if ($_ -is [hashtable]) { $_['Layer'] } elseif ($null -ne $_.PSObject) { $_.Layer } else { $null }
-                $val
-            } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
-
-            foreach ($domain in $domains) {
-                Invoke-ScapeWakeAssets -Domain $domain | Out-Null
-            }
-
-            Publish-ScapeEvent -Type "RESOLVER_REDRAW_SYNC" -Severity "TRACE" -Payload @{ Menu = $menuId; Domains = @($domains) }
-        }
-    }
+    # Redraw syncing removed to decouple Core Resolver from Presentation layer loops
 }

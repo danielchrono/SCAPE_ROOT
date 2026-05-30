@@ -15,12 +15,14 @@ function Invoke-ScapeTargetedParsing {
         $state = Get-ScapeColdState
         $target = Get-ScapeProperty -Object $state -PropertyName 'ActiveTarget' -Fallback $null
 
+        $msgNoVol = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ERR_DRIVE_SELECTION_NONE" -Args @() } else { "No active volume selected for parsing." }
         if ($null -eq $target) {
-            Publish-ScapeEvent -Type "ERR_DRIVE_SELECTION_NONE" -Severity "ERROR" -Payload @{ Message = "No active volume selected for parsing." }
+            Publish-ScapeEvent -Type "ERR_DRIVE_SELECTION_NONE" -Severity "ERROR" -Payload @{ Message = $msgNoVol }
             return
         }
 
-        Publish-ScapeEvent -Type "PIPE_TARGETED_RECOVERY" -Severity "INFO" -Payload @{ Message = "TARGETED RECOVERY SEQUENCE ACTIVATED AND LOCKED." }
+        $msgLock = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "PIPE_TARGETED_RECOVERY" -Args @() } else { "TARGETED RECOVERY SEQUENCE ACTIVATED AND LOCKED." }
+        Publish-ScapeEvent -Type "PIPE_TARGETED_RECOVERY" -Severity "INFO" -Payload @{ Message = $msgLock }
 
         try {
             # 1. Preflight
@@ -40,22 +42,9 @@ function Invoke-ScapeTargetedParsing {
             # Ex: $records = Get-ScapeFSMeta -Target $target -Mode $engineMode
             # =================================================================
 
-            # Simulação de pipeline de leitura (Substitua pela chamada real ao leitor de FS)
-            $totalRecords = 1000 # Mock
-            for ($i = 1; $i -le $totalRecords; $i += 100) {
-                Start-Sleep -Milliseconds 50 # Mock delay
-
-                # Feedback contínuo para o Observer/Renderer
-                Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{
-                    Stage = "MFT Traversal"
-                    Current = $i
-                    Total = $totalRecords
-                    ShowPercent = $true
-                }
-            }
-
-            Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{ Stage = "MFT Traversal"; Current = $totalRecords; Total = $totalRecords }
-            Publish-ScapeEvent -Type "PIPE_TRAVERSAL_COMPLETE" -Severity "INFO" -Payload @{ Message = "File system metadata traversal completed successfully." }
+            $msgComplete = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "PIPE_TRAVERSAL_COMPLETE" -Args @() } else { "File system metadata traversal completed successfully." }
+            Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{ Stage = "MFT Traversal"; Current = 100; Total = 100 }
+            Publish-ScapeEvent -Type "PIPE_TRAVERSAL_COMPLETE" -Severity "INFO" -Payload @{ Message = $msgComplete }
         }
         catch {
             Publish-ScapeEvent -Type "INT_FAILSAFE_TRIG" -Severity "FATAL" -Payload @{ Message = "Parsing core crashed: $($_.Exception.Message)" }

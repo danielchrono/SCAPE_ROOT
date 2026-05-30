@@ -58,6 +58,10 @@
         @{ Name = "Scape.Analysis.Analyzer"; LoadOrder = 56; IsVital = $false; Domain = "Analysis" }
     )
 
+    Diagnostics    = @(
+        @{ Name = "Scape.Diagnostics.UXSimulator"; LoadOrder = 58; IsVital = $false; Domain = "Diagnostics" }
+    )
+
     Infrastructure = @(
         @{ Name = "Scape.Infrastructure.Logger"; LoadOrder = 60; IsVital = $true; Domain = "Infrastructure"; ThreadSafe = $true }
         @{ Name = "Scape.Infrastructure.Audit"; LoadOrder = 61; IsVital = $true; Domain = "Infrastructure" }

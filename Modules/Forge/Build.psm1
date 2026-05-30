@@ -340,7 +340,7 @@ try {
     $Global:AppRoot = $PSScriptRoot
     if ([string]::IsNullOrWhiteSpace($Global:AppRoot)) { try { $Global:AppRoot = Split-Path -Parent $PSCommandPath -ErrorAction Stop } catch {} }
     if ([string]::IsNullOrWhiteSpace($Global:AppRoot)) { $Global:AppRoot = (Get-Location).Path }
-    $workspaceRootName = "SCAPE_Storage"; $workspaceLogsName = "Logs"; $workspaceTempName = "Temp"; $workspaceDeployName = "Build"
+    $workspaceRootName = "Workspace"; $workspaceLogsName = "Logs"; $workspaceTempName = "Temp"; $workspaceDeployName = "Build"
     $systemConstPath = Join-Path $Global:AppRoot "Data\Constants\system.psd1"
     $forgeConstPath = Join-Path $Global:AppRoot "Data\Constants\forge.psd1"
     if (Test-Path -LiteralPath $systemConstPath) {

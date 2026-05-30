@@ -9,13 +9,24 @@
     Meta        = @{
         Name         = "SCAPE Recovery System"
         Version      = "1.0.0"
+        Build        = "BETA"
+        Home         = "https://github.com/danielchrono/scape"
         MinPSVersion = "5.1"
         Architecture = @("x64", "ARM64")
+    }
+    Security    = @{
+        RequireElevation = $true
     }
     Identifiers = @{
         SegmentPrefix = "SCAPE_"
         Separator     = "::"
         Wildcard      = "*"
+    }
+    DomainAliases = @{
+        Extensions = @("Extensions", "Extended")
+        Extended   = @("Extensions", "Extended")
+        Extension  = @("Extensions", "Extended")
+        Network    = @("Network", "Extensions", "Extended")
     }
     Loader      = @{
         CacheEnabled    = $true
@@ -53,6 +64,7 @@
         UNIX_PATH_SEP   = "/"
         WIN_EOL         = "`r`n"
         UNIX_EOL        = "`n"
+        OEM_CODEPAGE    = 850
     }
     Regex       = @{
         BASE64      = '^[A-Za-z0-9+/]+=*$'
@@ -110,13 +122,22 @@
         USB  = @{ SEEK_PENALTY_MS = 20; OPTIMAL_CHUNK_KB = 32; MAX_PARALLEL_READS = 1; ENABLE_WRITE_CACHE = $false }
     }
     Safeguards  = @{
-        RAM_CRITICAL_PCT = 0.15
-        IO_QUEUE_MAX     = 1000
-        BACKOFF_BASE_MS  = 100
-        BACKOFF_MAX_MS   = 5000
+        RAM_CRITICAL_PCT    = 0.15
+        RAM_WARNING_PCT     = 0.20
+        IO_QUEUE_MAX        = 1000
+        BACKOFF_BASE_MS     = 100
+        BACKOFF_MAX_MS      = 5000
+        RAM_SERVER_MIN      = 32
+        RAM_WORKSTATION_MIN = 16
+        CPU_SERVER_MIN      = 8
+    }
+    HardwareScoring = @{
+        RAM_TIER3 = 64; RAM_TIER2 = 32; RAM_TIER1 = 16
+        CPU_TIER3 = 16; CPU_TIER2 = 8;  CPU_TIER1 = 4
+        SCORE_SERVER = 7; SCORE_WORKSTATION = 5; SCORE_STANDARD = 3
     }
     Workspace   = @{
-        ROOT      = "SCAPE_Storage"
+        ROOT      = "Workspace"
         LOGS      = "Logs"
         TEMP      = "Temp"
         STAGING   = "Staging"
@@ -128,7 +149,7 @@
     Defaults    = @{
         MODE             = "EFFICIENCY"
         LANG             = "en-US"
-        OUT_DIR          = "SCAPE_Storage\Staging"
+        OUT_DIR          = "Workspace\Staging"
         SETTINGS         = "user-settings.json"
         LOG_FILE_PATTERN = "scape_{0:yyyyMMdd_HHmmss}.log"
     }

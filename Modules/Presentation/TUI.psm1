@@ -148,3 +148,39 @@ function Clear-ScapeInputBuffer {
         }
     }
 }
+
+function Clear-ScapeRegion {
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)][int]$Left,
+        [Parameter(Mandatory = $true)][int]$Top,
+        [Parameter(Mandatory = $true)][int]$Width,
+        [Parameter(Mandatory = $true)][int]$Height
+    )
+    process {
+        if ($Width -le 0 -or $Height -le 0) { return }
+        $blankLine = " " * $Width
+        for ($i = 0; $i -lt $Height; $i++) {
+            Set-ScapeCursorPosition -Left $Left -Top ($Top + $i)
+            [Console]::Write($blankLine)
+        }
+    }
+}
+
+function Clear-ScapeLine {
+    [CmdletBinding()]
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory = $true)][int]$Left,
+        [Parameter(Mandatory = $true)][int]$Top,
+        [Parameter(Mandatory = $true)][int]$Width
+    )
+    process {
+        if ($Width -le 0) { return }
+        Set-ScapeCursorPosition -Left $Left -Top $Top
+        [Console]::Write(" " * $Width)
+    }
+}
+
+Export-ModuleMember -Function Get-ScapeConsoleDimension, Set-ScapeCursorPosition, Set-ScapeCursorVisibility, Read-ScapeKeyPress, Clear-ScapeInputBuffer, Clear-ScapeRegion, Clear-ScapeLine

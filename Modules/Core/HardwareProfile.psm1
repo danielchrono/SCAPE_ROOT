@@ -96,16 +96,28 @@ function Select-ScapeHardwareProfile {
     if (-not $safeguards) { $safeguards = @{} }
 
     # --- 1. Score baseado em hardware bruto (original) ---
+    $scores = Get-ScapeConstant -Path "system::HardwareScoring" -Fallback @{}
+    $rt3 = if ($scores.RAM_TIER3) { $scores.RAM_TIER3 } else { 64 }
+    $rt2 = if ($scores.RAM_TIER2) { $scores.RAM_TIER2 } else { 32 }
+    $rt1 = if ($scores.RAM_TIER1) { $scores.RAM_TIER1 } else { 16 }
+    $ct3 = if ($scores.CPU_TIER3) { $scores.CPU_TIER3 } else { 16 }
+    $ct2 = if ($scores.CPU_TIER2) { $scores.CPU_TIER2 } else { 8 }
+    $ct1 = if ($scores.CPU_TIER1) { $scores.CPU_TIER1 } else { 4 }
+
     $score = 0
-    $score += if ($Detected.RAM_GB -ge 64) { 3 } elseif ($Detected.RAM_GB -ge 32) { 2 } elseif ($Detected.RAM_GB -ge 16) { 1 } else { 0 }
-    $score += if ($Detected.CPU_CORES -ge 16) { 3 } elseif ($Detected.CPU_CORES -ge 8) { 2 } elseif ($Detected.CPU_CORES -ge 4) { 1 } else { 0 }
+    $score += if ($Detected.RAM_GB -ge $rt3) { 3 } elseif ($Detected.RAM_GB -ge $rt2) { 2 } elseif ($Detected.RAM_GB -ge $rt1) { 1 } else { 0 }
+    $score += if ($Detected.CPU_CORES -ge $ct3) { 3 } elseif ($Detected.CPU_CORES -ge $ct2) { 2 } elseif ($Detected.CPU_CORES -ge $ct1) { 1 } else { 0 }
     $score += switch ($Detected.STORAGE_TYPE) { "NVME" { 3 }; "SSD" { 2 }; "HDD" { 1 }; default { 0 } }
 
     # Seleção inicial por score
     $candidate = "MINIMUM"
-    if ($score -ge 7) { $candidate = "SERVER" }
-    elseif ($score -ge 5) { $candidate = "WORKSTATION" }
-    elseif ($score -ge 3) { $candidate = "STANDARD" }
+    $ss = if ($scores.SCORE_SERVER) { $scores.SCORE_SERVER } else { 7 }
+    $sw = if ($scores.SCORE_WORKSTATION) { $scores.SCORE_WORKSTATION } else { 5 }
+    $st = if ($scores.SCORE_STANDARD) { $scores.SCORE_STANDARD } else { 3 }
+
+    if ($score -ge $ss) { $candidate = "SERVER" }
+    elseif ($score -ge $sw) { $candidate = "WORKSTATION" }
+    elseif ($score -ge $st) { $candidate = "STANDARD" }
 
     # --- 2. Aplicar safeguards (a porra que faltava) ---
     # Se o safeguard exigir RAM mínima para um perfil e o hardware não atingir, REBAIXA
@@ -141,7 +153,7 @@ function Select-ScapeHardwareProfile {
         $candidate = "MINIMUM"
         Publish-ScapeEvent -Type "LOG_WARN" -Payload @{
             Action = "LogLine"; Key = "HW_PROFILE_MISSING"
-            Args = @("$candidate não encontrado, usando MINIMUM")
+            Args = @($candidate)
         }
     }
 

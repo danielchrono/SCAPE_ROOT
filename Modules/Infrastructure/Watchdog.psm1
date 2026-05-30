@@ -19,18 +19,23 @@ function Initialize-ScapeWatchdog {
         # --- 2. CONFIGURAÇÃO E PARÂMETROS (SAFE 5.1) ---
 
         # Fallback para Intervalo
-        $intervalMs = Get-ScapeConstant -Path "system::system::WATCHDOG_INTERVAL_MS"
+        $intervalMs = Get-ScapeConstant -Path "system::Behavior::WATCHDOG_INTERVAL_MS" -Fallback 2000
         if ($null -eq $intervalMs) {
             $intervalMs = 2000
         }
 
-        $timeoutSec = 15 # Timeout fixo de segurança (Hard Deadline)
+        $timeoutSec = Get-ScapeConstant -Path "system::Behavior::WATCHDOG_TIMEOUT_SEC" -Fallback 15
 
         # Fallback para EventQueue (Tratamento explícito)
         $eventQueue = $null
         if (Get-Command Get-ScapeEventQueue -ErrorAction SilentlyContinue) {
             $eventQueue = Get-ScapeEventQueue
         }
+
+        # Carregar I18N com suporte a tokens fora do runspace restrito
+        $msgDeadlock = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) {
+            Invoke-ScapeI18NFormat -Key "ROUTER_FATAL" -Args @("DEADLOCK")
+        } else { "SYSTEM DEADLOCK: Core unresponsive" }
 
         # --- 3. INFRAESTRUTURA DE RUNSPACE (ISOLAMENTO) ---
         $Script:WatchdogRunspace = [RunspaceFactory]::CreateRunspace()
@@ -42,13 +47,11 @@ function Initialize-ScapeWatchdog {
         $proxy = $Script:WatchdogRunspace.SessionStateProxy
         $proxy.SetVariable("ScapeHeartbeat", $Script:ScapeHeartbeat)
         $proxy.SetVariable("EventQueue", $eventQueue)
+        $proxy.SetVariable("DeadlockMsgBase", $msgDeadlock)
 
         # --- 4. SCRIPTBLOCK DO SENTINELA (LÓGICA AUTÔNOMA) ---
         $sentinelBlock = {
             param($interval, $timeout, $queue)
-
-            # Proxy interno para i18n
-            $getMsgCmd = Get-Command Get-ScapeLogMsg -ErrorAction SilentlyContinue
 
             while ($true) {
                 Start-Sleep -Milliseconds $interval
@@ -56,12 +59,7 @@ function Initialize-ScapeWatchdog {
                 $idleTime = ([DateTime]::UtcNow - $ScapeHeartbeat).TotalSeconds
 
                 if ($idleTime -gt $timeout) {
-                    $errorMsg = if ($getMsgCmd) {
-                        & $getMsgCmd -Key "ROUTER_FATAL" -MsgArgs @("SYSTEM DEADLOCK: Core unresponsive for $idleTime seconds.")
-                    }
-                    else {
-                        "SYSTEM DEADLOCK: Core unresponsive for $idleTime seconds."
-                    }
+                    $errorMsg = "$DeadlockMsgBase ($idleTime s)"
 
                     $crashFrame = [PSCustomObject]@{
                         Timestamp = [datetime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")

@@ -210,7 +210,7 @@ function Export-ScapeAuditLedger {
             $state = Get-ScapeColdState
             $sessionId = $state["DATA_SESSION_ID"]
             if ($null -eq $sessionId) { $sessionId = [guid]::NewGuid().ToString() }
-            $engineVersion = Get-ScapeConstant -Path "system::META::VERSION" -Fallback "1.0.0"
+            $engineVersion = Get-ScapeConstant -Path "system::META::VERSION" 
             $report = [PSCustomObject]@{
                 ExportTime    = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
                 SessionId     = $sessionId
@@ -301,4 +301,38 @@ Register-EngineEvent -SourceIdentifier PowerShell.OnExit -Action {
         $Script:LogStream.Dispose()
     }
     if ($Script:Semaphore) { $Script:Semaphore.Dispose() }
+}
+Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 10 -StepProgress 10
+    
+    
+    $workspace = Get-ScapeConstant -Path "system::Workspace" -Fallback @{}
+    $exportSubDir = if ($workspace.ContainsKey("Exports")) { $workspace["Exports"] } else { "Data\Exports" }
+    
+    $root = (Get-ScapeColdState)["ROOT"]
+    if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
+    $exportDir = Join-Path $root $exportSubDir
+    
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 30 -StepProgress 40
+    
+
+    if (-not (Test-Path $exportDir)) { New-Item -ItemType Directory -Path $exportDir -Force | Out-Null }
+    $exportPath = Join-Path $exportDir "AuditLedger_$(Get-Date -f 'yyyyMMdd_HHmmss').json"
+    
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 70 -StepProgress 80
+    
+
+    if (Get-Command Export-ScapeAuditLedger -ErrorAction SilentlyContinue) {
+        $result = Export-ScapeAuditLedger -OutputPath $exportPath -Format "JSON"
+        if ($result.Success) {
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORT_SUCCESS" ) -StatusFlag "Success" -RunProgress 100 -StepProgress 100
+        } else {
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORT_FAILED" ) -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
+            throw "Audit export failed"
+        }
+    } else {
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_MODULE_NOT_LOADED" ) -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
+        throw "Audit module not available."
+    }
 }

@@ -142,7 +142,7 @@
                 DoubleSepLong   = "================================================================="
                 ThickSepLong    = "#################################################################"
                 DottedSepLong   = "................................................................."
-                DashedSepLong   = "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+                DashedSepLong   = "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
         }
 
         # ===========================================================================
@@ -395,9 +395,9 @@
 
         Icons                = @{
                 # --- Status & Alerts ---
-                Success = @("✅", "✔", "[OK]"); Failure = @("❌", "✖", "[ERR]"); Warning = @("⚠️", "⚠", "[!]"); Info = @("ℹ️", "ℹ", "[i]")
-                Question = @("❓", "⁇", "[?]"); Critical = @("💥", "☠︎︎", "[CRIT]"); Fatal = @("☢️", "☢", "[FATAL]"); Checkmark = @("✔️", "✓", "[V]")
-                Crossmark = @("❎", "✗", "[X]"); Ellipsis = @("…", "…", "..."); Bullet = @("•", "∙", "*"); Separator = @("─", "─", "-")
+                Success = @("✅", "✅︎", "[OK]"); Failure = @("❌", "✖", "[ERR]"); Warning = @("⚠️", "⚠", "[!]"); Info = @("ℹ️", "ℹ︎", "[i]")
+                Question = @("❓", "⁇", "[?]"); Critical = @("💥", "☠︎︎", "[CRIT]"); Fatal = @("☢️", "☢︎", "[FATAL]"); Checkmark = @("✔️", "✔︎", "[V]")
+                Crossmark = @("❎", "❎︎", "[X]"); Ellipsis = @("…", "…︎", "..."); Bullet = @("•", "∙", "*"); Separator = @("─", "─", "-")
 
                 # --- Colored Status Dots ---
                 DotRed = @("🔴", "●", "[!]"); DotGreen = @("🟢", "●", "[OK]"); DotYellow = @("🟡", "●", "[~]"); DotBlue = @("🔵", "●", "[i]")
@@ -406,230 +406,232 @@
                 SquareRed = @("🟥", "■", "[X]"); SquareGreen = @("🟩", "■", "[OK]"); SquareYellow = @("🟨", "■", "[!]"); SquareBlue = @("🟦", "■", "[i]")
 
                 # --- Status Badges & WIP ---
-                BadgeNew = @("🆕", "⊞", "[NEW]"); BadgeUpdated = @("🔄", "⟳", "[UPD]"); BadgeHot = @("🔥", "⚠", "[HOT]"); BadgeCold = @("❄️", "❄", "[CLD]")
-                BadgeLock = @("🔐", "☗", "[LCK]"); BadgeUnlock = @("🔓", "☖", "[OPN]"); BadgeBeta = @("🧪", "β", "[BETA]"); BadgeStable = @("⚓", "⎈", "[STABLE]")
+                BadgeNew = @("🆕", "🆕︎", "[NEW]"); BadgeUpdated = @("🔄", "🔄︎", "[UPD]"); BadgeHot = @("🔥", "🔥︎", "[HOT]"); BadgeCold = @("❄️", "❄", "[CLD]")
+                BadgeLock = @("🔐", "🔐︎", "[LCK]"); BadgeUnlock = @("🔓", "🔓︎", "[OPN]"); BadgeBeta = @("🧪", "β", "[BETA]"); BadgeStable = @("⚓", "⎈", "[STABLE]")
                 WIP = @("🚧", "⊘", "[WIP]")
 
                 # --- THEMES & PERSONAS ---
-                ThemeCyber = @("🪩", "⫟", "[CYB]"); ThemeCorporate = @("🎩", "⊒", "[COR]"); ThemeHacker = @("🕶️", "⍟", "[HCK]"); ThemeMinimal = @("👕", "◦", "[MIN]")
-                ThemeRetro = @("🕹️", "⎚", "[RET]"); ThemeHighVis = @("⛑️", "⛑", "[HVS]"); ThemePowerShell = @("📸", "⌘", "[PS]"); ThemeDark = @("🌙", "⏾", "[DRK]")
-                ThemeLight = @("☀️", "☼", "[LGT]"); Palette = @("🎨", "☱", "[THM]"); Persona = @("🪞", "⍑", "[PSN]"); Random = @("🎲", "⚄", "[RDM]"); ColorPicker = @("🖌️", "🖌", "[PCK]")
+                ThemeCyber = @("🪩", "◍", "[CYB]"); ThemeCorporate = @("🎩", "🎩︎", "[COR]"); ThemeHacker = @("🕶️", "🕶︎", "[HCK]"); ThemeMinimal = @("👕", "🖽", "[MIN]")
+                ThemeRetro = @("🕹️", "⎚", "[RET]"); ThemeHighVis = @("⛑️", "⛑︎", "[HVS]"); ThemePowerShell = @("📸", "⌘", "[PS]"); ThemeDark = @("🌙", "⏾", "[DRK]")
+                ThemeLight = @("☀️", "☀", "[LGT]"); Palette = @("🎨", "☱", "[THM]"); Persona = @("🪞", "🪞︎", "[PSN]"); Random = @("🎲", "⚄", "[RDM]"); ColorPicker = @("🖌️", "🖌︎", "[PCK]")
+                ThemeMenu = @("🍭", "☱", "[THM]")
 
                 # --- FORENSICS & DATA RECOVERY ---
-                Corrupted = @("🚫", "⍟", "[COR]"); Overwritten = @("🔄", "⌫", "[OW]"); Unallocated = @("⬜", "◻", "[UNA]"); Allocated = @("⬛", "◼", "[ALC]")
-                SlackSpace = @("🔲", "◫", "[SLK]"); Fragmented = @("⚙️", "⊘", "[FRG]"); Intact = @("💎", "◈", "[OK]"); Partial = @("🩹", "⨯", "[PRT]")
-                Encrypted = @("🔐", "⚷", "[ENC]"); Decrypted = @("🔓", "∡", "[DEC]"); Deleted = @("🗑️", "⌦", "[DEL]"); Recovered = @("♻️", "♾", "[REC]")
-                Unrecoverable = @("⚰️", "⌀", "[NREC]"); Tampered = @("⚠️", "⊘", "[TAMP]"); Orphaned = @("🪾", "⊘", "[ORF]")
-                Carve = @("🧩", "⧄", "[CRV]"); ImageDisk = @("💿", "⍝", "[IMG]"); Verify = @("☑️", "☑", "[VRF]"); WriteBlock = @("🛑", "⛔", "[WB]")
-                HashCalc = @("🔀", "ℋ", "[HASH]"); Reconstruct = @("🧩", "⧄", "[RCN]"); Wipe = @("🧹", "⌧", "[WIP]"); Scrub = @("🧽", "⌦", "[SCR]")
-                BytePatch = @("🩹", "✎", "[PAT]"); BruteForce = @("🛠️", "🛠", "[BRF]"); XRayScan = @("🩻", "⍍", "[XRY]"); FingerprintID = @("🫆", "◖", "[FIN]")
-                MFT = @("🗃️", "☗", "[MFT]"); Inode = @("🔢", "⌶", "[INOD]"); BootSector = @("🦾", "⍍", "[BOOT]"); Superblock = @("🖲️", "⍞", "[SUP]")
-                GPTHeader = @("📐", "⏣", "[GPT]"); MBR = @("📟", "⍍", "[MBR]"); FATTable = @("▦", "▦", "[FAT]"); Journal = @("📓", "▤", "[JRN]")
-                BTree = @("🌲", "⸙", "[BTRE]"); Extent = @("⤢", "⤢", "[EXT]"); NestedArchive = @("🪆", "◫", "[NST]")
-                HexView = @("🔢", "⍢", "[HEX]"); BinaryView = @("🖲️", "🖲", "[BIN]"); Entropy = @("☄️", "֍", "[ENT]"); Cluster = @("🪼", "⬡", "[CLU]")
-                Sector = @("🧫", "◉", "[SEC]"); Block = @("💢", "■", "[BLK]")
-                BadSector = @("❌", "✖", "[BAD]"); PendingSector = @("⚠️", "⍟", "[PEN]"); Reallocated = @("🔄", "⏣", "[REA]"); SSDWear = @("📉", "⊖", "[WRN]")
-                SMARTWarn = @("🚨", "⊘", "[SMR]"); HeadCrash = @("☣️ ", "☣︎", "[HDC]")
-                Evidence = @("💼", "⧫", "[EVD]"); ChainOfCustody = @("⛓️", "⊸", "[COC]"); Sealed = @("🔏", "⊐", "[SEAL]"); IDCard = @("🪪", "⊐", "[ID]")
+                Corrupted = @("🚫", "⚠", "[COR]"); Overwritten = @("🔄", "🔄︎", "[OW]"); Unallocated = @("⬜", "◻", "[UNA]"); Allocated = @("⬛", "◼", "[ALC]")
+                SlackSpace = @("🔲", "▤", "[SLK]"); Fragmented = @("⚙️", "⊘", "[FRG]"); Intact = @("💎", "◈", "[OK]"); Partial = @("🩹", "±", "[PRT]")
+                Encrypted = @("🔐", "🔐︎", "[ENC]"); Decrypted = @("🔓", "🔓︎", "[DEC]"); Deleted = @("🗑️", "✖", "[DEL]"); Recovered = @("♻️", "♻︎", "[REC]")
+                Unrecoverable = @("⚰️", "⊝", "[NREC]"); Tampered = @("⚠️", "⚠", "[TAMP]"); Orphaned = @("🪾", "⊘", "[ORF]")
+                Carve = @("🧩", "✂", "[CRV]"); ImageDisk = @("💿", "💿︎", "[IMG]"); Verify = @("☑️", "✔", "[VRF]"); WriteBlock = @("🛑", "⊘", "[WB]")
+                HashCalc = @("🔀", "#", "[HASH]"); Reconstruct = @("🧩", "✂", "[RCN]"); Wipe = @("🧹", "⌧", "[WIP]"); Scrub = @("🧽", "▒", "[SCR]")
+                BytePatch = @("🩹", "±", "[PAT]"); BruteForce = @("🛠️", "⚒", "[BRF]"); XRayScan = @("🩻", "☠", "[XRY]"); FingerprintID = @("🆔", "⍝", "[FIN]")
+                MFT = @("🗃️", "🗃︎", "[MFT]"); Inode = @("🔢", "🔢︎", "[INOD]"); BootSector = @("🦾", "⚙", "[BOOT]"); Superblock = @("🖲️", "🖲︎", "[SUP]")
+                GPTHeader = @("📐", "📐︎", "[GPT]"); MBR = @("📟", "📟︎", "[MBR]"); FATTable = @("🗂️", "▦", "[FAT]"); Journal = @("📓", "📓︎", "[JRN]")
+                BTree = @("🌲", "🌲︎", "[BTRE]"); Extent = @("⤢", "⤢", "[EXT]"); NestedArchive = @("🪆", "◫", "[NST]")
+                HexView = @("🔢", "🔢︎", "[HEX]"); BinaryView = @("🖲️", "🖲︎", "[BIN]"); Entropy = @("☄️", "☄", "[ENT]"); Cluster = @("🪼", "❖", "[CLU]")
+                Sector = @("🧫", "☉", "[SEC]"); Block = @("💢", "💢︎", "[BLK]")
+                Color256 = @("🌈", "☱", "[256]"); Color16 = @("🎨", "🖽", "[16]")
+                BadSector = @("❌", "✖", "[BAD]"); PendingSector = @("⚠️", "⚠", "[PEN]"); Reallocated = @("🔄", "🔄︎", "[REA]"); SSDWear = @("📉", "⊖", "[WRN]")
+                SMARTWarn = @("🚨", "⊘", "[SMR]"); HeadCrash = @("☣️ ", "☣", "[HDC]")
+                Evidence = @("💼", "💼︎", "[EVD]"); ChainOfCustody = @("⛓️", "⛓︎", "[COC]"); Sealed = @("🔏", "🔏︎", "[SEAL]"); IDCard = @("🪪", "🖹", "[ID]")
 
                 # --- LAYOUTS & ADVANCED NAVIGATION ---
                 ArrowUp = @("⬆️", "↑", "[^]"); ArrowDown = @("⬇️", "↓", "[v]"); ArrowLeft = @("⬅️", "←", "[<]"); ArrowRight = @("➡️", "→", "[>]")
                 ArrowDoubleUp = @("⏫", "⇈", "[^^]"); ArrowDoubleDown = @("⏬", "⇊", "[vv]"); ArrowDoubleLeft = @("⬅️", "⇇", "[<<]"); ArrowDoubleRight = @("➡️", "⇉", "[>>]")
-                ArrowSync = @("🔃", "⟲", "[<>]"); ArrowDiagonalUR = @("↗️", "↗", "[/^]"); ArrowDiagonalDR = @("↘️", "↘", "[\v]"); ArrowCurveRight = @("⤴️", "⤳", "[^>]")
-                ArrowCurveLeft = @("⤵️", "⤳", "[<v]"); ArrowTarget = @("➜", "➔", "[->]"); ArrowRedirect = @("⤳", "⇝", "[>>]"); ArrowJump = @("⤴️", "↱", "[JMP]")
-                CaretUp = @("▲", "▲", "[^]"); CaretDown = @("▼", "▼", "[v]"); CaretLeft = @("◀", "◀", "[<]"); CaretRight = @("▶", "▶", "[>]")
+                ArrowSync = @("🔃", "🔃︎", "[<>]"); ArrowDiagonalUR = @("↗️", "↗︎", "[/^]"); ArrowDiagonalDR = @("↘️", "↘︎", "[\v]"); ArrowCurveRight = @("⤴️", "⤴︎", "[^>]")
+                ArrowCurveLeft = @("⤵️", "⤵︎", "[<v]"); ArrowTarget = @("➜", "➜︎", "[->]"); ArrowRedirect = @("⤳", "⇝", "[>>]"); ArrowJump = @("⤴️", "↱", "[JMP]")
+                CaretUp = @("▲", "▲︎", "[^]"); CaretDown = @("▼", "▼︎", "[v]"); CaretLeft = @("◀", "◀︎", "[<]"); CaretRight = @("▶", "▶︎", "[>]")
                 CaretSmallUp = @("▴", "▵", "[^]"); CaretSmallDown = @("▾", "▿", "[v]"); CaretSmallLeft = @("◂", "◃", "[<]"); CaretSmallRight = @("▸", "▹", "[>]")
                 Compass = @("🧭", "⌖", "[R]"); CompassN = @("🧭N", "◧", "[N]"); CompassS = @("🧭S", "◨", "[S]"); CompassE = @("🧭E", "◩", "[E]")
-                CompassW = @("🧭W", "◪", "[W]"); Home = @("🏠", "𖠿", "[H]"); End = @("🏁", "⚑", "[E]"); Jump = @("⤴️", "↱", "[J]")
+                CompassW = @("🧭W", "◪", "[W]"); Home = @("🏠", "🏠︎", "[H]"); End = @("🏁", "⚑", "[E]"); Jump = @("⤴️", "↱", "[J]")
                 Return = @("↩️", "↵", "[RET]"); Breadcrumb = @("❯", "›", ">"); NextTab = @("⇥", "⇨", "[>>]"); PrevTab = @("⇤", "⇦", "[<<]")
 
                 # --- UI CONTROLS, FORMS & BRACKETS ---
-                Menu = @("☰", "≡", "[MENU]"); Submenu = @("▸", "▹", "[>]"); Back = @("◂", "◃", "[<]"); Close = @("✖️", "✕", "[X]")
+                Menu = @("☰", "≡", "[MENU]"); Submenu = @("▸", "▹", "[>]"); Back = @("◂", "◃", "[<]"); Close = @("✖️", "✖︎", "[X]")
                 Minimize = @("◷", "—", "[_]"); Maximize = @("🗖", "□", "[#]"); Normalize = @("🗗", "▣", "[O]"); Help = @("❔", "⁇", "[?]")
-                WindowTile = @("🪟", "⊞", "[TILE]"); WindowSplitH = @("⇹", "⬌", "[SPLITH]"); WindowSplitV = @("⤢", "⇕", "[SPLITV]"); WindowFull = @("⛶", "⎔", "[FULL]")
-                TabNew = @("🗐", "⊞", "[+TAB]"); TabClose = @("🗙", "⊠", "[X]"); FocusIn = @("🔍", "⊕", "[IN]"); FocusOut = @("🔎", "⊖", "[OUT]")
-                Chat = @("💬", "🗩", "[MSG]"); Comment = @("💭", "🗭", "[CMT]"); Mention = @("🔖", "@", "[@]")
-                CheckboxOn = @("☑️", "🗹", "[X]"); CheckboxOff = @("🔳", "◻", "[ ]"); CheckboxHalf = @("🟪", "◫", "[-]");
-                RadioOn = @("🔘", "◉", "(O)"); RadioOff = @("⚪", "○", "( )"); ToggleOn = @("🟢", "⌽", "[ON]"); ToggleOff = @("🔴", "⦰", "[OFF]")
+                WindowTile = @("🪟", "⊞", "[TILE]"); WindowSplitH = @("⇹", "⇹", "[SPLITH]"); WindowSplitV = @("⤢", "⇕", "[SPLITV]"); WindowFull = @("⛶", "⎔", "[FULL]")
+                TabNew = @("🗐", "+", "[+TAB]"); TabClose = @("🗙", "⊠", "[X]"); FocusIn = @("🔍", "⊕", "[IN]"); FocusOut = @("🔎", "⊖", "[OUT]")
+                Chat = @("💬", "💬︎", "[MSG]"); Comment = @("💭", "💭︎", "[CMT]"); Mention = @("🔖", "@", "[@]")
+                CheckboxOn = @("☑️", "☑︎", "[X]"); CheckboxOff = @("🔳", "◻", "[ ]"); CheckboxHalf = @("🟪", "⊟", "[-]");
+                RadioOn = @("🔘", "◉", "(O)"); RadioOff = @("⚪", "○", "( )"); ToggleOn = @("🟢", "○", "[ON]"); ToggleOff = @("🔴", "○", "[OFF]")
                 SliderStart = @("🔹", "⊢", "[o]"); SliderMid = @("─", "—", "[-]"); SliderEnd = @("🔸", "⊣", "[●]"); SliderHandle = @("🔶", "◈", "[H]")
-                InputText = @("📝", "▤", "[TXT]"); InputNumber = @("🔢", "#", "[NUM]"); InputDate = @("📅", "◪", "[DATE]"); InputEmail = @("📧", "✉", "[EMAIL]")
+                InputText = @("📝", "📝︎", "[TXT]"); InputNumber = @("🔢", "🔢︎", "[NUM]"); InputDate = @("📅", "◪", "[DATE]"); InputEmail = @("📧", "📧︎", "[EMAIL]")
                 InputPassword = @("🔑", "⚷", "[PWD]"); Dropdown = @("▾", "▿", "[▼]"); Listbox = @("📋", "▤", "[LIST]"); Combobox = @("🗂️", "⊟", "[COMBO]")
-                BracketAngle = @("⟨⟩", "〈〉", "<>"); BracketSquare = @("⟦⟧", "〖〗", "[]"); BracketCurly = @("⦃⦄", "⦗⦘", "{}"); BracketParen = @("⸨⸩", "⑉⑊", "()")
+                BracketAngle = @("⟨⟩", "⟨⟩︎", "<>"); BracketSquare = @("⟦⟧", "⟦⟧︎", "[]"); BracketCurly = @("⦃⦄", "⦃⦄︎", "{}"); BracketParen = @("⸨⸩", "⑉⑊", "()")
 
                 # --- VEHICLES & TRANSPORT ---
-                Rocket = @("🚀", "🛦", "[RCK]"); Helicopter = @("🚁", "⍙", "[HEL]"); Locomotive = @("🚂", "", "[LOC]"); HighSpeedTrain = @("🚄", "⌿", "[HST]")
-                BulletTrain = @("🚅", "⍟", "[BLT]"); Metro = @("🚇", "⊕", "[MET]"); Station = @("🚉", "◱", "[STA]"); Bus = @("🚌", "◫", "[BUS]")
-                BusStop = @("🚏", "⊡", "[BST]"); Ambulance = @("🚑", "⍟", "[AMB]"); FireEngine = @("🚒", "⍟", "[FIR]"); PoliceCar = @("🚓", "⛨", "[POL]")
+                Rocket = @("🚀", "🚀︎", "[RCK]"); Helicopter = @("🚁", "⍙", "[HEL]"); Locomotive = @("🚂", "🛲", "[LOC]"); HighSpeedTrain = @("🚄", "🚄︎", "[HST]")
+                BulletTrain = @("🚅", "🚅︎", "[BLT]"); Metro = @("🚇", "⊕", "[MET]"); Station = @("🚉", "◱", "[STA]"); Bus = @("🚌", "🚌︎", "[BUS]")
+                BusStop = @("🚏", "⊡", "[BST]"); Ambulance = @("🚑", "🚑︎", "[AMB]"); FireEngine = @("🚒", "🚒︎", "[FIR]"); PoliceCar = @("🚓", "⛨", "[POL]")
                 Taxi = @("🚕", "⛟", "[TAX]"); Automobile = @("🚗", "⛟", "[CAR]"); SUV = @("🚙", "⛟", "[SUV]"); DeliveryTruck = @("🚚", "⛟", "[TRK]")
-                Tractor = @("🚜", "⛟", "[TRC]"); Ship = @("🚢", "⛴", "[SHP]"); Speedboat = @("🚤", "⛴", "[BOT]"); AirplaneDepart = @("🛫", "⤒", "[DEP]")
-                AirplaneArrive = @("🛬", "⤓", "[ARR]"); Bicycle = @("🚲", "⋒", "[BKE]"); Scooter = @("🛵", "⋗", "[SCV]"); FlyingSaucer = @("🛸", "⊛", "[UFO]")
+                Tractor = @("🚜", "⛟", "[TRC]"); Ship = @("🚢", "⛴", "[SHP]"); Speedboat = @("🚤", "⛴", "[BOT]"); AirplaneDepart = @("🛫", "🛫︎", "[DEP]")
+                AirplaneArrive = @("🛬", "🛬︎", "[ARR]"); Bicycle = @("🚲", "⋒", "[BKE]"); Scooter = @("🛵", "⋗", "[SCV]"); FlyingSaucer = @("🛸", "🛸", "[UFO]")
                 Skateboard = @("🛹", "⋖", "[SKB]"); PickupTruck = @("🛻", "⛟", "[PCK]")
 
                 # --- TRAFFIC, SIGNS & MAPS ---
                 TrafficLightH = @("🚥", "≬", "[TLH]"); TrafficLightV = @("🚦", "⍙", "[TLV]"); NoSmoking = @("🚭", "⌀", "[NSM]"); NoLittering = @("🚯", "⌀", "[NLT]")
                 PotableWater = @("🚰", "☵", "[WTR]"); NoPedestrians = @("🚷", "⌀", "[NPED]"); ChildrenCrossing = @("🚸", "⌅", "[KID]"); MensRoom = @("🚹", "♂", "[M]")
-                WomensRoom = @("🚺", "♀", "[W]"); Restroom = @("🚻", "⚲", "[WC]"); BabySymbol = @("🚼", "⍙", "[BBY]"); PassportControl = @("🛂", "⊐", "[PAS]")
-                Customs = @("🛃", "⊗", "[CST]"); BaggageClaim = @("🛄", "◫", "[BAG]"); LeftLuggage = @("🛅", "◫", "[LUG]"); ProhibitedSign = @("🛇", "⌀", "[PRO]")
-                CircledInfo = @("🛈", "⍟", "[CINF]"); PlaceOfWorship = @("🛐", "♜", "[TEMP]"); StopSign = @("🛑", "⏹", "[STP]"); Wireless = @("🛜", "ᯤ", "[WIF]")
-                Wheel = @("🛞", "◎", "[WHL]"); RingBuoy = @("🛟", "◎", "[BUOY]"); OilDrum = @("🛢️", "🛢", "[OIL]"); Motorway = @("🛣", "⚌", "[MWY]")
-                RailwayTrack = @("🛤", "⌿", "[RWY]")
+                WomensRoom = @("🚺", "♀", "[W]"); Restroom = @("🚻", "⚲", "[WC]"); BabySymbol = @("🚼", "⍙", "[BBY]"); PassportControl = @("🛂", "🛂︎", "[PAS]")
+                Customs = @("🛃", "⊗", "[CST]"); BaggageClaim = @("🛄", "🛄︎", "[BAG]"); LeftLuggage = @("🛅", "🛅︎", "[LUG]"); ProhibitedSign = @("🛇", "⌀", "[PRO]")
+                CircledInfo = @("🛈", "ⓘ", "[CINF]"); PlaceOfWorship = @("🛐", "♜", "[TEMP]"); StopSign = @("🛑", "⏹", "[STP]"); Wireless = @("🛜", "ᯤ", "[WIF]")
+                Wheel = @("🛞", "◎", "[WHL]"); RingBuoy = @("🛟", "◎", "[BUOY]"); OilDrum = @("🛢️", "🛢︎", "[OIL]"); Motorway = @("🛣", "⚌", "[MWY]")
+                RailwayTrack = @("🛤", "🛤︎", "[RWY]")
 
                 # --- SYSTEM, HARDWARE & TOOLS ---
-                Folder = @("📁", "◫", "[DIR]"); FolderOpen = @("📂", "◪", "[OPN]"); FolderSync = @("⊞", "∲", "[SYNCDIR]"); FolderSecure = @("☗", "⛨", "[SECDIR]")
-                File = @("📄", "▤", "[FILE]"); FileCode = @("⌨️", "🖦", "[CODE]"); FileConfig = @("⚙️", "⚙", "[CFG]"); FileLog = @("📜", "⌹", "[LOG]")
-                FileTemp = @("⌫", "⌦", "[TMP]"); FileArchive = @("🗜️", "🗜", "[ZIP]"); FileExec = @("⚡", "🗲", "[EXE]"); FileMedia = @("🎬", "◧", "[MEDIA]")
-                Database = @("🏛️", "🏛", "[DB]"); DatabaseSync = @("⟳", "⇌", "[DBSYNC]"); Server = @("🖥️", "🖧", "[SRV]"); ServerRack = @("🗄️", "🖥", "[RACK]")
-                Network = @("🌐", "🌎︎", "[NET]"); NetworkWired = @("🔌", "☍", "[ETH]"); NetworkWireless = @("📶", "𓊒", "[WIFI]"); NetworkCloud = @("☁️", "☁︎", "[CLD]")
-                NetworkLocal = @("🏠", "⌂", "[LAN]"); Router = @("📡", "⤚", "[RTR]")
-                Disk = @("💾", "▣", "[DISK]"); DiskSSD = @("⚡", "⌗", "[SSD]"); DiskHDD = @("💽", "🖴", "[HDD]"); DiskUSB = @("🔌", "⊞", "[USB]")
+                Folder = @("📁", "📁︎", "[DIR]"); FolderOpen = @("📂", "◪", "[OPN]"); FolderSync = @("⊞", "∲", "[SYNCDIR]"); FolderSecure = @("☗", "⛨", "[SECDIR]")
+                File = @("📄", "📄︎", "[FILE]"); FileCode = @("⌨️", "⌨︎", "[CODE]"); FileConfig = @("⚙️", "⚙︎", "[CFG]"); FileLog = @("📜", "⌹", "[LOG]")
+                FileTemp = @("⌫", "⏱", "[TMP]"); FileArchive = @("🗜️", "🗜︎", "[ZIP]"); FileExec = @("⚡", "⚡︎", "[EXE]"); FileMedia = @("🎬", "🎬︎", "[MEDIA]")
+                Database = @("🏛️", "🏛︎", "[DB]"); DatabaseSync = @("⟳", "⇌", "[DBSYNC]"); Server = @("🖥️", "🖥︎", "[SRV]"); ServerRack = @("🗄️", "🗄︎", "[RACK]")
+                Network = @("🌐", "🖧", "[NET]"); NetworkWired = @("🔌", "🔌︎", "[ETH]"); NetworkWireless = @("📶", "📶︎", "[WIFI]"); NetworkCloud = @("☁️", "☁︎", "[CLD]")
+                NetworkLocal = @("🏠", "🏠︎", "[LAN]"); Router = @("📡", "📡︎", "[RTR]")
+                Disk = @("💾", "🖫", "[DISK]"); DiskSSD = @("⚡", "⚡︎", "[SSD]"); DiskHDD = @("💽", "💽︎", "[HDD]"); DiskUSB = @("🔌", "🔌︎", "[USB]")
                 DiskNetwork = @("🔮", "⛃", "[NAS]")
-                Memory = @("🧠", "☷", "[RAM]"); Chip = @("🔲", "▦", "[CHIP]"); CPU = @("⚙️", "⚙", "[CPU]"); GPU = @("🎮", "⊞", "[GPU]")
+                Memory = @("🧠", "☷", "[RAM]"); Chip = @("🔲", "▦", "[CHIP]"); CPU = @("⚙️", "⚙︎", "[CPU]"); GPU = @("🎮", "▤", "[GPU]")
                 Power = @("⏻", "⌽", "[PWR]"); BatteryFull = @("🔋", "▮", "[FULL]"); BatteryHalf = @("🪫", "⌸", "[HALF]"); BatteryLow = @("🪫", "▯", "[LOW]")
                 Charging = @("⚡", "⚡︎", "[CHG]")
-                Lock = @("🔒", "☗", "[LCK]"); Unlock = @("🔓", "☖", "[OPN]"); Key = @("🔑", "⚷", "[KEY]"); KeyPair = @("🔐", "⚷_chr", "[PAIR]")
-                Certificate = @("📜🔐", "⣖", "[CERT]"); Shield = @("🛡️", "⛨", "[SHD]"); ShieldCheck = @("🛡️", "⛨", "[SAFE]"); Bug = @("🪲", "⯐", "[BUG]")
-                EyeOpen = @("👁️", "👁", "[SEE]"); EyeClosed = @("👁️‍🗨️", "⚇", "[BLIND]")
+                Lock = @("🔒", "🔒︎", "[LCK]"); Unlock = @("🔓", "🔓︎", "[OPN]"); Key = @("🔑", "🔑︎", "[KEY]"); KeyPair = @("🔐", "🔐︎", "[PAIR]")
+                Certificate = @("📜🔐", "📜🔐︎", "[CERT]"); Shield = @("🛡️", "⛨", "[SHD]"); Bug = @("🪲", "🪲︎", "[BUG]")
+                EyeOpen = @("👁️", "👁︎", "[SEE]"); EyeClosed = @("👁️‍🗨️", "⚇", "[BLIND]")
                 User = @("👤", "☻", "[USR]"); Users = @("👥", "☻☻", "[GRP]"); Admin = @("👑", "♛", "[ADM]"); Guest = @("🎭", "☺", "[GST]")
-                Service = @("⚙️", "⚙", "[SVC]")
-                Terminal = @("💻", "♳", "[CLI]"); Container = @("📦", "⎈", "[DOCKER]"); API = @("🔌", "☍", "[API]"); Webhook = @("🪝", "🕷", "[HOOK]")
+                Service = @("⚙️", "⚙︎", "[SVC]")
+                Terminal = @("💻", "♳", "[CLI]"); Container = @("📦", "⎈", "[DOCKER]"); API = @("🔌", "🔌︎", "[API]"); Webhook = @("🪝", "🪝︎", "[HOOK]")
                 Robot = @("🤖", "⚙", "[BOT]")
                 Clock = @("⏱️", "⏲", "[TIME]"); Calendar = @("📅", "◪", "[DATE]"); Timer = @("⏲️", "◵", "[TMR]"); Stopwatch = @("⏰", "⏲", "[STOP]")
-                Hourglass = @("⏳", "⧖", "[WAIT]")
-                Settings = @("⚙️", "⚙", "[SET]"); Config = @("🔧", "⤨", "[CFG]"); Preferences = @("🎛️", "⎚", "[PREF]")
-                Target = @("🎯", "𖣠", "[TGT]"); Search = @("🔍", "⌕", "[FND]"); Filter = @("🔽", "◂", "[FLT]"); SortAsc = @("🔼", "▵", "[ASC]")
-                SortDesc = @("🔽", "▿", "[DESC]"); GroupBy = @("🗂️", "⊟", "[GRP]"); Refresh = @("🔄", "⟲", "[RFR]"); Sync = @("🔁", "⇌", "[SYNC]")
+                Hourglass = @("⏳", "⏳︎", "[WAIT]")
+                Settings = @("⚙️", "⚙︎", "[SET]"); Config = @("🔧", "🔧︎", "[CFG]"); Preferences = @("🎛️", "⎚", "[PREF]")
+                Target = @("🎯", "🎯︎", "[TGT]"); Search = @("🔍", "⌕", "[FND]"); Filter = @("🔽", "◂", "[FLT]"); SortAsc = @("🔼", "▵", "[ASC]")
+                SortDesc = @("🔽", "▿", "[DESC]"); GroupBy = @("🗂️", "⊟", "[GRP]"); Refresh = @("🔄", "🔄︎", "[RFR]"); Sync = @("🔁", "⇌", "[SYNC]")
                 Update = @("⬆️", "⇡", "[UPD]"); Upgrade = @("🚀", "⇈", "[UPG]")
                 Play = @("▶️", "►", "[>]"); Pause = @("⏸️", "‖", "[||]"); Stop = @("⏹️", "■", "[STOP]"); Record = @("⏺️", "●", "[REC]")
-                Eject = @("⏏️", "⏏", "[EJT]"); Next = @("⏭️", "⏭", "[>>]"); Prev = @("⏮️", "⏮", "[<<]"); Shuffle = @("🔀", "⤮", "[SHF]")
-                Repeat = @("🔁", "⟳", "[RPT]"); VolumeMax = @("🔊", "◧", "[MAX]"); VolumeMed = @("🔉", "◨", "[MED]"); VolumeMin = @("🔈", "◩", "[MIN]")
-                VolumeMute = @("🔇", "⦰", "[MUTE]"); MicOn = @("🎤", "⚑", "[MIC_ON]"); MicOff = @("🎤🚫", "⚑⦰", "[MIC_OFF]"); CameraOn = @("📷", "◘", "[CAM_ON]")
-                CameraOff = @("📷🚫", "◘⦰", "[CAM_OFF]")
+                Eject = @("⏏️", "⏏︎", "[EJT]"); Next = @("⏭️", "⏭︎", "[>>]"); Prev = @("⏮️", "⏮︎", "[<<]"); Shuffle = @("🔀", "🔀︎", "[SHF]")
+                Repeat = @("🔁", "🔁︎", "[RPT]"); VolumeMax = @("🔊", "🕪", "[MAX]"); VolumeMed = @("🔉", "🕩", "[MED]"); VolumeMin = @("🔈", "🕨", "[MIN]")
+                VolumeMute = @("🔇", "🔇︎", "[MUTE]"); MicOn = @("🎤", "🎤︎", "[MIC_ON]"); MicOff = @("🎤🚫", "🎤︎🚫︎", "[MIC_OFF]"); CameraOn = @("📷", "◘", "[CAM_ON]")
+                CameraOff = @("📷🚫", "📷🚫︎", "[CAM_OFF]")
                 Print = @("🖨️", "⎙", "[PRT]"); Scan = @("📠", "⎚", "[SCN]"); Fax = @("📠", "⎚", "[FAX]")
-                MailSend = @("📤", "⌯⌲", "[SENT]"); MailReceive = @("📥", "⩤⌯", "[INBOX]"); MailDraft = @("📝", "▤", "[DRAFT]"); MailArchive = @("🗄️📧", "☖✉", "[ARCH]")
-                Share = @("🔗", "☍", "[SHR]"); Link = @("🔗", "☍", "[LNK]"); Unlink = @("✂️", "✄", "[UNLK]")
-                Copy = @("📋", "⎘", "[CPY]"); Cut = @("✂️", "✄", "[CUT]"); Paste = @("📌", "⌖", "[PST]"); Clone = @("⊹", "⧉", "[CLN]")
-                Save = @("💾", "▣", "[SAV]"); SaveAs = @("💾✏️", "▣✎", "[SAVAS]"); Trash = @("🗑️", "⌫", "[DEL]"); Delete = @("🗑️", "⌦", "[DEL]")
-                Restore = @("🔄🗑️", "⟲⌫", "[RST]"); Undo = @("↩️", "↶", "[UNDO]"); Redo = @("↪️", "↷", "[REDO]"); New = @("🆕", "⊞", "[NEW]")
-                Open = @("📂", "◪", "[OPEN]"); Edit = @("✍", "✎", "[EDIT]"); Load = @("📂", "◪", "[LOAD]"); Import = @("📥", "⇊", "[IMP]")
-                Export = @("📤", "⇈", "[EXP]"); Upload = @("⤒", "⇡", "[UPL]"); Download = @("⤓", "⇣", "[DWN]"); Install = @("💿", "⊞⇣", "[INS]")
-                Uninstall = @("💽", "⊠⚡︎", "[RMV]"); Execute = @("⚡", "🗲", "[EXEC]"); Build = @("🛠️", "🛠", "[BLD]"); Deploy = @("🚢", "⇈", "[DEP]")
-                Test = @("🧪", "⚗", "[TST]")
-                Tools = @("🧰", "🛠", "[TLS]"); Wrench = @("🔧", "🔧", "[WRN]"); Hammer = @("🔨", "☭", "[HMR]"); Pickaxe = @("⛏️", "⛏", "[PCK]")
-                Construction = @("🏗️", "⚙", "[BLD]"); Screwdriver = @("🪛", "⨳", "[SCW]"); Saw = @("🪚", "⪓", "[SAW]"); Axe = @("🪓", "⫟", "[AXE]")
-                Bucket = @("🪣", "֎", "[BKT]"); Plunger = @("🪠", "⍙", "[PLG]"); Broom = @("🧹", "🧹", "[BRM]"); Sponge = @("🧽", "⌦", "[SPN]")
-                Funnel = @("⏳", "⌖", "[FNL]")
-                Fire = @("🔥", "𑁍", "[FIRE]"); Lightning = @("⚡", "🗲", "[LTN]"); Sparkle = @("✨", "⁂", "[*]")
+                MailSend = @("📤", "ᯓ➤", "[SENT]"); MailReceive = @("📥", "📥︎", "[INBOX]"); MailDraft = @("📝", "📝︎", "[DRAFT]"); MailArchive = @("🗄️📧", "🗄📧︎", "[ARCH]")
+                Share = @("🔗", "☍", "[SHR]"); Link = @("🔗", "☍", "[LNK]"); Unlink = @("✂️", "✂︎", "[UNLK]")
+                Copy = @("📋", "⎘", "[CPY]"); Cut = @("✂️", "✂︎", "[CUT]"); Paste = @("📌", "🖈", "[PST]"); Clone = @("⊹", "⊹︎", "[CLN]")
+                Save = @("💾", "🖫", "[SAV]"); SaveAs = @("💾✏️", "🖫✏︎", "[SAVAS]"); Trash = @("🗑️", "🗑", "[DEL]"); Delete = @("🗑️", "🗑︎", "[DEL]")
+                Restore = @("🔄🗑️", "🔄︎🗑︎", "[RST]"); Undo = @("↩️", "↶", "[UNDO]"); Redo = @("↪️", "↷", "[REDO]"); New = @("🆕", "★", "[NEW]")
+                Open = @("📂", "◪", "[OPEN]"); Edit = @("✍", "✍︎", "[EDIT]"); Load = @("📂", "◪", "[LOAD]"); Import = @("📥", "⇊", "[IMP]")
+                Export = @("📤", "⇈", "[EXP]"); Upload = @("⤒", "⇡", "[UPL]"); Download = @("⤓", "⇣", "[DWN]"); Install = @("💿", "💿︎", "[INS]")
+                Uninstall = @("💽", "💽︎⚡︎", "[RMV]"); Execute = @("⚡", "⚡︎", "[EXEC]"); Build = @("🛠️", "🛠︎", "[BLD]"); Deploy = @("🚀", "🚀︎", "[DEP]")
+                Test = @("🧪", "⚗", "[TST]"); Write = @("✍", "✍︎", "[WRT]")
+                Tools = @("🧰", "🧰︎", "[TLS]"); Wrench = @("🔧", "🔧︎", "[WRN]"); Hammer = @("🔨", "☭", "[HMR]"); Pickaxe = @("⛏️", "⛏︎", "[PCK]")
+                Construction = @("🏗️", "🏗︎", "[BLD]"); Screwdriver = @("🪛", "🪛︎", "[SCW]"); Saw = @("🪚", "🪚︎", "[SAW]"); Axe = @("🪓", "🪓︎", "[AXE]")
+                Bucket = @("🪣", "֎", "[BKT]"); Plunger = @("🪠", "⍙", "[PLG]"); Broom = @("🧹", "🧹︎", "[BRM]"); Sponge = @("🧽", "🧽︎", "[SPN]")
+                Funnel = @("⏳", "⏳︎", "[FNL]")
+                Fire = @("🔥", "🔥︎", "[FIRE]"); Lightning = @("⚡", "⚡︎", "[LTN]"); Sparkle = @("✨", "⁂", "[*]")
 
                 # --- GIT & DEVOPS ICONS ---
-                GitBranch = @("🌿", "⎇", "[BR]"); CodeCommit = @("📌", "⏣", "[COMMIT]"); GitPush = @("⬆️", "⇡", "[PUSH]"); GitPull = @("⬇️", "⇣", "[PULL]")
+                GitBranch = @("🌿", "⎇", "[BR]"); CodeCommit = @("📌", "🖈", "[COMMIT]"); GitPush = @("⬆️", "⇡", "[PUSH]"); GitPull = @("⬇️", "⇣", "[PULL]")
                 GitMerge = @("🔀", "⇶", "[MERGE]")
 
                 # --- CLOTHING & ACCESSORIES ---
-                GraduationCap = @("🎓", "◬", "[GRAD]"); TopHat = @("🎩", "⊒", "[HAT]"); Backpack = @("🎒", "◫", "[BAG]"); Dress = @("👗", "◌", "[DRS]")
-                Bikini = @("👙", "◍", "[BIK]"); Purse = @("👛", "⊚", "[PRS]"); ManShoe = @("👞", "⊏", "[SHO]"); RunningShoe = @("👟", "⊐", "[RUN]")
+                GraduationCap = @("🎓", "◬", "[GRAD]"); TopHat = @("🎩", "🎩︎", "[HAT]"); Backpack = @("🎒", "🎒︎", "[BAG]"); Dress = @("👗", "◌", "[DRS]")
+                Bikini = @("👙", "◍", "[BIK]"); Purse = @("👛", "⊚", "[PRS]"); ManShoe = @("👞", "👞︎", "[SHO]"); RunningShoe = @("👟", "👟︎", "[RUN]")
                 ClutchBag = @("👝", "⊡", "[CLU]"); Handbag = @("👜", "⊠", "[HAN]"); TShirt = @("👕", "◦", "[TSH]"); WomansSandal = @("👡", "⊓", "[SND]")
-                Crown = @("👑", "🜲", "[CRN]"); Lipstick = @("💄", "⌕", "[LIP]"); WomansClothes = @("👚", "◬", "[WCL]"); WomansBoot = @("👢", "⊟", "[WBT]")
+                Crown = @("👑", "👑︎", "[CRN]"); Lipstick = @("💄", "⌕", "[LIP]"); WomansClothes = @("👚", "◬", "[WCL]"); WomansBoot = @("👢", "⊟", "[WBT]")
                 Ring = @("💍", "◉", "[RNG]"); Kimono = @("👘", "◈", "[KIM]"); GemStone = @("💎", "◈", "[GEM]"); Glasses = @("👓", "⌐", "[GLS]")
                 Jeans = @("👖", "◭", "[JNS]"); Necktie = @("👔", "⌙", "[TIE]"); HighHeel = @("👠", "⊔", "[HEL]"); PrayerBeads = @("📿", "⊗", "[PRAY]")
-                WomansHat = @("👒", "◊", "[WHAT]"); Sunglasses = @("🕶️", "⊝", "[SUN]"); ShoppingBags = @("🛍️", "⊟⊟", "[SHOP]"); BilledCap = @("🧢", "⊓", "[CAP]")
-                SafetyVest = @("🦺", "⛨", "[SAFE]"); Scarf = @("🧣", "⌇", "[SCRF]"); Gloves = @("🧤", "⊏⊐", "[GLV]"); Coat = @("🧥", "◫", "[COAT]")
-                Socks = @("🧦", "⌵", "[SCK]"); Sari = @("🥻", "◬", "[SARI]"); HikingBoot = @("🥾", "⊟", "[HIKE]"); LabCoat = @("🥼", "⍟", "[LAB]")
-                FlatShoe = @("🥿", "⊓", "[FLAT]"); Goggles = @("🥽", "◔", "[GOG]"); MilitaryHelmet = @("🪖", "⛨", "[MIL]"); BalletShoes = @("🩰", "⊢", "[BALL]")
+                WomansHat = @("👒", "◊", "[WHAT]"); Sunglasses = @("🕶️", "🕶︎", "[SUN]"); ShoppingBags = @("🛍️", "⊟⊟", "[SHOP]"); BilledCap = @("🧢", "⊓", "[CAP]")
+                SafetyVest = @("🦺", "⛨", "[SAFE]"); Scarf = @("🧣", "⌇", "[SCRF]"); Gloves = @("🧤", "🧤︎", "[GLV]"); Coat = @("🧥", "🧥︎", "[COAT]")
+                Socks = @("🧦", "⌵", "[SCK]"); Sari = @("🥻", "◬", "[SARI]"); HikingBoot = @("🥾", "⊟", "[HIKE]"); LabCoat = @("🥼", "🥼︎", "[LAB]")
+                FlatShoe = @("🥿", "🖦", "[FLAT]"); Goggles = @("🥽", "◔", "[GOG]"); MilitaryHelmet = @("🪖", "⛨", "[MIL]"); BalletShoes = @("🩰", "🖦", "[BALL]")
                 ThongSandal = @("🩴", "⊣", "[THONG]"); Swimsuit = @("🩱", "⌆", "[SWIM]"); Briefs = @("🩲", "▯", "[BRF]"); Shorts = @("🩳", "▭", "[SHRT]")
-                FoldingFan = @("🪭", "ᨐ", "[FAN]"); HairPick = @("🪮", "ᨐ", "[PICK]"); RescueHelmet = @("⛑️", "⛑", "[RSC]")
+                FoldingFan = @("🪭", "ᨐ", "[FAN]"); HairPick = @("🪮", "ᨐ", "[PICK]"); RescueHelmet = @("⛑️", "⛑︎", "[RSC]")
 
                 # --- MUSIC & AUDIO ---
-                Loudspeaker = @("📢", "⌲", "[SPK]"); Megaphone = @("📣", "⌻", "[MEGA]"); PostalHorn = @("📯", "⌺", "[HORN]"); MutedSpeaker = @("🔇", "⦰", "[MUTE]")
-                SpeakerLow = @("🔈", "◬", "[SPK1]"); SpeakerMed = @("🔉", "◭", "[SPK2]"); SpeakerHigh = @("🔊", "◮", "[SPK3]"); Bell = @("🔔", "🕭", "[BELL]")
-                BellSlash = @("🔕", "⦰🕭", "[NOBEL]"); ControlKnobs = @("🎛️", "🎛", "[KNOB]"); StudioMic = @("🎙️", "🎙︎", "[STUM]"); Microphone = @("🎤", "🎤︎︎", "[MIC]")
-                LevelSlider = @("🎚️", "🎚", "[SLDR]"); MusicalNotes = @("🎶", "♪♫", "[NOTES]"); MusicalScore = @("🎼", "𝄞", "[SCORE]"); MusicalNote = @("🎵", "♪", "[NOTE]")
-                Headphone = @("🎧", "☊", "[HP]"); Radio = @("📻", "⌻", "[RAD]"); Violin = @("🎻", "⌿", "[VLN]"); Trumpet = @("🎺", "⍟", "[TRU]")
-                Saxophone = @("🎷", "⍛", "[SAX]"); Keyboard = @("🎹", "🎘", "[KEYB]"); Guitar = @("🎸", "⍡", "[GTR]"); Drum = @("🥁", "◉", "[DRUM]")
-                Banjo = @("🪕", "⍢", "[BANJ]"); Accordion = @("🪗", "⌇⌇", "[ACC]"); LongDrum = @("🪘", "◉", "[LDRU]"); Flute = @("🪈", "⚱", "[FLT]")
-                Maracas = @("🪇", "⊡", "[MARA]"); Harp = @("🪉", "𓃦", "[HARP]"); Trombone = @("𖡎", "𖡎", "[TROM]")
+                Loudspeaker = @("📢", "⌲", "[SPK]"); Megaphone = @("📣", "⌻", "[MEGA]"); PostalHorn = @("📯", "⌺", "[HORN]"); MutedSpeaker = @("🔇", "🔇︎", "[MUTE]")
+                SpeakerLow = @("🔈", "◬", "[SPK1]"); SpeakerMed = @("🔉", "◭", "[SPK2]"); SpeakerHigh = @("🔊", "◮", "[SPK3]"); Bell = @("🔔", "🔔︎", "[BELL]")
+                BellSlash = @("🔕", "🔕︎", "[NOBEL]"); ControlKnobs = @("🎛️", "🎛︎", "[KNOB]"); StudioMic = @("🎙️", "🎙︎", "[STUM]"); Microphone = @("🎤", "🎤︎︎", "[MIC]")
+                LevelSlider = @("🎚️", "🎚︎", "[SLDR]"); MusicalNotes = @("🎶", "♪♫", "[NOTES]"); MusicalScore = @("🎼", "🎼︎", "[SCORE]"); MusicalNote = @("🎵", "♪", "[NOTE]")
+                Headphone = @("🎧", "☊", "[HP]"); Radio = @("📻", "⌻", "[RAD]"); Violin = @("🎻", "🎻︎", "[VLN]"); Trumpet = @("🎺", "🎺︎", "[TRU]")
+                Saxophone = @("🎷", "⍛", "[SAX]"); Keyboard = @("🎹", "🎹︎", "[KEYB]"); Guitar = @("🎸", "🎸︎", "[GTR]"); Drum = @("🥁", "◉", "[DRUM]")
+                Banjo = @("🪕", "🪕︎", "[BANJ]"); Accordion = @("🪗", "⌇⌇", "[ACC]"); LongDrum = @("🪘", "◉", "[LDRU]"); Flute = @("🪈", "⚱", "[FLT]")
+                Maracas = @("🪇", "⊡", "[MARA]"); Harp = @("🪉", "🪉", "[HARP]")
 
                 # --- OFFICE & STATIONERY ---
-                TelephoneReceiver = @("📞", "☎", "[PHONE]"); FaxMachine = @("📠", "⎚", "[FAX]"); MobilePhone = @("📱", "⌘", "[MOB]"); Pager = @("📟", "⌨", "[PGR]")
-                MobileArrow = @("📲", "⇡", "[MOBA]"); Telephone = @("☎️", "☎", "[TEL]"); Dvd = @("📀", "◉", "[DVD]"); OpticalDisk = @("💿", "◉", "[CD]")
-                FloppyDisk = @("💾", "▣", "[FLOP]"); ComputerDisk = @("💽", "▣", "[HD]"); Laptop = @("💻", "🖳", "[LAP]"); ComputerMouse = @("🖱️", "◉", "[MOUSE]")
-                Trackball = @("🖲️", "◉", "[TRK]"); Desktop = @("🖥️", "⌘", "[PC]"); Printer = @("🖨️", "⎙", "[PRN]"); Battery = @("🔋", "▮", "[BAT]")
-                Plug = @("🔌", "☍", "[PLUG]"); Abacus = @("🧮", "⨀", "[ABAC]"); LowBattery = @("🪫", "▯", "[LBAT]"); KeyboardDev = @("⌨️", "⌨", "[KBD]")
+                TelephoneReceiver = @("📞", "🕽", "[PHONE]"); FaxMachine = @("📠", "⎚", "[FAX]"); MobilePhone = @("📱", "🖁", "[MOB]"); Pager = @("📟", "⌨", "[PGR]")
+                MobileArrow = @("📲", "⇡", "[MOBA]"); Telephone = @("☎️", "🕿", "[TEL]"); Dvd = @("📀", "💿︎", "[DVD]"); OpticalDisk = @("💿", "💿︎", "[CD]")
+                FloppyDisk = @("💾", "🖫", "[FLOP]"); ComputerDisk = @("💽", "💽︎", "[HD]"); Laptop = @("💻", "💻︎", "[LAP]"); ComputerMouse = @("🖱️", "🖰", "[MOUSE]")
+                Trackball = @("🖲️", "◉", "[TRK]"); Desktop = @("🖥️", "🖳", "[PC]"); Printer = @("🖨️", "⎙", "[PRN]"); Battery = @("🔋", "▮", "[BAT]")
+                Plug = @("🔌", "🔌︎", "[PLUG]"); Abacus = @("🧮", "🧮︎", "[ABAC]"); LowBattery = @("🪫", "▯", "[LBAT]"); KeyboardDev = @("⌨️", "⌨︎", "[KBD]")
 
                 # --- MEDIA & ELECTRONICS ---
-                MovieCamera = @("🎥", "◰", "[CAM]"); ClapperBoard = @("🎬", "⌂", "[ACT]"); Lantern = @("🏮", "◌", "[LAN]"); FilmFrames = @("🎞️", "🎞", "[FILM]")
-                VideoCamera = @("📹", "◰", "[VID]"); CameraFlash = @("📸", "◑", "[CAMF]"); Camera = @("📷", "◐", "[CAM]"); LightBulb = @("💡", "◌", "[LAMP]")
-                Television = @("📺", "⌂", "[TV]"); Videocassette = @("📼", "◧", "[VHS]"); FilmProjector = @("📽️", "◰", "[PROJ]"); Candle = @("🕯️", "⌇", "[CNDL]")
-                MagnifyRight = @("🔎", "⌕", "[MAG]"); MagnifyLeft = @("🔍", "⌕", "[MAG]"); Flashlight = @("🔦", "⌁", "[FLSH]"); DiyaLamp = @("🪔", "◌", "[DIY]")
-                Label = @("🏷️", "⌂", "[LBL]"); BookmarkTabs = @("📑", "◫", "[BMT]"); Notebook = @("📓", "▤", "[NB]"); PageCurl = @("📃", "⌇", "[PC]")
-                ClosedBook = @("📕", "◫", "[BOOK]"); Ledger = @("📒", "▤", "[LEDG]"); GreenBook = @("📗", "◫", "[GBK]"); NotebookDeco = @("📔", "◫", "[NBD]")
-                OrangeBook = @("📙", "◫", "[OBK]"); OpenBook = @("📖", "◰", "[OPEN]"); BlueBook = @("📘", "◫", "[BBK]"); Scroll = @("📜", "⌇", "[SCRL]")
-                Books = @("📚", "◫◫", "[LIBS]"); PageUp = @("📄", "▤", "[PAGE]"); Newspaper = @("📰", "🗟", "[NEWS]"); RolledNewspaper = @("🗞️", "🗞", "[ROLL]")
+                MovieCamera = @("🎥", "◰", "[CAM]"); ClapperBoard = @("🎬", "🎬︎", "[ACT]"); Lantern = @("🏮", "◌", "[LAN]"); FilmFrames = @("🎞️", "🎞︎", "[FILM]")
+                VideoCamera = @("📹", "◰", "[VID]"); CameraFlash = @("📸", "☎", "[CAMF]"); Camera = @("📷", "☎", "[CAM]"); LightBulb = @("💡", "◌", "[LAMP]")
+                Television = @("📺", "📺︎", "[TV]"); Videocassette = @("📼", "◧", "[VHS]"); FilmProjector = @("📽️", "📽", "[PROJ]"); Candle = @("🕯️", "🕯", "[CNDL]")
+                MagnifyRight = @("🔎", "⌕", "[MAG]"); MagnifyLeft = @("🔍", "🔍︎", "[MAG]"); Flashlight = @("🔦", "⌁", "[FLSH]"); DiyaLamp = @("🪔", "◌", "[DIY]")
+                Label = @("🏷️", "🏷︎", "[LBL]"); BookmarkTabs = @("📑", "📑︎", "[BMT]"); Notebook = @("📓", "📓︎", "[NB]"); PageCurl = @("📃", "⌇", "[PC]")
+                ClosedBook = @("📕", "📕︎", "[BOOK]"); Ledger = @("📒", "📒︎", "[LEDG]"); GreenBook = @("📗", "📗︎", "[GBK]"); NotebookDeco = @("📔", "📔︎", "[NBD]")
+                OrangeBook = @("📙", "📙︎", "[OBK]"); OpenBook = @("📖", "◰", "[OPEN]"); BlueBook = @("📘", "📘︎", "[BBK]"); Scroll = @("📜", "⌇", "[SCRL]")
+                Books = @("📚", "📚︎", "[LIBS]"); PageUp = @("📄", "📄︎", "[PAGE]"); Newspaper = @("📰", "📰︎", "[NEWS]"); RolledNewspaper = @("🗞️", "🗞︎", "[ROLL]")
 
                 # --- MONEY & FINANCE ---
-                MoneyWings = @("💸", "✈", "[MNY]"); PoundNote = @("💷", "£", "[GBP]"); ChartYen = @("💹", "¥", "[YEN]"); EuroNote = @("💶", "€", "[EUR]")
-                DollarNote = @("💵", "$", "[USD]"); YenNote = @("💴", "¥", "[JPY]"); CreditCard = @("💳", "⌧", "[CC]"); MoneyBag = @("💰", "⊞", "[BAG]")
-                Receipt = @("🧾", "⌇", "[RCPT]"); Coin = @("🪙", "◉", "[COIN]"); Ticket = @("🎫", "🎟", "[TCK]")
+                MoneyWings = @("💸", "💸︎", "[MNY]"); PoundNote = @("💷", "£", "[GBP]"); ChartYen = @("💹", "¥", "[YEN]"); EuroNote = @("💶", "€", "[EUR]")
+                DollarNote = @("💵", "$", "[USD]"); YenNote = @("💴", "¥", "[JPY]"); CreditCard = @("💳", "⌧", "[CC]"); MoneyBag = @("💰", "💰︎", "[BAG]")
+                Receipt = @("🧾", "⌇", "[RCPT]"); Coin = @("🪙", "◉", "[COIN]"); Ticket = @("🎫", "🎫︎", "[TCK]")
 
                 # --- MAIL & COMMUNICATION ---
                 MailboxDown = @("📪", "◬", "[MBD]"); MailboxUp = @("📫", "◬", "[MBU]"); MailboxOpenUp = @("📬", "◬", "[MBOU]"); MailboxOpenDown = @("📭", "◬", "[MBOD]")
-                Email = @("📧", "✉", "[EML]"); OutboxTray = @("📤", "⇡", "[OUT]"); InboxTray = @("📥", "⇣", "[IN]"); Package = @("📦", "⊞", "[PKG]")
-                IncomingEnvelope = @("📨", "✉", "[INEN]"); EnvelopeArrow = @("📩", "⇡", "[ENVA]"); Postbox = @("📮", "⌂", "[POST]"); BallotBox = @("🗳️", "☑", "[VOTE]")
-                Envelope = @("✉️", "✉", "[ENV]"); Memo = @("📝", "▤", "[MEMO]"); Crayon = @("🖍️", "✎", "[CRY]"); FountainPen = @("🖋️", "✒", "[PEN]")
-                Paintbrush = @("🖌️", "🖌", "[BRUSH]"); Pen = @("🖊️", "🖋", "[PEN]"); BlackNib = @("✒️", "✒", "[NIB]"); Pencil = @("✏️", "✎", "[PEN]")
-                ChartUp = @("📈", "⌂", "[CHUP]"); Pushpin = @("📌", "⌖", "[PIN]"); BarChart = @("📊", "⌂", "[BCH]"); RulerTriangle = @("📐", "⌐", "[RUL]")
-                Clipboard = @("📋", "▤", "[CLIP]"); ChartDown = @("📉", "↯", "[CHDN]"); RulerStraight = @("📏", "─", "[RUL]"); FileFolder = @("📁", "◫", "[DIR]")
-                RoundPushpin = @("📍", "◉", "[PIN]"); Briefcase = @("💼", "⊞", "[CASE]"); TearCalendar = @("📆", "◪", "[TCAL]"); CardIndex = @("📇", "⌂", "[CARD]")
-                OpenFolder = @("📂", "◪", "[OPN]"); Paperclip = @("📎", "⌗", "[CLIP]"); FileCabinet = @("🗄️", "🗄", "[CAB]"); CardBox = @("🗃️", "⌂", "[CBOX]")
-                CardDividers = @("🗂️", "⌂", "[DIV]"); LinkedClips = @("🖇️", "⌗⌗", "[LINK]"); SpiralCalendar = @("🗓️", "◪", "[SCAL]"); Wastebasket = @("🗑️", "⌫", "[TRASH]")
-                SpiralNotepad = @("🗒️", "▤", "[NOT]"); Scissors = @("✂️", "✄", "[SCIS]")
+                Email = @("📧", "📧︎", "[EML]"); OutboxTray = @("📤", "⇡", "[OUT]"); InboxTray = @("📥", "⇣", "[IN]"); Package = @("📦", "📦︎", "[PKG]")
+                IncomingEnvelope = @("📨", "📨︎", "[INEN]"); EnvelopeArrow = @("📩", "⇡", "[ENVA]"); Postbox = @("📮", "📮︎", "[POST]"); BallotBox = @("🗳️", "☑", "[VOTE]")
+                Envelope = @("✉️", "✉︎", "[ENV]"); Memo = @("📝", "📝︎", "[MEMO]"); Crayon = @("🖍️", "🖍︎", "[CRY]"); FountainPen = @("🖋️", "🖋︎", "[PEN]")
+                Paintbrush = @("🖌️", "🖌︎", "[BRUSH]"); Pen = @("🖊️", "🖊︎", "[PEN]"); BlackNib = @("✒️", "✒︎", "[NIB]"); Pencil = @("✏️", "✏︎", "[PEN]")
+                ChartUp = @("📈", "📈︎", "[CHUP]"); Pushpin = @("📌", "🖈", "[PIN]"); BarChart = @("📊", "📊︎", "[BCH]"); RulerTriangle = @("📐", "📐︎", "[RUL]")
+                Clipboard = @("📋", "📋︎", "[CLIP]"); ChartDown = @("📉", "🗠", "[CHDN]"); RulerStraight = @("📏", "─", "[RUL]"); FileFolder = @("📁", "📁︎", "[DIR]")
+                RoundPushpin = @("📍", "𖤣", "[PIN]"); Briefcase = @("💼", "💼︎", "[CASE]"); TearCalendar = @("📆", "◪", "[TCAL]"); CardIndex = @("📇", "📇︎", "[CARD]")
+                OpenFolder = @("📂", "◪", "[OPN]"); Paperclip = @("📎", "📎︎", "[CLIP]"); FileCabinet = @("🗄️", "🗄︎", "[CAB]"); CardBox = @("🗃️", "🗃︎", "[CBOX]")
+                CardDividers = @("🗂️", "🗂︎", "[DIV]"); LinkedClips = @("🖇️", "🖇︎", "[LINK]"); SpiralCalendar = @("🗓️", "◪", "[SCAL]"); Wastebasket = @("🗑️", "🗑", "[TRASH]")
+                SpiralNotepad = @("🗒️", "🗒︎", "[NOT]"); Scissors = @("✂️", "✂︎", "[SCIS]")
 
                 # --- HOUSEHOLD & TOOLS ---
-                LockedKey = @("🔐", "☗≗", "[LCK]"); LockedPen = @("🔏", "☗✎", "[LCKP]"); OldKey = @("🗝️", "🗝", "[OKEY]"); BowArrow = @("🏹", "⤒", "[BOW]")
-                Bomb = @("💣", "◉", "[BMB]"); Clamp = @("🗜️", "⌗", "[CLMP]"); Dagger = @("🗡️", "🗡", "[DAG]"); NutBolt = @("🔩", "⨀", "[NUT]")
-                HammerWrench = @("🛠️", "⚒", "[TOOL]"); Magnet = @("🧲", "⌶", "[MAG]"); WhiteCane = @("🦯", "⌿", "[CANE]"); Toolbox = @("🧰", "⊞", "[TBX]")
-                Hook = @("🪝", "ރ", "[HOOK]"); Ladder = @("🪜", "⌇", "[LAD]"); Boomerang = @("🪃", "⌿", "[BOOM]"); Shovel = @("🪏", "⌆", "[SHOV]")
-                Gear = @("⚙️", "⚙", "[GEAR]"); Chains = @("⛓️", "⊸", "[CHN]"); CrossedSwords = @("⚔️", "⚔︎", "[XSW]"); BalanceScale = @("⚖️", "⚖", "[SCAL]")
-                HammerPick = @("⚒️", "⚒", "[HMP]"); BrokenChain = @("⛓️‍💥", "⫘⌇⫘", "[BCH]"); Satellite = @("🛰️", "◉", "[SAT]"); Telescope = @("🔭", "🎕", "[TEL]")
-                Microscope = @("🔬", "◉", "[MIC]"); TestTube = @("🧪", "⚗", "[TUBE]"); PetriDish = @("🧫", "◌", "[PETR]"); Dna = @("🧬", "⌇", "[DNA]")
-                Alembic = @("⚗️", "⚗", "[ALEM]"); Syringe = @("💉", "✇", "[SYR]"); Pill = @("💊", "◉", "[PILL]"); Stethoscope = @("🩺", "⌕", "[STET]")
-                Bandage = @("🩹", "⌇", "[BND]"); BloodDrop = @("🩸", "◉", "[BLOOD]"); Crutch = @("🩼", "⌿", "[CRUT]"); XRay = @("🩻", "⍟", "[XRAY]")
-                Microbe = @("🦠", "⍿", "[MICR]"); Factory = @("🏭", "🏗", "[FAC]");
+                LockedKey = @("🔐", "🔐︎", "[LCK]"); LockedPen = @("🔏", "🔏︎", "[LCKP]"); OldKey = @("🗝️", "🗝︎", "[OKEY]"); BowArrow = @("🏹", "🏹︎", "[BOW]")
+                Bomb = @("💣", "◉", "[BMB]"); Clamp = @("🗜️", "🗜︎", "[CLMP]"); Dagger = @("🗡️", "🗡︎", "[DAG]"); NutBolt = @("🔩", "🔩︎", "[NUT]")
+                HammerWrench = @("🛠️", "⚒", "[TOOL]"); Magnet = @("🧲", "∩", "[MAG]"); WhiteCane = @("🦯", "🦯︎", "[CANE]"); Toolbox = @("🧰", "⚒", "[TBX]")
+                Hook = @("🪝", "ރ", "[HOOK]"); Ladder = @("🪜", "⌇", "[LAD]"); Boomerang = @("🪃", "🪃︎", "[BOOM]"); Shovel = @("🪏", "⌆", "[SHOV]")
+                Gear = @("⚙️", "⚙︎", "[GEAR]"); Chains = @("⛓️", "⛓︎", "[CHN]"); CrossedSwords = @("⚔️", "⚔︎", "[XSW]"); BalanceScale = @("⚖️", "⚖︎", "[SCAL]")
+                HammerPick = @("⚒️", "⚒︎", "[HMP]"); BrokenChain = @("⛓️‍💥", "⛓‍💥︎", "[BCH]"); Satellite = @("🛰️", "🛰", "[SAT]"); Telescope = @("🔭", "🔭︎", "[TEL]")
+                Microscope = @("🔬", "◉", "[MIC]"); TestTube = @("🧪", "⚗", "[TUBE]"); PetriDish = @("🧫", "◌", "[PETR]"); Dna = @("🧬", "⚛︎", "[DNA]")
+                Alembic = @("⚗️", "⚗︎", "[ALEM]"); Syringe = @("💉", "💉︎", "[SYR]"); Pill = @("💊", "◉", "[PILL]"); Stethoscope = @("🩺", "⌕", "[STET]")
+                Bandage = @("🩹", "⌇", "[BND]"); BloodDrop = @("🩸", "◉", "[BLOOD]"); Crutch = @("🩼", "🩼︎", "[CRUT]"); XRay = @("🩻", "🩻︎", "[XRAY]")
+                Microbe = @("🦠", "𖠌", "[MICR]"); Factory = @("🏭", "🏭︎", "[FAC]");
 
                 # --- FURNITURE & APPLIANCES ---
-                Bathtub = @("🛁", "⌇", "[BATH]"); Elevator = @("🛗", "◉", "[ELEV]"); CouchLamp = @("🛋️", "⌂", "[SOFA]"); ShoppingCart = @("🛒", "⊞", "[CART]")
-                Shower = @("🚿", "⌇", "[SHWR]"); Bed = @("🛏️", "⌇", "[BED]"); Toilet = @("🚽", "◉", "[TOIL]"); Door = @("🚪", "⌂", "[DOOR]")
-                LotionBottle = @("🧴", "◌", "[LOT]"); FireExtinguisher = @("🧯", "⍟", "[FIREX]"); SafetyPin = @("🧷", "⌗", "[PIN]"); Basket = @("🧺", "◫", "[BASK]")
-                Soap = @("🧼", "◌", "[SOAP]"); PaperRoll = @("🧻", "⌇", "[PAP]"); Toothbrush = @("🪥", "⌿", "[TOOTH]"); Mousetrap = @("🪤", "◉", "[TRAP]")
-                Window = @("🪟", "⌂", "[WIN]"); Mirror = @("🪞", "◌", "[MIR]"); Chair = @("🪑", "⌂", "[CHAIR]"); Razor = @("🪒", "⌿", "[RAZ]")
-                Bubbles = @("🫧", "◌", "[BUB]"); Moai = @("🗿", "◌", "[MOAI]"); Cigarette = @("🚬", "⌇", "[CIG]"); NazarAmulet = @("🧿", "◉", "[NAZ]")
-                Placard = @("🪧", "⌂", "[PLAC]"); Headstone = @("🪦", "𓉸", "[TOMB]"); IDCardIcon = @("🪪", "⊐", "[ID]"); Hamsa = @("🪬", "⚜", "[HAM]")
-                FuneralUrn = @("⚱️", "◉", "[URN]"); Coffin = @("⚰️", "◫", "[COFF]"); Monster = @("👾", "𖠌", "[MON]"); Alien = @("👽", "𖠌", "[ALN]")
+                Bathtub = @("🛁", "⌇", "[BATH]"); Elevator = @("🛗", "◉", "[ELEV]"); CouchLamp = @("🛋️", "🛋︎", "[SOFA]"); ShoppingCart = @("🛒", "🛒︎", "[CART]")
+                Shower = @("🚿", "⌇", "[SHWR]"); Bed = @("🛏️", "⌇", "[BED]"); Toilet = @("🚽", "◉", "[TOIL]"); Door = @("🚪", "🚪︎", "[DOOR]")
+                LotionBottle = @("🧴", "◌", "[LOT]"); FireExtinguisher = @("🧯", "🧯︎", "[FIREX]"); SafetyPin = @("🧷", "🧷︎", "[PIN]"); Basket = @("🧺", "🧺︎", "[BASK]")
+                Soap = @("🧼", "◌", "[SOAP]"); PaperRoll = @("🧻", "⌇", "[PAP]"); Toothbrush = @("🪥", "🪥︎", "[TOOTH]"); Mousetrap = @("🪤", "🪤︎", "[TRAP]")
+                Window = @("🪟", "🪟︎", "[WIN]"); Mirror = @("🪞", "🪞︎", "[MIR]"); Chair = @("🪑", "🪑︎", "[CHAIR]"); Razor = @("🪒", "🪒︎", "[RAZ]")
+                Bubbles = @("🫧", "◌", "[BUB]"); Moai = @("🗿", "🗿︎", "[MOAI]"); Cigarette = @("🚬", "⌇", "[CIG]"); NazarAmulet = @("🧿", "◉", "[NAZ]")
+                Placard = @("🪧", "🪧︎", "[PLAC]"); Headstone = @("🪦", "🪦︎", "[TOMB]"); IDCardIcon = @("🪪", "🪪︎", "[ID]"); Hamsa = @("🪬", "⚜", "[HAM]")
+                FuneralUrn = @("⚱️", "⚱", "[URN]"); Coffin = @("⚰️", "⚰︎", "[COFF]"); Monster = @("👾", "👾︎", "[MON]"); Alien = @("👽", "👽︎", "[ALN]")
 
                 # --- VISUAL & DECORATIVE ---
-                StarEmpty = @("☆", "☆", "[ ]"); StarHalf = @("★", "⯨", "[*]"); StarFull = @("⭐", "★", "[★]"); HeartEmpty = @("♡", "♡", "[ ]")
-                HeartFull = @("❤️", "♥", "[♥]"); Bookmark = @("🔖", "◫", "[BMK]"); Tag = @("🏷️", "⌂", "[TAG]"); Flag = @("🚩", "⚑", "[FLG]")
-                Trophy = @("🏆", "⛨", "[WIN]"); Medal = @("🎖️", "🎖", "[MED]"); Snowflake = @("❄️", "❄", "[SNOW]"); Drop = @("💧", "🌢", "[DROP]")
-                Sun = @("☀️", "𖤓", "[SUN]"); Moon = @("🌙", "☽", "[MON]"); Cloud = @("☁️", "☁", "[CLD]"); Rainbow = @("🌈", "◮", "[RBW]")
-                SepDot = @("・", "·", "[.]"); SepDash = @("─", "─", "[-]"); SepDouble = @("═", "═", "[=]"); SepWave = @("〜", "≈", "[~]")
-                SepArrow = @("⟶", "→", "[->]"); SepChevron = @("»", "»", "[>]")
+                StarEmpty = @("☆", "☆︎", "[ ]"); StarHalf = @("⯨", "★︎", "[*]"); StarFull = @("⭐", "★", "[★]"); HeartEmpty = @("♡", "♡︎", "[ ]")
+                HeartFull = @("❤️", "♥", "[♥]"); Bookmark = @("🔖", "🔖︎", "[BMK]"); Tag = @("🏷️", "🏷︎", "[TAG]"); Flag = @("🚩", "⚑", "[FLG]")
+                Trophy = @("🏆", "⛨", "[WIN]"); Medal = @("🎖️", "🎖︎", "[MED]"); Snowflake = @("❄️", "❄︎", "[SNOW]"); Drop = @("💧", "💧︎", "[DROP]")
+                Sun = @("☀️", "☀︎", "[SUN]"); Moon = @("🌙", "☽", "[MON]"); Cloud = @("☁️", "☁︎", "[CLD]"); Rainbow = @("🌈", "◮", "[RBW]")
+                SepDot = @("・", "·", "[.]"); SepDash = @("─", "─︎", "[-]"); SepDouble = @("═", "═︎", "[=]"); SepWave = @("〜", "≈", "[~]")
+                SepArrow = @("⟶", "→", "[->]"); SepChevron = @("»", "»︎", "[>]")
                 BoxTL = @("╭", "┌", "+"); BoxTR = @("╮", "┐", "+"); BoxBL = @("╰", "└", "+"); BoxBR = @("╯", "┘", "+")
-                BoxH = @("─", "─", "-"); BoxV = @("│", "│", "|"); BoxCross = @("┼", "┼", "[+]")
+                BoxH = @("─", "─", "-"); BoxV = @("│", "│︎", "|"); BoxCross = @("┼", "┼︎", "[+]")
 
                 # --- POWERSHELL NATIVE ---
-                PSPrompt = @("〉", ">", "[PS]"); PSClass = @("🏗️", "⌂", "[CLS]"); PSFunction = @("⚙️", "ƒ", "[FN]"); PSFunctionPrivate = @("🔒⚙️", "☗ƒ", "[PRVF]")
-                PSFunctionPublic = @("🔓⚙️", "☖ƒ", "[PUBF]"); PSVariable = @("$", "$", "[VAR]"); PSVariableConst = @("🔒$", "☗$", "[CVAR]"); PSVariableEnv = @("🌍$", "⌾$", "[EVAR]")
-                PSModule = @("🧩", "⊞", "[MOD]"); PSModuleCore = @("💠", "◈", "[CORE]"); PSModuleScript = @("📜", "≡", "[SCR]"); PSEnum = @("📋", "▤", "[ENUM]")
-                PSRunspace = @("🧵", "ᯓ➤", "[RS]"); PSJob = @("📬", "✉", "[JOB]"); PSJobRunning = @("🟢📬", "▶✉", "[RUN]"); PSJobStopped = @("🔴📬", "■✉", "[STOP]")
+                PSPrompt = @("〉", ">", "[PS]"); PSClass = @("🏗️", "🏗︎", "[CLS]"); PSFunction = @("⚙️", "ƒ", "[FN]"); PSFunctionPrivate = @("🔒⚙️", "🔒︎⚙︎", "[PRVF]")
+                PSFunctionPublic = @("🔓⚙️", "🔓︎⚙︎", "[PUBF]"); PSVariable = @("$", "$︎", "[VAR]"); PSVariableConst = @("🔒$", "🔒︎$︎", "[CVAR]"); PSVariableEnv = @("🌍$", "⌾$", "[EVAR]")
+                PSModule = @("🧩", "🧩︎", "[MOD]"); PSModuleCore = @("💠", "◈", "[CORE]"); PSModuleScript = @("📜", "≡", "[SCR]"); PSEnum = @("📋", "📋︎", "[ENUM]")
+                PSRunspace = @("🧵", "🧵︎", "[RS]"); PSJob = @("📬", "📬︎", "[JOB]"); PSJobRunning = @("🟢📬", "📬︎✅︎", "[RUN]"); PSJobStopped = @("🔴📬", "📬︎❌︎", "[STOP]")
                 PSPipeline = @("⎸", "⇶", "[PIPE]"); PSOutput = @("📤", "⇈", "[OUT]"); PSInput = @("📥", "⇊", "[IN]"); PSProfile = @("👤⚙️", "☻⚙", "[PROF]")
-                PSHistory = @("⎌", "⇠", "[HIST]"); PSAlias = @("🏷️", "⌂", "[ALIAS]"); PSDebug = @("🐛", "⯐", "[DBG]"); PSVerbose = @("🗣️", "⚑", "[VB]")
-                PSWarning = @("⚠️", "⚠", "[WRN]"); PSError = @("❌", "✖", "[ERR]"); PSGet = @("📥", "⇊", "[GET]"); PSSet = @("📤", "⇈", "[SET]")
-                PSNew = @("🆕", "⊞", "[NEW]"); PSRemove = @("🗑️", "⌫", "[RM]"); PSClear = @("🧹", "⌧", "[CLR]"); PSImport = @("📦➡️", "⊞→", "[IMP]")
-                PSExport = @("➡️📦", "→⊞", "[EXP]"); PSHelp = @("❔", "⁇", "[?]"); PSAbout = @("ℹ️", "ℹ", "[i]")
+                PSHistory = @("⎌", "⇠", "[HIST]"); PSAlias = @("🏷️", "🏷︎", "[ALIAS]"); PSDebug = @("🐛", "🐛︎", "[DBG]"); PSVerbose = @("🗣️", "🗣", "[VB]")
+                PSWarning = @("⚠️", "⚠︎", "[WRN]"); PSError = @("❌", "❌︎", "[ERR]"); PSGet = @("📥", "⇊", "[GET]"); PSSet = @("📤", "⇈", "[SET]")
+                PSNew = @("🆕", "🆕︎", "[NEW]"); PSRemove = @("🗑️", "⌫", "[RM]"); PSClear = @("🧹", "⌧", "[CLR]"); PSImport = @("📦➡️", "📦︎➡︎", "[IMP]")
+                PSExport = @("➡️📦", "➡📦︎", "[EXP]"); PSHelp = @("❔", "⁇", "[?]"); PSAbout = @("ℹ️", "ℹ︎", "[i]")
 
                 # --- MISC & FALLBACKS ---
-                Unknown = @("❓", "⁇", "[?]"); Placeholder = @("□", "□", "[ ]"); Loading = @("⏳", "⧖", "[...]"); Processing = @("⚙️", "⚙", "[PROC]")
-                Waiting = @("🕐", "◷", "[WAIT]"); Idle = @("😴", "⌾", "[IDLE]"); Ready = @("✅", "✔", "[READY]"); Source = @("⛲", "⌶", "[SRC]")
-                Spiral = @("🌀", "꩜", "[SPI]"); FallbackIcon = "•"; FallbackText = "[?]"
+                Unknown = @("❓", "⁇", "[?]"); Placeholder = @("✌︎🕷︎", "□︎", "[ ]"); Loading = @("⏳", "⏳︎", "[...]"); Processing = @("⚙️", "⚙︎", "[PROC]")
+                Waiting = @("🕐", "◷", "[WAIT]"); Idle = @("😴", "⌾", "[IDLE]"); Ready = @("✅", "✅︎", "[READY]"); Source = @("⛲", "⛲︎", "[SRC]")
+                Spiral = @("🌀", "🌀︎", "[SPI]"); FallbackIcon = "•"; FallbackText = "[?]"
         }
 
         # ===========================================================================
@@ -667,9 +669,9 @@
                 ARCHIVE = "FileArchive"; EXTRACT = "Saw"
 
                 # OPERAÇÕES DE DISCO, STORAGE & FORENSE
-                DISKPART = "Disk"; CHKDSK = "ShieldCheck"; WINFR = "Carve"; FSUTIL = "Screwdriver"
-                AUTOSPSY = "Toolbox";                 VOLATILITY = "Toolbox";                 FTKIMAGER = "Toolbox";                 KAPE = "Toolbox";                 TESTDISK = "Toolbox";                 PHOTOREC = "Toolbox";                 WIRESHARK = "Toolbox";                 TCPDUMP = "Toolbox";                 NMAP = "Toolbox";                 SYSINTERNALS = "Toolbox";                 REGCFG = "Toolbox";                 MEMORYZE = "Toolbox";                 REDLINE = "Toolbox";                 PLASO = "Toolbox";                 LOG2TIMELINE = "Toolbox";                 XWAYS = "Toolbox";                 SLEUTHKIT = "Toolbox";
-                SFC = "ShieldCheck"; DISM = "Wrench"; EVENTVWR = "ListAlt"; FILEHASH = "FingerprintID"
+                DISKPART = "Disk"; CHKDSK = "Shield"; WINFR = "Carve"; FSUTIL = "Screwdriver"
+                AUTOSPSY = "Toolbox"; VOLATILITY = "Toolbox"; FTKIMAGER = "Toolbox"; KAPE = "Toolbox"; TESTDISK = "Toolbox"; PHOTOREC = "Toolbox"; WIRESHARK = "Toolbox"; TCPDUMP = "Toolbox"; NMAP = "Toolbox"; SYSINTERNALS = "Toolbox"; REGCFG = "Toolbox"; MEMORYZE = "Toolbox"; REDLINE = "Toolbox"; PLASO = "Toolbox"; LOG2TIMELINE = "Toolbox"; XWAYS = "Toolbox"; SLEUTHKIT = "Toolbox";
+                SFC = "Shield"; DISM = "Wrench"; EVENTVWR = "ListAlt"; FILEHASH = "FingerprintID"
                 WINDIRSTAT = "PieChart"; PROCEXP = "ActivityPulse"; AUTORUNS = "Gear"; EVERYTHING = "Search"
                 NATIVE = "Terminal"; THIRDPARTY = "Toolbox"
                 STORDIAG = "Bug"; VOLUME = "Disk"; PARTITION = "WindowSplitV"; MOUNT = "Disk"
@@ -728,12 +730,12 @@
                 AUTH = "Key"; AUTHENTICATE = "Key"; LOGIN = "BadgeUnlock"; LOGOUT = "BadgeLock"
                 SIGN_IN = "BadgeUnlock"; SIGN_OUT = "BadgeLock"; REGISTER = "BadgeNew"; PASSWORD = "InputPassword"
                 TOKEN = "Key"; CERTIFICATE = "Certificate"; ENCRYPT = "Lock"; DECRYPT = "Unlock"
-                HASH = "Key"; SIGN = "Certificate"; VERIFY = "ShieldCheck"; AUDIT = "EyeOpen"
-                PERMISSION = "ShieldCheck"; ROLE = "Admin"; ADMIN = "Crown"; GUEST = "Guest"
+                HASH = "Key"; SIGN = "Certificate"; VERIFY = "Shield"; AUDIT = "EyeOpen"
+                PERMISSION = "Shield"; ROLE = "Admin"; ADMIN = "Crown"; GUEST = "Guest"
                 PROHIBITED = "ProhibitedSign"; BANNED = "ProhibitedSign"
 
                 # UI/UX & INTERFACE / VIEW LAYER & THEMES
-                THEME = "Palette"; DARK_MODE = "ThemeDark"; LIGHT_MODE = "ThemeLight"; HIGH_CONTRAST = "ThemeHighVis"
+                THEME = "ThemeMenu"; DARK_MODE = "ThemeDark"; LIGHT_MODE = "ThemeLight"; HIGH_CONTRAST = "ThemeHighVis"
                 COLOR_PICKER = "ColorPicker"; CYBER = "ThemeCyber"; CORPORATE = "ThemeCorporate"; HACKER = "ThemeHacker"
                 MINIMAL = "ThemeMinimal"; RETRO = "ThemeRetro"; RECOVERY = "ThemeHighVis"; LANGUAGE = "Chat"
                 LOCALE = "Chat"; TRANSLATE = "Chat"; LAYOUT = "WindowTile"; VIEW = "EyeOpen"
@@ -803,7 +805,7 @@
                 GRADUATION = "GraduationCap"; HAT = "TopHat"; BACKPACK = "Backpack"; DRESS = "Dress"
                 SHOE = "ManShoe"; RUNNING_SHOE = "RunningShoe"; HANDBAG = "Handbag"; TSHIRT = "TShirt"
                 LIPSTICK = "Lipstick"; RING = "Ring"; GEM = "GemStone"; GLASSES = "Glasses"
-                JEANS = "Jeans"; NECKTIE = "Necktie"; HIGH_HEEL = "HighHeel"; SUNGLASSES = "Sunglasses"
+                JEANS = "Jeans"; NECKTIE = "Necktie"; HIGH_HEEL = "HighHeel"; SUNGLASSES = "ThemeHacker"
                 SHOPPING = "ShoppingBags"; SAFETY = "SafetyVest"; SCARF = "Scarf"; GLOVES = "Gloves"
                 COAT = "Coat"; SOCKS = "Socks"; HIKING = "HikingBoot"; LAB_COAT = "LabCoat"
                 GOGGLES = "Goggles"; HELMET = "MilitaryHelmet"; BALLET = "BalletShoes"; SWIMSUIT = "Swimsuit"
@@ -844,6 +846,6 @@
                 # Terminal Capabilities
                 CAP_TRUECOLOR = "Television"; CAP_HYPERLINKS = "Link"; CAP_BRACKETEDPASTE = "Paste"; CAP_MOUSETRACKING = "Settings"
                 CAP_ALTERNATESCREEN = "WindowFull"; CAP_FOCUSEVENTS = "FocusIn"; CAP_KITTYKEYBOARD = "KeyboardDev"; CAP_SIXELGRAPHICS = "FileMedia"
-                CAP_CSIUKEYBOARD = "KeyboardDev"; CAP_FALLBACK256 = "Placeholder"; CAP_FALLBACK16 = "Placeholder"
+                CAP_CSIUKEYBOARD = "KeyboardDev"; CAP_FALLBACK256 = "Color256"; CAP_FALLBACK16 = "Color16"
         }
 }

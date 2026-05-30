@@ -17,9 +17,9 @@ function Find-ScapeNetworkNode {
 
     $port = Get-ScapeConstant -Path "network::PROTOCOLS::SMB_PORT" -Fallback 445
     $timeout = Get-ScapeConstant -Path "network::PROTOCOLS::TIMEOUT_MS" -Fallback 80
+    $ipRange = Get-ScapeConstant -Path "network::PROTOCOLS::SUBNET_RANGE" -Fallback (1..254)
 
-    $results = [System.Collections.Generic.List[string]]::new()
-    $tasks = 1..254 | ForEach-Object {
+    $tasks = $ipRange | ForEach-Object {
         $ip = "$SubnetRoot.$_"
         Start-Job -ScriptBlock {
             param($tIP, $tPort, $tTime)
@@ -28,23 +28,10 @@ function Find-ScapeNetworkNode {
         } -ArgumentList $ip, $port, $timeout
     }
 
-    $tasks | Wait-Job | Receive-Job | ForEach-Object { if ($_) { $results.Add($_) } }
+    $results = $tasks | Wait-Job | Receive-Job | Where-Object { $_ }
     $tasks | Remove-Job -Force
 
-    return $results.ToArray()
-}
-
-function Invoke-ScapeCredentialPopup {
-    param([string]$Target)
-    $tmpFile = Join-Path ([System.IO.Path]::GetTempPath()) "scape_cred_$([Guid]::NewGuid()).xml"
-    $script = "Get-Credential -Message 'SCAPE: Authentication required for $Target' | Export-Clixml -Path '$tmpFile'"
-    $proc = Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $script -Wait -PassThru
-    if ($proc.ExitCode -eq 0 -and (Test-Path $tmpFile)) {
-        $cred = Import-Clixml -Path $tmpFile
-        Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
-        return $cred
-    }
-    return $null
+    return @($results)
 }
 
 function New-ScapeNetworkMount {
@@ -52,17 +39,24 @@ function New-ScapeNetworkMount {
     [OutputType([bool])]
     param(
         [Parameter(Mandatory = $true)][string]$RemoteVault,
-        [Parameter(Mandatory = $true)][string]$DriveLetter
+        [Parameter(Mandatory = $true)][string]$DriveLetter,
+        [Parameter(Mandatory = $false)][string]$UserName,
+        [Parameter(Mandatory = $false)][string]$Password
     )
 
-    $cred = Invoke-ScapeCredentialPopup -Target $RemoteVault
-    if (-not $cred) { return $false }
-    $user = $cred.UserName
-    $pass = $cred.GetNetworkCredential().Password
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" 
+    
+    $argsStr = "use $DriveLetter $RemoteVault"
+    if (-not [string]::IsNullOrWhiteSpace($Password)) {
+        $argsStr += " $Password"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($UserName)) {
+        $argsStr += " /user:$UserName"
+    }
+    $argsStr += " /persistent:yes"
 
-    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" -Fallback "net.exe"
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
-                FileName = $netExe; Arguments = "use $DriveLetter $RemoteVault $pass /user:$user /persistent:yes"
+                FileName = $netExe; Arguments = $argsStr
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
             }))
     $proc.WaitForExit()
@@ -78,7 +72,7 @@ function Remove-ScapeNetworkMount {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$DriveLetter)
 
-    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" -Fallback "net.exe"
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" 
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
                 FileName = $netExe; Arguments = "use $DriveLetter /delete /yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
@@ -96,7 +90,7 @@ function Clear-ScapeNetworkMounts {
     [CmdletBinding()]
     param()
 
-    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" -Fallback "net.exe"
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" 
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
                 FileName = $netExe; Arguments = "use * /delete /yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
@@ -105,3 +99,159 @@ function Clear-ScapeNetworkMounts {
     Publish-ScapeEvent -Type "NET_SMB_UNMOUNT_ALL" -Severity "LOG_INFO" -Payload @{}
     return ($proc.ExitCode -eq 0)
 }
+
+function Start-ScapeNetworkScan {
+    [CmdletBinding()]
+    param()
+    
+    $radarSweepMsg = Get-ScapeLogMsg -Key "NET_RADAR_SWEEP"
+    Write-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $radarSweepMsg -StatusFlag "INFO" -RunProgress 10 -StepProgress 10
+
+    $gw = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Select-Object -First 1).NextHop
+    if (-not $gw) {
+        $gwErr = Get-ScapeLogMsg -Key "NET_RADAR_GATEWAY_ERR"
+        Write-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $gwErr -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
+        return $null
+    }
+
+    $subnet = $gw -replace '\.\d+$', ''
+    $scanMsg = Get-ScapeLogMsg -Key "NET_RADAR_SCAN" -MsgArgs @($subnet)
+    Write-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $scanMsg -StatusFlag "INFO" -RunProgress 50 -StepProgress 50
+
+    $nodes = Find-ScapeNetworkNode -SubnetRoot $subnet
+    return $nodes
+}
+
+function Invoke-ScapeNetworkRadarAction {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $false)][string]$TargetShare,
+        [Parameter(Mandatory = $false)][string]$UserName,
+        [Parameter(Mandatory = $false)][string]$Password
+    )
+    
+    if ([string]::IsNullOrWhiteSpace($TargetShare)) {
+        $TargetShare = Get-ScapeConstant -Path "network::DEFAULT_SHARE" 
+    }
+
+    $nodes = Start-ScapeNetworkScan
+    if ($null -eq $nodes -or $nodes.Count -eq 0) {
+        $noneMsg = Get-ScapeLogMsg -Key "NET_RADAR_NONE"
+        Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $noneMsg }
+        Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+            ScreenId = "NetworkRadar"
+            TitleKey = "NET_MGR_TITLE"
+            Status = "NO_SERVERS"
+        }
+        return
+    }
+
+    Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+        ScreenId = "NetworkRadar"
+        TitleKey = "NET_MGR_TITLE"
+        Status = "SERVERS_FOUND"
+        Nodes = $nodes
+    }
+
+    $targetNode = $nodes[0]
+    $usedLetters = (Get-Volume).DriveLetter
+    $driveLetter = $null
+    $driveRange = Get-ScapeConstant -Path "network::PROTOCOLS::DRIVE_RANGE" -Fallback (([char]'Z')..([char]'D'))
+    foreach ($l in $driveRange) {
+        if ([char]$l -notin $usedLetters) {
+            $driveLetter = "$([char]$l):"
+            break
+        }
+    }
+
+    if (-not $driveLetter) {
+        $noDriveMsg = Invoke-ScapeI18NFormat -Key "NET_NO_FREE_DRIVES" 
+        Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = $noDriveMsg }
+        return
+    }
+
+    $remotePath = "\\$targetNode\$TargetShare"
+    $mapInitMsg = Get-ScapeLogMsg -Key "NET_MAP_INIT" -MsgArgs @($targetNode)
+    Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = $mapInitMsg }
+
+    $mountOk = New-ScapeNetworkMount -RemoteVault $remotePath -DriveLetter $driveLetter -UserName $UserName -Password $Password
+    if ($mountOk) {
+        Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_SUCCESS" -MsgArgs @($driveLetter)) }
+        Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+            ScreenId = "NetworkRadar"
+            TitleKey = "NET_MGR_TITLE"
+            Status = "MOUNT_SUCCESS"
+            Target = $remotePath
+            Drive = $driveLetter
+        }
+    } else {
+        if (Get-Command Mount-ScapeNetworkShareWithCredential -ErrorAction SilentlyContinue) {
+            Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_SMB_AUTH_REQUIRED") }
+            $mountOk = Mount-ScapeNetworkShareWithCredential -RemoteVault $remotePath -DriveLetter $driveLetter
+            if ($mountOk) {
+                Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_SUCCESS" -MsgArgs @($driveLetter)) }
+                Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+                    ScreenId = "NetworkRadar"
+                    TitleKey = "NET_MGR_TITLE"
+                    Status = "MOUNT_SUCCESS"
+                    Target = $remotePath
+                    Drive = $driveLetter
+                }
+            } else {
+                Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_CANCELLED") }
+                Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+                    ScreenId = "NetworkRadar"
+                    TitleKey = "NET_MGR_TITLE"
+                    Status = "AUTH_FAILED"
+                }
+            }
+        } else {
+            Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_CANCELLED") }
+            Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+                ScreenId = "NetworkRadar"
+                TitleKey = "NET_MGR_TITLE"
+                Status = "MOUNT_FAILED"
+            }
+        }
+    }
+}
+
+function Invoke-ScapeNetworkAction {
+    [CmdletBinding()]
+    param([string]$Task, [string]$Target)
+    
+    if (-not (Get-Command Find-ScapeNetworkNode -ErrorAction SilentlyContinue)) {
+        throw "Not Implemented"
+    }
+
+    if ($Task -eq 'SCAN') {
+        Invoke-ScapeNetworkRadarAction -TargetShare $Target
+    } elseif ($Task -eq 'UNMOUNT_ALL') {
+        $unmountOk = Clear-ScapeNetworkMounts
+        if ($unmountOk) {
+            Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MGR_ALL_REMOVED") }
+            Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+                ScreenId = "NetworkRadar"
+                TitleKey = "NET_MGR_TITLE"
+                Status = "UNMOUNT_ALL_SUCCESS"
+            }
+        } else {
+            $failMsg = Invoke-ScapeI18NFormat -Key "NET_UNMOUNT_FAIL" 
+            Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = $failMsg }
+            Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "ERROR" -Payload @{
+                ScreenId = "NetworkRadar"
+                TitleKey = "NET_MGR_TITLE"
+                Status = "UNMOUNT_ALL_FAILED"
+            }
+        }
+    } else {
+        Find-ScapeNetworkNode | Out-Null
+    }
+}
+
+
+# ==============================================================================
+# ACTION REGISTRY BINDINGS (Pure & Decoupled)
+# ==============================================================================
+
+Export-ModuleMember -Function 'Find-ScapeNetworkNode', 'New-ScapeNetworkMount', 'Remove-ScapeNetworkMount', 'Clear-ScapeNetworkMounts', 'Start-ScapeNetworkScan', 'Invoke-ScapeNetworkRadarAction', 'Invoke-ScapeNetworkAction'

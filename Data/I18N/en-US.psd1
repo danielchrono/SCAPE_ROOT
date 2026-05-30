@@ -1,7 +1,7 @@
-@{
-    # ─────────────────────────────────────────────────────────────────────
+﻿@{
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # CORE ENGINE
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "CORE_ENGINE_START"               = @{ T = 'SCAPE Recovery Engine Boot Sequence Initiated. Allocating core resources...'; H = 'Engine initialization message'; F = 'SYSTEM' }
     "CORE_ENGINE_STOP"                = @{ T = 'SCAPE Engine Offline. Valedictory sequence and memory purge completed.'; H = 'Engine shutdown confirmation'; F = 'SYSTEM' }
     "CORE_KERNEL_SHIELD_ACTIVE"       = @{ T = 'SHIELD_STABLE: NT_IO_PRIORITY_HIGH engaged. Execution threads elevated.'; H = 'Kernel priority elevation success'; F = 'KERNEL' }
@@ -14,9 +14,9 @@
     "CORE_BACKUP_PRIV_MISSING"        = @{ T = 'Backup privileges not fully enabled. NTFS ACL bypass capabilities may be heavily restricted during extraction.'; H = 'Partial privilege escalation warning'; F = 'SANCTUARY_WARN' }
     "CORE_PRESERVATION_ACTIVE"        = @{ T = 'PRESERVATION MODE ACTIVE - COOLING DOWN'; H = 'Preservation mode status indicator'; F = 'STATUS' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # SETTINGS ENGINE
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "SETTINGS_ENGINE_ONLINE"          = @{ T = 'Settings Engine online. Synchronizing overrides...'; H = 'Engine initialization message'; F = 'SYSTEM' }
     "SETTINGS_MUTATE_UNKNOWN"         = @{ T = 'Attempted to mutate unknown setting key: {0}'; H = 'Mutation error for unknown key'; F = 'WARN' }
     "SETTINGS_IO_FAULT"               = @{ T = 'I/O fault: Key {0} applied in RAM but failed to persist to disk.'; H = 'Persistence failure in JSON file'; F = 'ERROR' }
@@ -24,9 +24,9 @@
     "SETTINGS_RESET_DEFAULTS"         = @{ T = 'Reset to Factory Defaults'; H = 'Option to reset all settings to defaults'; F = 'UI' }
     "SETTINGS_RESET_SUCCESS"          = @{ T = 'All settings restored to engine factory defaults (.psd1).'; H = 'Factory reset confirmation'; F = 'SYSTEM' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # MAIN MENU
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "MENU_MAIN_TITLE"                 = @{ T = 'SYSTEM SETTINGS & ENVIRONMENT CONFIGURATION'; H = 'Main menu header title'; F = $null }
     "MENU_MAIN_SCAN"                  = @{ T = 'FULL SCAN & INVENTORY TOPOLOGY'; H = 'Hardware audit and disk topology inventory.'; F = '1' }
     "MENU_MAIN_PARSING"               = @{ T = 'TARGETED RECOVERY (Plan A - MFT/Inode)'; H = 'Deterministic MFT/Inode record recovery.'; F = '2' }
@@ -62,9 +62,9 @@
     "MENU_RANDOM_THEME"               = @{ T = 'NEW RANDOM THEME (DYNAMIC RGB)'; H = 'Applies a new algorithmically generated color palette.'; F = '6' }
     "THEME_APPLIED"                   = @{ T = 'Quantum UI theme applied successfully. Base RGB: {0}'; H = 'Theme application success with RGB token'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # DRIVE ACTIONS MENU
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "MENU_DRIVE_TARGET_LABEL"         = @{ T = '>> SELECTED TARGET: {0}'; H = 'Selected drive label with device token'; F = $null }
     "MENU_DRIVE_OPT_TARGETED"         = @{ T = 'Targeted Recovery (SCAPE Plan A)'; H = 'Extract specific paths bypassing Windows APIs.'; F = '1' }
     "MENU_DRIVE_OPT_ARCHAEOLOGY"      = @{ T = 'Archaeology Mode (SCAPE Plan B)'; H = 'Deep raw sector carving for lost signatures.'; F = '2' }
@@ -73,9 +73,9 @@
     "MENU_DRIVE_OPT_HYBRID"           = @{ T = 'Hybrid Recovery (WinFR + SCAPE)'; H = 'Dual-engine scan leveraging Windows File Recovery.'; F = '5' }
     "MENU_DRIVE_OPT_RETURN"           = @{ T = 'Return'; H = 'Return to previous menu.'; F = 'R' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # PIPELINE / COMPLIANCE
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "TUI_PREFLIGHT"                   = @{ T = 'Initiating {0} diagnostic and isolation sequence...'; H = 'Pre-flight diagnostic start with tool token'; F = 'PRE-FLIGHT' }
     "TUI_EXECUTION"                   = @{ T = '{0} engine active. Processing I/O streams.'; H = 'Execution phase status with engine token'; F = 'EXECUTION' }
     "TUI_POSTFLIGHT"                  = @{ T = '{0} operational sequence finalized.'; H = 'Post-flight completion with tool token'; F = 'POST-FLIGHT' }
@@ -100,9 +100,9 @@
     "SYNC_SUSPEND"                    = @{ T = 'Suspending asynchronous LiveMonitor to prevent COM/Handle collisions.'; H = 'Sync suspension notice for resource safety'; F = 'SYNC' }
     "SYNC_RESUME"                     = @{ T = 'Synchronous lock released. Resuming LiveMonitor thread.'; H = 'Sync resumption notice'; F = 'SYNC' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # STATUS ENUMERATIONS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "STATUS_DISCOVERED"               = @{ T = 'DISCOVERED_PARSED'; H = 'File discovered via metadata parsing'; F = $null }
     "STATUS_DISCOVERED_RAW"           = @{ T = 'DISCOVERED_CARVED'; H = 'File discovered via raw carving'; F = $null }
     "STATUS_EXTRACTED"                = @{ T = 'SUCCESSFULLY_EXTRACTED'; H = 'File extraction completed successfully'; F = $null }
@@ -113,9 +113,9 @@
     "STATUS_PROCESSING"               = @{ T = 'ACTIVE_PROCESSING'; H = 'Operation currently in progress'; F = $null }
     "STATUS_VERIFIED"                 = @{ T = 'INTEGRITY_VERIFIED'; H = 'Data integrity verification passed'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # TABLE HEADERS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "TABLE_HEADER_ID"                 = @{ T = 'OBJECT_ID'; H = 'Table column: Object identifier'; F = $null }
     "TABLE_HEADER_NAME"               = @{ T = 'FILE_NAME'; H = 'Table column: File name'; F = $null }
     "TABLE_HEADER_SIZE"               = @{ T = 'ALLOCATED_SIZE'; H = 'Table column: Allocated size in bytes'; F = $null }
@@ -127,16 +127,16 @@
     "TABLE_HEADER_OFFSET"             = @{ T = 'PHYSICAL_OFFSET'; H = 'Table column: Physical disk offset'; F = $null }
     "TABLE_HEADER_LENGTH"             = @{ T = 'BYTE_LENGTH'; H = 'Table column: Byte length of object'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # INVENTORY & DISCOVERY
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "INVENTORY_PHYSICAL_DISKS"        = @{ T = 'ENUMERATING PHYSICAL DISK TOPOLOGY:'; H = 'Physical disk enumeration start message'; F = 'INVENTORY_MANAGER' }
     "INVENTORY_LOGICAL_VOLUMES"       = @{ T = 'ENUMERATING LOGICAL VOLUME MOUNTS:'; H = 'Logical volume enumeration start message'; F = 'INVENTORY_MANAGER' }
     "INVENTORY_WMI_FAIL"              = @{ T = 'WMI/CIM Subsystem unresponsive. Cannot enumerate hardware topology.'; H = 'WMI subsystem failure fatal error'; F = 'INVENTORY_FATAL' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # VOLUME TYPES & SELECTION
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "VOLUME_TYPE_NTFS"                = @{ T = 'NTFS'; H = 'File system type identifier'; F = $null }
     "VOLUME_TYPE_EXFAT"               = @{ T = 'exFAT'; H = 'File system type identifier'; F = $null }
     "VOLUME_TYPE_FAT32"               = @{ T = 'FAT32'; H = 'File system type identifier'; F = $null }
@@ -152,9 +152,9 @@
     "VOLUME_SELECTION_INDEX"          = @{ T = 'TARGET_INDEX'; H = 'Volume selection table header'; F = $null }
     "VOLUME_NO_TARGETS"               = @{ T = 'No viable storage targets detected in the current hardware configuration.'; H = 'No targets found warning'; F = 'SYSTEM_WARN' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # I/O OPERATIONS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "IO_CREATEFILE_FAIL"              = @{ T = 'Win32 CreateFile API Failed to secure handle. Win32Error Code: {0}'; H = 'CreateFile API failure with error code token'; F = 'IO_FATAL' }
     "IO_READ_SUCCESS"                 = @{ T = 'Successfully read {0} bytes from physical offset {1}'; H = 'Successful read confirmation with byte/offset tokens'; F = 'IO_STREAM' }
     "IO_READ_PARTIAL"                 = @{ T = 'Partial read detected: expected {0} bytes, retrieved only {1} bytes. Padding may occur.'; H = 'Partial read warning with expected/received tokens'; F = 'IO_STREAM_WARN' }
@@ -165,18 +165,18 @@
     "IO_DASD_HANDLE_CLOSED"           = @{ T = 'Direct-Access Storage Device (DASD) handle released back to OS.'; H = 'DASD handle release confirmation'; F = 'IO_MANAGER' }
     "IO_DEVICE_NOT_READY"             = @{ T = 'Storage device reported Not Ready status. Standing by for hardware reconnection.'; H = 'Device not ready warning'; F = 'IO_WARN' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # SYSTEM TOPOLOGY & SPECS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "TOPOLOGY_TITLE"                  = @{ T = '[ HOST SYSTEM INFRASTRUCTURE TOPOLOGY ]'; H = 'Topology display header'; F = $null }
     "SPEC_LABEL_CPU"                  = @{ T = 'PROCESSOR'; H = 'Hardware spec label for CPU'; F = $null }
     "SPEC_LABEL_RAM"                  = @{ T = 'MEMORY'; H = 'Hardware spec label for RAM'; F = $null }
     "SPEC_LABEL_OS"                   = @{ T = 'KERNEL'; H = 'Hardware spec label for OS kernel'; F = $null }
     "SPEC_LABEL_VIRT"                 = @{ T = 'VIRT_LAYER'; H = 'Hardware spec label for virtualization layer'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # HARDWARE METRICS & TELEMETRY
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "HW_SMART_FAIL"                   = @{ T = 'S.M.A.R.T. pre-fail threshold exceeded for attribute ID {0} (Raw Value: {1}). Mechanical failure imminent.'; H = 'S.M.A.R.T. critical warning with attribute/value tokens'; F = 'HW_METRICS_CRITICAL' }
     "HW_TBW_WARN"                     = @{ T = 'NAND ENDURANCE WARNING: Target SSD Total Bytes Written (TBW) is nearing manufacturer limits. Risk of read-only hardware lockdown.'; H = 'SSD endurance warning'; F = 'HW_METRICS_WARN' }
     "HW_TBW_CRITICAL"                 = @{ T = 'TBW limit strictly exceeded. Drive may enter protective read-only state at any moment.'; H = 'SSD endurance critical failure'; F = 'HW_METRICS_FATAL' }
@@ -191,9 +191,9 @@
     "HW_CACHE_FLUSH"                  = @{ T = 'Flushing volatile disk write cache to physical NAND to prevent data loss.'; H = 'Cache flush operation notice'; F = 'HW_MANAGER' }
     "HW_STORAGE_HEALTH"               = @{ T = 'Warning: Critical response latency detected on {0}. Check physical SATA/NVMe cable and controller integrity.'; H = 'Storage health warning with device token'; F = 'HW_DIAGNOSTICS' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # NETWORK / SAMBA OPERATIONS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "NET_SMB_LOCK"                    = @{ T = 'Samba Vault successfully mapped and locked to drive letter {0} (Target: {1}).'; H = 'SMB mount success with drive/target tokens'; F = 'NETWORK_SECURE' }
     "NET_SMB_TIMEOUT"                 = @{ T = 'Samba Radar subnet sweep exhausted. Target IP is unreachable, firewalled, or offline.'; H = 'SMB discovery timeout error'; F = 'NETWORK_ERR' }
     "NET_SMB_UNMOUNT"                 = @{ T = 'Unmounting Samba Drive {0} and destroying active network credentials...'; H = 'SMB unmount with drive token'; F = 'NETWORK_CLEANUP' }
@@ -240,9 +240,9 @@
     "NET_MGR_ALL_REMOVED"             = @{ T = 'All network drives removed.'; H = 'Bulk unmount confirmation'; F = $null }
     "NET_MGR_UNMOUNT_REGEX"           = @{ T = '^(?:UNMOUNT|DESMONTAR|\[DESMONTAR\]):\s*([A-Z]):'; H = 'Regex pattern for unmount command parsing'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # SQLITE DATABASE ENGINE
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "SQLITE_ENGINE_LOADED"            = @{ T = 'Native Interop Engine Loaded from path: {0}'; H = 'SQLite engine load success with path token'; F = 'SQLITE_ENGINE' }
     "SQLITE_ENGINE_FAIL"              = @{ T = 'Failed to load or link SQLite DLL dependency: {0}'; H = 'SQLite load failure with error token'; F = 'SQLITE_FATAL' }
     "SQLITE_DB_INIT"                  = @{ T = 'Database schema and relational structures initialized successfully in WAL mode.'; H = 'Database initialization success'; F = 'SQLITE_CORE' }
@@ -258,9 +258,9 @@
     "DB_QUERY_ERROR"                  = @{ T = 'Query execution failed: {0}'; H = 'Query error with exception token'; F = 'DB_ERR' }
     "DB_MONITOR_STATS"                = @{ T = 'Records: {0} | Orphans: {1} | Written: {2} MB'; H = 'Live stats display with record/orphan/size tokens'; F = 'LIVE' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # INTEGRITY & FAILSAFE SYSTEMS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "INT_MFT_MIRROR_DIV"              = @{ T = 'Divergence between primary MFT and MFTMirror detected. Underlying file system logic is compromised.'; H = 'MFT divergence integrity alert'; F = 'SANCTUARY_ALERT' }
     "INT_SQLITE_CORRUPT"              = @{ T = 'SQLite Write-Ahead Log (WAL) corruption detected. Forcing structural vacuum and rebuild.'; H = 'SQLite WAL corruption recovery'; F = 'SQLITE_FATAL' }
     "INT_MODE_CONFLICT"               = @{ T = "The detected file system '{0}' inherently does not support the '{1}' engine parsing mode."; H = 'Filesystem/mode incompatibility with tokens'; F = 'CONFIG_CONFLICT' }
@@ -270,9 +270,9 @@
     "INT_CONVERSION_OK"               = @{ T = 'EngineMode successfully altered to REDUNDANCY.'; H = 'Mode conversion confirmation'; F = 'CONFIG_UPDATE' }
     "INT_CHECKPOINT_CREATED"          = @{ T = 'Operational checkpoint saved to database. Engine resume capability is now active.'; H = 'Checkpoint creation confirmation'; F = 'STATE_MACHINE' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # PIPELINE / EXTRACTION FLOW
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "PIPE_TRAVERSAL_START"            = @{ T = 'Walking metadata tree deterministically on {0}...'; H = 'Traversal start with target token'; F = 'TRAVERSAL_INIT' }
     "PIPE_TRAVERSAL_COMPLETE"         = @{ T = 'File system metadata traversal completed successfully.'; H = 'Traversal completion notice'; F = 'TRAVERSAL_DONE' }
     "PIPE_ARCHAEOLOGY_START"          = @{ T = 'Raw hexadecimal signature sweep started for engine: {0}.'; H = 'Archaeology start with engine token'; F = 'ARCHAEOLOGY_INIT' }
@@ -290,9 +290,9 @@
     "PIPE_EXTRACTION_PHASE"           = @{ T = 'Initiating physical byte-extraction phase...'; H = 'Extraction phase transition'; F = 'PIPELINE_TRANSITION' }
     "PIPE_CARVING_PROGRESS"           = @{ T = 'Physical Offset: {0} GB | Throughput: {1} MB/s | Orphans Recovered: {2}'; H = 'Carving telemetry with offset/speed/count tokens'; F = 'CARVING_TELEMETRY' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # UI / INTERACTIVE EXPLORER
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "UI_ExplorerTitle"                = @{ T = 'INTERACTIVE FILE EXPLORER - SCAPE RECOVERY SYSTEM'; H = 'Explorer window title'; F = $null }
     "UI_BreadcrumbRoot"               = @{ T = 'VIRTUAL_ROOT'; H = 'Root breadcrumb label'; F = $null }
     "UI_NavHelp"                      = @{ T = 'HOTKEYS: [UP/DOWN] Navigate | [ENTER] Open Folder | [SPACE] Toggle Mark | [E] Execute Extraction | [B] Go Back | [Q] Quit Explorer'; H = 'Explorer navigation help text'; F = $null }
@@ -321,9 +321,9 @@
     "UI_COMPLIANCE_DISCLAIMER"        = @{ T = 'Accessing RAW sectors carries risk of hardware stress or data loss. Accept? (y/N): '; H = 'RAW access risk disclaimer'; F = 'DASD COMPLIANCE' }
     "UI_ABORT_CONFIRM_CRITICAL"       = @{ T = 'Aborting active I/O may leave handles open or corrupt the database. Force Abort? (y/N): '; H = 'Critical abort confirmation'; F = 'CRITICAL WARNING' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # VIEW / DASHBOARD UI
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "DASH_HEADER_NODE"                = @{ T = 'SYSTEM-CRITICAL ANALYSIS PARTITION EXTRACTOR | NODE: {0}'; H = 'Dashboard header with node token'; F = $null }
     "BANNER_TITLE"                    = @{ T = 'SCAPE Recovery System - Advanced Forensic Engine v1.0'; H = 'Application banner title'; F = $null }
 
@@ -332,9 +332,9 @@
     "DASH_LINE2"                      = @{ T = 'DB_PARSED: {0} | DB_ORPHANS: {1} | DB_EXTRACTED: {2}'; H = 'Dashboard metrics line 2 with db stat tokens'; F = $null }
     "DASH_LINE3"                      = @{ T = 'LCN_POS: {0} | PROG: {1} | RATE: {2} MB/s'; H = 'Dashboard metrics line 3 with progress/rate tokens'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # ROBOCOPY / CLOUD SYNC CONFIG
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "RC_TITLE"                        = @{ T = 'LOGISTICS & CLOUD SYNC CONTROL PANEL - SCAPE ROBOSYNC'; H = 'Robocopy panel title'; F = $null }
     "RC_STAGING_LABEL"                = @{ T = 'Local Staging Directory'; H = 'Staging path field label'; F = $null }
     "RC_DEST_LABEL"                   = @{ T = 'Final Cloud/UNC Destination'; H = 'Destination path field label'; F = $null }
@@ -403,9 +403,9 @@
     "RC_TAGGING_START"                = @{ T = 'Initiating High-Speed Archive Bit Tagging on {0}...'; H = 'Tagging start with target token'; F = 'ROBOSYNC' }
     "RC_TAGGING_DONE"                 = @{ T = 'Archive Bit Tagging Complete.'; H = 'Tagging completion notice'; F = 'ROBOSYNC' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # DEPLOYER / COMPILER ENGINE
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "DEPLOYER_START"                  = @{ T = 'Initiating dynamic structural orchestration of the SCAPE Monolith...'; H = 'Deployer initialization'; F = 'DEPLOYER_INIT' }
     "DEPLOYER_PURGE"                  = @{ T = 'Previous active deployment tree detected. Purging old architecture...'; H = 'Old build purge notice'; F = 'DEPLOYER_WARN' }
     "DEPLOYER_EXTRACT"                = @{ T = 'Extracting modular payloads dynamically from matrix...'; H = 'Module extraction start'; F = 'DEPLOYER_EXEC' }
@@ -464,9 +464,9 @@
     "DEPLOYER_ERR_LIGHT"              = @{ T = 'Light linking pipeline crashed.'; H = 'Light pipeline error'; F = $null }
     "DEPLOYER_ERR_MSI_FORGE"          = @{ T = 'Compilation failed during WiX MSI forging: {0}'; H = 'MSI forge fail with error token'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # COMPILER SUBSYSTEM
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "COMPILER_MSI_BASE_EXE"           = @{ T = 'Forging base executable for MSI payload...'; H = 'Base EXE prep'; F = 'COMPILER' }
     "COMPILER_MSI_SUCCESS"            = @{ T = 'MSI Installer successfully generated: {0}'; H = 'MSI generation success'; F = 'COMPILER' }
     "COMPILER_CHECK_PS2EXE"           = @{ T = 'Checking for ps2exe module...'; H = 'ps2exe check notice'; F = 'COMPILER' }
@@ -476,9 +476,9 @@
     "COMPILER_WIX_NOT_FOUND"          = @{ T = 'WiX not found. Attempting winget install...'; H = 'WiX winget fallback'; F = 'COMPILER' }
     "COMPILER_WIX_FALLBACK"           = @{ T = 'WiX Toolset fallback failed. Emitting Portable ZIP.'; H = 'WiX fallback to ZIP'; F = 'COMPILER' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # SYSTEM & DEPENDENCIES (ADDITIONS)
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "DEP_SQLITE_DOWNLOADING"          = @{ T = 'Downloading SQLite payload...'; H = 'SQLite background download start'; F = 'SYSTEM' }
     "DEP_SQLITE_EXTRACTED"            = @{ T = 'SQLite payload extracted to Environment module successfully.'; H = 'Post-download extraction success'; F = 'SYSTEM' }
     "DEP_BINARIES_MISSING"            = @{ T = '[SYSTEM] Binaries module not loaded.'; H = 'Module initialization failure'; F = 'ERROR' }
@@ -486,22 +486,22 @@
     "SYS_MEM_CRITICAL"                = @{ T = 'Host memory critical (<20%). Forcing database memory spill.'; H = 'Low memory safety trigger'; F = 'PERF_WARN' }
     "SYS_ACCESS_DENIED_DRIVE"         = @{ T = 'Access Denied. Hardware lockdown on {0}'; H = 'Drive access failure with token'; F = 'PRIV_FATAL' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # COMPILER & MSI (ADDITIONS)
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "COMPILER_WIX_DOWNLOADING"        = @{ T = 'Downloading WiX Toolset binaries (Silent)...'; H = 'WiX background download'; F = 'COMPILER' }
     "COMPILER_MSI_DOWNGRADE"          = @{ T = 'A newer version of SCAPE is already installed.'; H = 'MSI Installer downgrade error'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # NATIVE & KERNEL (ADDITIONS)
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "NATIVE_LINUX_DIAG"               = @{ T = '[LINUX] Routing to smartctl / fsck pipeline...'; H = 'Linux diagnostic redirection'; F = 'HINT' }
     "NATIVE_LINUX_ISOLATE"            = @{ T = '[LINUX] Routing to umount / dd native pipeline...'; H = 'Linux isolation redirection'; F = 'HINT' }
     "NATIVE_JOURNAL_EXPORTED"         = @{ T = 'Journal exported to {0}. Processing entries...'; H = 'USN Journal extraction success'; F = 'FSUTIL' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # BOOT & IGNITION SEQUENCE
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "ERR_ADMIN_REQUIRED"              = @{ T = 'Administrator privileges are strictly required.'; H = 'Admin requirement error'; F = $null }
     "ERR_BOOT_SECTOR_READ"            = @{ T = 'Failed to read Boot Sector.'; H = 'Boot sector read error'; F = 'IO_FATAL' }
     "ERR_SUPERBLOCK_READ"             = @{ T = 'Failed to read EXT Superblock.'; H = 'EXT superblock read error'; F = 'IO_FATAL' }
@@ -539,16 +539,16 @@
     "IGNITE_DEPLOY_FAIL"              = @{ T = 'Failed to launch Start-ScapeDeployment: {0}'; H = 'Deploy launch fail with error token'; F = 'FATAL' }
     "IGNITE_DEPLOYER_MISSING"         = @{ T = 'DeployerPayload (The Factory) not found in memory!'; H = 'Missing deployer fatal'; F = 'FATAL' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # DEPLOYER PROCESS MANAGEMENT
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "DEPLOYER_PROCESS_CLEANUP"        = @{ T = 'Active instances detected. Terminating processes for clean purge...'; H = 'Process cleanup start'; F = 'DEPLOYER' }
     "DEPLOYER_PURGE_SUCCESS"          = @{ T = 'Previous architecture purged successfully.'; H = 'Purge success notice'; F = 'DEPLOYER' }
     "DEPLOYER_PURGE_BUSY_WARN"        = @{ T = 'Output directory is busy. Old build moved to temporary trash path: {0}'; H = 'Purge busy fallback with path token'; F = 'DEPLOYER' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # AUDIT & FORENSIC MANIFEST
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "AUDIT_MANIFEST_DEPLOY"           = @{ T = 'Forensic JSON Manifest deployed securely to: {0} [Status: {1}]'; H = 'Manifest deploy with path/status tokens'; F = 'AUDIT_SYSTEM' }
     "AUDIT_MANIFEST_FAIL"             = @{ T = 'Critical failure writing JSON manifest/checksum data: {0}'; H = 'Manifest write fail with error token'; F = 'AUDIT_FATAL' }
     "AUDIT_REPORT_GEN"                = @{ T = 'Comprehensive JSON Audit Report cleanly generated at: {0}'; H = 'Report generation success with path token'; F = 'AUDIT_SYSTEM' }
@@ -563,9 +563,9 @@
     "IO_BIT_ERROR"                    = @{ T = 'Resilient bitwise read/write operation failed after retry budget exhaustion.'; H = 'Bitwise/resilience operation fatal error'; F = 'IO_FATAL' }
     "LOG_ROTATED"                     = @{ T = 'Log rotation completed. Archived: {0} | Active: {1} | Rotation: {2}.'; H = 'Logger rotation completion with archive/new file and counter'; F = 'LOGGER' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # ARCHIVE / CARVING ENGINE
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "ARCHIVE_ENUMERATING"             = @{ T = 'Enumerating database nodes for targeted files...'; H = 'Archive enumeration start'; F = 'ARCHIVE_ENGINE' }
     "ARCHIVE_BAR_TOTAL"               = @{ T = 'TOTAL_DB_NODES: {0} | ACTIVELY_TAGGED: {1} | CORRUPT_ERRORS: {2} | SCAN_RATE: {3} nodes/sec'; H = 'Archive progress bar with stat tokens'; F = $null }
     "ARCHIVE_COMPLETE"                = @{ T = 'Database targeted tagging cycle completely finished.'; H = 'Archive cycle completion'; F = 'ARCHIVE_ENGINE' }
@@ -577,9 +577,9 @@
     "CARVE_ZFS_SIG"                   = @{ T = 'Valid ZFS label/uberblock magic identified at physical offset {0}'; H = 'ZFS signature hit with offset token'; F = 'CARVE_HIT' }
     "CARVE_RECORD_ADDED"              = @{ T = 'Raw orphaned record safely buffered to SQL persistence engine.'; H = 'Record buffer success'; F = 'CARVE_STATE' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # ERROR HANDLING & MISC
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "MANIFEST_NOT_FOUND"              = @{ T = 'Manifest node not found: {0}'; H = 'Missing manifest node with key token'; F = 'ORCH_FATAL' }
     "ROUTER_FATAL"                    = @{ T = '{0}'; H = 'Generic router fatal with error token'; F = 'ROUTER_FATAL' }
     "ROUTE_EXEC_FAIL"                 = @{ T = '{0}'; H = 'Route execution fail with error token'; F = 'ROUTE_EXEC_FAIL' }
@@ -597,9 +597,9 @@
     "ERR_DISK_FULL"                   = @{ T = 'Insufficient physical disk space detected on target medium. Operation safely aborted to prevent crash.'; H = 'Disk full error'; F = 'IO_FATAL' }
     "ERR_CORRUPTED_RECORD"            = @{ T = 'Severely corrupted MFT/Inode record structurally detected. Skipping parsing to prevent engine fault.'; H = 'Corrupted record warning'; F = 'PARSE_WARN' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # MISCELLANEOUS & USER PROMPTS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "MISC_OR"                         = @{ T = ' ou '; H = 'Logical OR separator'; F = $null }
     "MISC_PROGRESS"                   = @{ T = 'OPERATION_PROGRESS'; H = 'Visual activity indicator'; F = 'UI' }
     "MISC_PRESS_ENTER"                = @{ T = 'Press the [ENTER] key to safely return to the Maestro main menu...'; H = 'Return prompt'; F = $null }
@@ -623,54 +623,54 @@
     "MISC_PRESS_ENTER_EXIT"           = @{ T = 'Press the [ENTER] key to close the terminal and exit...'; H = 'Terminal exit prompt'; F = $null }
     "MISC_RESTART_STATE_MACHINE"      = @{ T = 'Press the [ENTER] key to forcefully restart the Maestro State Machine...'; H = 'State machine restart prompt'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # PERFORMANCE METRICS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "PERF_RAM_STRATEGY"               = @{ T = 'Validated RAM available: {0} GB | Estimated Target size: {1} GB -> Assigned Allocation Strategy: {2}'; H = 'RAM strategy with avail/target/strategy tokens'; F = 'PERF_METRIC' }
     "PERF_THREAD_AUTO"                = @{ T = 'Auto-tuning data transfer threads dynamically to {0} based on analyzed destination medium.'; H = 'Thread auto-tune with count token'; F = 'PERF_TUNE' }
     "PERF_LOW_MEM_WARNING"            = @{ T = 'Extremely low physical memory detected on host. Force-switching pipeline to DISK_SPOOL mode to prevent OOM crash.'; H = 'Low memory warning'; F = 'PERF_WARN' }
     "PERF_HIGH_IO_WARNING"            = @{ T = 'Exceptionally high I/O load registered on storage controller. Automated throttling protocols engaged.'; H = 'High I/O warning'; F = 'PERF_WARN' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # DEPENDENCY MANAGEMENT
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "DEP_ARM64_FALLBACK"              = @{ T = 'ARM64 native DLL not embedded. Falling back to x64 (emulation).'; H = 'ARM64 fallback notice'; F = 'SQLITE' }
     "DEP_EXTRACT_SUCCESS"             = @{ T = 'Native dependencies extracted from memory matrix successfully.'; H = 'Dependency extract success'; F = 'SYSTEM' }
     "DEP_LOCAL_DETECTED"              = @{ T = 'Local dependencies detected (DEV_MODE).'; H = 'Local deps detected'; F = 'SYSTEM' }
     "DEP_MISSING_ERROR"               = @{ T = 'ERROR: Files not found on disk and not embedded in memory.'; H = 'Missing dependencies error'; F = 'SQLITE' }
     "DEP_SIZE_MISMATCH"               = @{ T = 'Managed DLL size mismatch post-extraction.'; H = 'DLL size mismatch error'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # CONFIGURATION VALUES
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "CONFIG_VAL_EFFICIENCY"           = @{ T = 'EFFICIENCY'; H = 'Engine mode: Efficiency'; F = $null }
     "CONFIG_VAL_REDUNDANCY"           = @{ T = 'REDUNDANCY'; H = 'Engine mode: Redundancy'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # WAIT / RETURN PROMPTS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "WAIT_ENTER_CONTINUE"             = @{ T = 'Press ENTER to continue...'; H = 'Continue wait prompt'; F = $null }
     "WAIT_ENTER_ESC_PROMPT"           = @{ T = 'Press [ENTER] to proceed, or [ESC] to cancel.'; H = 'Proceed/cancel prompt'; F = $null }
     "WAIT_ENTER_ACCEPT_RISK"          = @{ T = 'Press [ENTER] to accept the risk and proceed, or [ESC] to abort.'; H = 'Risk accept/abort prompt'; F = $null }
     "WAIT_ENTER_RETURN"               = @{ T = 'Press ENTER to return...'; H = 'Return wait prompt'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # SYSTEM DETECTION
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "SYS_BARE_METAL"                  = @{ T = 'Bare Metal'; H = 'Physical host indicator'; F = $null }
     "SYS_NA"                          = @{ T = 'N/A'; H = 'Not applicable indicator'; F = $null }
     "SYS_VM_DETECTED"                 = @{ T = 'Virtual Machine Detected (Hypervisor: {0})'; H = 'VM detection with hypervisor token'; F = 'SYSTEM' }
     "SYS_HOST_DETECTED"               = @{ T = 'Physical Host Detected (Bare Metal)'; H = 'Bare metal detection'; F = 'SYSTEM' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # FORENSIC WALK / TRAVERSAL
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "FOR_MFT_WALK"                    = @{ T = 'Walking MFT tree deterministically... Record {0} / {1}'; H = 'MFT walk progress with current/total tokens'; F = $null }
     "FOR_EXT_WALK"                    = @{ T = 'Walking Inode tree deterministically... Inode {0} / {1}'; H = 'Inode walk progress with current/total tokens'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # SAMBA / NETWORK MOUNT REMOVAL
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "SAMBA_UNMOUNT_ALL"               = @{ T = 'Removing all network mounts...'; H = 'Bulk unmount start'; F = $null }
     "SAMBA_UNMOUNT_SINGLE"            = @{ T = 'Removing mapped drive {0}...'; H = 'Single unmount with drive token'; F = $null }
     "SAMBA_SELECT_IP"                 = @{ T = 'MULTIPLE SMB HOSTS DETECTED. SELECT TARGET:'; H = 'Multi-host selection'; F = $null }
@@ -679,16 +679,16 @@
     "SAMBA_MGR_NONE"                  = @{ T = 'No active network mounts detected.'; H = 'No mounts notice'; F = $null }
     "SAMBA_MGR_REMOVED"               = @{ T = 'Drive {0} ({1}) successfully unmounted.'; H = 'Unmount success with drive/path tokens'; F = $null }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # NATIVE BRIDGE / SAFETY CONTROLS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "ERR_SYSTEM_DRIVE_LOCK"           = @{ T = 'Operation blocked: Cannot offline or repair the active System Drive.'; H = 'System drive protection error'; F = 'SAFETY_CRITICAL' }
     "NET_NATIVE_ISOLATION_OK"         = @{ T = 'Target disk is now OFFLINE. Exclusive DASD access granted.'; H = 'Disk isolation success'; F = 'DISKPART' }
     "NET_NATIVE_JOURNAL_START"        = @{ T = 'Harvesting NTFS USN Journal for recent deletions...'; H = 'Journal harvest start'; F = 'FSUTIL' }
     "UI_NATIVE_HYBRID_RUNNING"        = @{ T = 'SCAPE + WinFR dual-engine scan in progress. Please standby...'; H = 'Hybrid scan in progress'; F = 'HYBRID' }
     "UI_NATIVE_DIAG_FAIL"             = @{ T = 'Hardware reports critical failures. Minimal I/O recommended.'; H = 'Hardware diagnostic failure'; F = 'STORDIAG_ALERT' }
 
-    # ─────────────────────────────────────────────────────────────────────   
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€   
     # THIRD_PARTY_TOOLS
     "TOOL_AUTOSPSY" = @{ T = "AUTOSPSY (Third-Party)"; H = "Launch AUTOSPSY forensics tool"; F = "1" }
     "TOOL_VOLATILITY" = @{ T = "VOLATILITY (Third-Party)"; H = "Launch VOLATILITY forensics tool"; F = "1" }
@@ -710,7 +710,7 @@
     "TOOL_SLEUTHKIT" = @{ T = "SLEUTHKIT (Third-Party)"; H = "Launch SLEUTHKIT forensics tool"; F = "1" }
     "TOOL_DD" = @{ T = "DD (Third-Party)"; H = "Launch DD forensics tool"; F = "1" }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "TOOL_DISKPART"                   = @{ T = 'DISKPART (Isolation & Partitioning)'; H = 'Force offline or manage partitions'; F = '1' }
     "TOOL_DISKPART_DESC"              = @{ T = 'Force drive offline to prevent OS interference. WARNING: Disconnects all active sessions.'; H = 'DiskPart warning hint'; F = 'WARN' }
     "TOOL_CHKDSK"                     = @{ T = 'CHKDSK (File System Repair)'; H = 'Scan and fix logical file system errors'; F = '2' }
@@ -732,9 +732,9 @@
     "TOOL_AUTORUNS"                   = @{ T = 'AUTORUNS (Sysinternals)'; H = 'Manage auto-starting programs and services'; F = 'A' }
     "TOOL_EVERYTHING"                 = @{ T = 'EVERYTHING (Voidtools)'; H = 'Instant file and folder search engine'; F = 'E' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # LOGGING & TELEMETRY
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "LOG_INFO"                        = @{ T = 'INFO_OPERATIONAL_MSG'; H = 'Standard operational message'; F = 'INFO' }
     "LOG_DEBUG"                       = @{ T = 'DEBUG_DIAGNOSTIC_TRACE'; H = 'Deep diagnostic trace'; F = 'DEBUG' }
     "LOG_WARN"                        = @{ T = 'WARNING_EXECUTION_ANOMALY'; H = 'Non-fatal execution anomaly'; F = 'WARN' }
@@ -744,9 +744,9 @@
     "LOG_METRIC"                      = @{ T = 'METRIC_PERF_TELEMETRY'; H = 'Performance telemetry data'; F = 'METRIC' }
     "LOG_TRACE"                       = @{ T = 'TRACE_INST_TRACKING'; H = 'Instruction level tracking'; F = 'TRACE' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # FILE SYSTEMS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "FS_NTFS"                         = @{ T = 'NTFS_FILE_SYSTEM'; H = 'New Technology File System'; F = 'FS' }
     "FS_APFS"                         = @{ T = 'APFS_APPLE_CONTAINER'; H = 'Apple File System'; F = 'FS' }
     "FS_EXT4"                         = @{ T = 'EXT4_LINUX_NATIVE'; H = 'Fourth Extended Filesystem'; F = 'FS' }
@@ -765,9 +765,9 @@
     "FS_PART_TABLE"                   = @{ T = 'PARTITION_TABLE_STRUCT'; H = 'Disk partition structure'; F = 'META' }
     "FS_DISK_IMAGE"                   = @{ T = 'VIRTUAL_DISK_IMAGE'; H = 'Disk image container (VMDK/VHDX/DMG)'; F = 'VIRT' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # HARDWARE & TOPOLOGY
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "HW_CPU"                          = @{ T = 'CPU_PROCESSOR_UNIT'; H = 'Central Processing Unit'; F = 'HW' }
     "HW_RAM"                          = @{ T = 'MEMORY_RAM_VOLATILE'; H = 'System volatile memory'; F = 'HW' }
     "HW_HDD"                          = @{ T = 'DISK_HDD_MECHANICAL'; H = 'Mechanical storage'; F = 'HW' }
@@ -776,16 +776,16 @@
     "HW_USB"                          = @{ T = 'DISK_USB_EXTERNAL'; H = 'Universal Serial Bus Storage'; F = 'HW' }
     "HW_GPU"                          = @{ T = 'GPU_GRAPHICS_UNIT'; H = 'Graphics Processing Unit'; F = 'HW' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # STATUS & ENGINE STATES
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "STATUS_SUCCESS"                  = @{ T = 'OPERATION_SUCCESS'; H = 'Operation completed with no errors'; F = 'OK' }
     "STATUS_UNKNOWN"                  = @{ T = 'STATE_UNKNOWN'; H = 'Unidentified object or state'; F = 'WARN' }
     "STATUS_BUSY"                     = @{ T = 'ACTIVE_PROCESSING'; H = 'I/O stream actively engaged'; F = 'PROC' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # METADATA LABELS
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "META_ACCESSED"                   = @{ T = 'TIMESTAMP_ACCESSED'; H = 'Last access time'; F = 'META' }
     "META_CREATED"                    = @{ T = 'TIMESTAMP_CREATED'; H = 'Creation time'; F = 'META' }
     "META_MODIFIED"                   = @{ T = 'TIMESTAMP_MODIFIED'; H = 'Last modification time'; F = 'META' }
@@ -794,18 +794,18 @@
     "META_PID"                        = @{ T = 'PROCESS_ID'; H = 'System Process Identifier'; F = 'SYS' }
     "META_OFFSET"                     = @{ T = 'PHYSICAL_OFFSET'; H = 'Raw byte offset on disk'; F = 'DASD' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # DOMAINS & MODULES
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "DOMAIN_ANALYSIS"                 = @{ T = 'ANALYSIS_SUBSYSTEM'; H = 'Core analysis engine'; F = 'SYS' }
     "DOMAIN_PARSING"                  = @{ T = 'METADATA_PARSING'; H = 'Deterministic record parsing'; F = 'SYS' }
     "DOMAIN_ARCHAEOLOGY"              = @{ T = 'ARCHAEOLOGY_MODE'; H = 'Deep raw sector carving'; F = 'SYS' }
     "DOMAIN_HARVESTER"                = @{ T = 'HARVESTER_ENGINE'; H = 'Bulk extraction engine'; F = 'SYS' }
     "DOMAIN_INFRA"                    = @{ T = 'INFRASTRUCTURE_LAYER'; H = 'System support layer'; F = 'SYS' }
 
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # TERMINAL CAPABILITIES TOGGLES
-    # ─────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "CAP_MENU_TITLE"                  = @{ T = 'TERMINAL CAPABILITIES'; H = 'Terminal capabilities menu title'; F = 'UI' }
     "CAP_TRUECOLOR"                   = @{ T = 'TrueColor (24-bit RGB)'; H = 'Enable full 24-bit color support. Disable to fallback to ANSI 16-color palette.'; F = 'UI' }
     "CAP_HYPERLINKS"                  = @{ T = 'Hyperlinks (OSC 8)'; H = 'Enable clickable hyperlinks in the terminal. Requires modern terminal emulator.'; F = 'UI' }
@@ -830,4 +830,69 @@
     "RC_ROBOCOPY_ENGINE"              = @{ T = 'ROBOCOPY ENGINE'; H = 'Robocopy engine menu'; F = 'E' }
     "RC_TELEMETRY_SCAN"               = @{ T = 'TELEMETRY SCAN'; H = 'Hardware telemetry scan'; F = 'S' }
     "RC_CLOUD_SYNC"                   = @{ T = 'CLOUD SYNC'; H = 'Cloud synchronization subsystem'; F = '7' }
+
+    # --- ORCHESTRATION & ACTIONS ---
+    CORE_ACTION_TARGET_MODULE = "Target Module"
+    CORE_ACTION_ACTIVE_TASK = "Active Task"
+    CORE_ACTION_STATUS = "Status"
+    CORE_ACTION_SYSTEM_TASK = "System Task"
+    CORE_ACTION_DEFAULT = "Default"
+    CORE_ACTION_INITIALIZING = "INITIALIZING..."
+    CORE_ACTION_COMPLETED = "COMPLETED - PRESS ANY KEY"
+    CORE_ACTION_FAILED = "FAILED"
+
+    KEYBINDINGS_INIT = "INITIALIZING KEY BINDINGS MANAGER..."
+    KEYBINDINGS_NO_MODULE = "KEY BINDINGS MODULE NOT LOADED"
+    KEYBINDINGS_MODE = "Mode"
+    KEYBINDINGS_INTERACTIVE = "INTERACTIVE REBINDING"
+    KEYBINDINGS_STATUS = "Status"
+    KEYBINDINGS_PRESS_KEY = "PRESS A KEY TO REBIND"
+    KEYBINDINGS_ACTION = "Action"
+    KEYBINDINGS_READY = "KEY BINDINGS READY"
+    KEYBINDINGS_PROF_LOADED = "PROFILE {0} LOADED"
+    KEYBINDINGS_NO_PROFILE = "NO PROFILE SPECIFIED"
+    KEYBINDINGS_SAVED = "KEY BINDINGS SAVED"
+    KEYBINDINGS_FAILED = "FAILED TO SAVE KEY BINDINGS"
+    KEYBINDINGS_SYS_READY = "KEY BINDINGS SYSTEM READY"
+
+    FILEPICKER_INIT = "Initializing secure directory selection sandbox..."
+    FILEPICKER_DIALOG = "SCAPE STAGING: Select Destination Sandbox"
+    FILEPICKER_COM_FAIL = "COM Interface failed. Engaging CLI manual prompt."
+    FILEPICKER_CANCEL = "Operation cancelled by operator."
+    FILEPICKER_INVALID = "Cannot create staging path: {0}"
+    FILEPICKER_LOCKED = "Staging locked to: {0}"
+
+    ACTION_TOOL_LAUNCH = "LAUNCHING {0}..."
+    ACTION_TOOL_SUCCESS = "{0} executed successfully."
+    ACTION_TOOL_FAIL = "Failed to launch {0}"
+    ACTION_TOOL_COMPLETE = "{0} AUDIT COMPLETE"
+    ACTION_TOOL_PACKAGER = "INVOKING PACKAGER FOR {0}..."
+    ACTION_PACKAGER_SUCCESS = "{0} successfully deployed! Run again to launch."
+    ACTION_PACKAGER_FAIL = "Setup failed or requires manual license"
+    ACTION_TOOL_MISSING = "{0} ({1}) is not installed on this system."
+    ACTION_TOOL_MISSING_HINT = "Use the built-in packager or install manually."
+    TOOL_ERROR_LBL = "Error"
+    ACTION_FILEHASH_WARN = "Please specify a specific file path to hash. This module requires CLI arguments or a FilePicker integration."
+
+    CORE_INTEROP_FAIL = "Core.Interop not available"
+    ROBOCOPY_PREPARING = "PREPARING ROBOCOPY CONFIGURATION..."
+    ROBOCOPY_READY = "ROBOCOPY CONFIGURATION READY"
+    ACTION_RESOLVING_VAULT = "RESOLVING CLOUD VAULT ENDPOINT..."
+    ACTION_AUTH_KEYS = "AUTHENTICATING SHA256 KEYS..."
+    CORE_NOT_IMPLEMENTED = "Not Implemented"
+    NET_NO_FREE_DRIVES = "No free drive letters available."
+    NET_UNMOUNT_FAIL = "Failed to clear network mounts."
+    AUDIT_EXPORTING = "EXPORTING AUDIT LEDGER..."
+    AUDIT_EXPORT_SUCCESS = "AUDIT LEDGER EXPORTED SUCCESSFULLY"
+    AUDIT_EXPORT_FAILED = "FAILED TO EXPORT AUDIT LEDGER"
+    AUDIT_MODULE_NOT_LOADED = "AUDIT MODULE NOT LOADED"
+
+    COMPLIANCE_GENERATING = "GENERATING COMPLIANCE REPORT..."
+    COMPLIANCE_GENERATED = "COMPLIANCE REPORT GENERATED"
+    COMPLIANCE_FAILED = "FAILED TO GENERATE COMPLIANCE REPORT"
+    COMPLIANCE_NO_MODULE = "COMPLIANCE MODULE NOT LOADED"
+
+    PIPELINE_INIT = "INITIALIZING MEMORY PIPELINE..."
+    PIPELINE_ACTIVE = "PIPELINE BUFFER ACTIVE"
+    PIPELINE_NO_MODULE = "PIPELINE MODULE NOT LOADED"
 }

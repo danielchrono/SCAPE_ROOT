@@ -32,21 +32,27 @@ function Get-ScapeDefaultIconLevel {
     }
 }
 
+$Script:ConstantsCache = $null
+
 function Get-ScapeConstant {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$Path, $Fallback = $null)
     process {
-        $state = Get-ScapeColdState
-        if (-not $state.Assets) { return $Path }
+        if ($null -eq $Script:ConstantsCache) {
+            $state = Get-ScapeColdState
+            if (-not $state.Assets) { return $Path }
+            $Script:ConstantsCache = $state.Assets
+        }
+        $assets = $Script:ConstantsCache
 
         $parts = $Path -split "::"
         $root = $parts[0]
         $asset = $null
 
-        foreach ($cat in $state.Assets.Keys) {
-            $foundKey = $state.Assets[$cat].Keys | Where-Object { $_ -ieq $root } | Select-Object -First 1
+        foreach ($cat in $assets.Keys) {
+            $foundKey = $assets[$cat].Keys | Where-Object { $_ -ieq $root } | Select-Object -First 1
             if ($foundKey) {
-                $asset = $state.Assets[$cat][$foundKey]
+                $asset = $assets[$cat][$foundKey]
                 break
             }
         }

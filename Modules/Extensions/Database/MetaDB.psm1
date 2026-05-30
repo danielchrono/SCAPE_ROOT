@@ -15,8 +15,8 @@ function Write-ScapeShadowRecord {
 
     $cmd = $null
     try {
-        $table = Get-ScapeConstant -Path "network::network::TABLE_MFT" -Fallback "ShadowMFT"
-        $query = (Get-ScapeConstant -Path "network::network::QUERY_INS_MFT" -Fallback "INSERT OR IGNORE INTO {0} (VolumeSerial, FRN, BaseFRN, SequenceNumber, Status, IsBaseRecord, ParentFRN, FileName, Category, RawRecord) VALUES (@VS, @F, @B, @S, @ST, @I, @P, @FN, @Cat, @R)") -f $table
+        $table = Get-ScapeConstant -Path "network::DB::TABLE_MFT" -Fallback "ShadowMFT"
+        $query = (Get-ScapeConstant -Path "network::DB::QUERY_INS_MFT" -Fallback "INSERT OR IGNORE INTO {0} (VolumeSerial, FRN, BaseFRN, SequenceNumber, Status, IsBaseRecord, ParentFRN, FileName, Category, RawRecord) VALUES (@VS, @F, @B, @S, @ST, @I, @P, @FN, @Cat, @R)") -f $table
 
         $cmd = $Connection.CreateCommand()
         $cmd.Transaction = $Transaction
@@ -49,8 +49,8 @@ function Resolve-ScapeShadowPath {
     $cmd = $null
     try {
         $maxDepth = Get-ScapeConstant -Path "system::LIMITS::MAX_DIR_DEPTH" -Fallback 20
-        $rootId = Get-ScapeConstant -Path "storage::storage::ROOT_DIR_ID" -Fallback 5
-        $queryMft = (Get-ScapeConstant -Path "network::network::QUERY_PATH_MFT" -Fallback "SELECT ParentFRN as PID, FileName FROM {0} WHERE FRN = @id AND VolumeSerial = @vs") -f (Get-ScapeConstant -Path "network::network::TABLE_MFT" -Fallback "ShadowMFT")
+        $rootId = Get-ScapeConstant -Path "storage::FS::ROOT_DIR_ID" -Fallback 5
+        $queryMft = (Get-ScapeConstant -Path "network::DB::QUERY_PATH_MFT" -Fallback "SELECT ParentFRN as PID, FileName FROM {0} WHERE FRN = @id AND VolumeSerial = @vs") -f (Get-ScapeConstant -Path "network::DB::TABLE_MFT" -Fallback "ShadowMFT")
 
         $chunks = [System.Collections.Generic.List[string]]::new()
         $current = $ParentNode

@@ -17,7 +17,7 @@ function Invoke-ThirdPartyTool {
     )
     $rows = @()
     if (Get-Command $CommandName -ErrorAction SilentlyContinue) {
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "LAUNCHING $ToolName..." -StatusFlag "WARN"
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @($ToolName)) -StatusFlag "WARN" -RunProgress 50 -StepProgress 50
         try {
             if ([string]::IsNullOrWhiteSpace($Arguments)) {
                 $proc = Start-Process -FilePath $CommandName -Wait -PassThru -ErrorAction Stop
@@ -25,27 +25,27 @@ function Invoke-ThirdPartyTool {
             else {
                 $proc = Start-Process -FilePath $CommandName -ArgumentList $Arguments -Wait -PassThru -ErrorAction Stop
             }
-            $rows += @{ LeftText = "Status"; RightText = "$ToolName executed successfully."; Flag = "Success"; RightFlag = "Success" }
+            $rows += @{ LeftText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_STATUS"); RightText = (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_SUCCESS" -Args @($ToolName)); Flag = "Success"; RightFlag = "Success" }
             $rows += @{ LeftText = "ExitCode"; RightText = "$($proc.ExitCode)"; Flag = "Success"; RightFlag = "Info" }
         }
         catch {
-            $rows += @{ LeftText = "Error"; RightText = "Failed to launch `$ToolName: $($_.Exception.Message)"; Flag = "Failure"; RightFlag = "Failure" }
+            $rows += @{ LeftText = (Invoke-ScapeI18NFormat -Key "TOOL_ERROR_LBL"); RightText = ((Invoke-ScapeI18NFormat -Key "ACTION_TOOL_FAIL" -Args @($ToolName)) + ": $($_.Exception.Message)"); Flag = "Failure"; RightFlag = "Failure" }
         }
     }
     else {
-        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "INVOKING PACKAGER FOR $ToolName..." -StatusFlag "WARN"
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_PACKAGER" -Args @($ToolName)) -StatusFlag "WARN"
         if (Get-Command "Install-ScapeForensicTool" -ErrorAction SilentlyContinue) {
             $installResult = Install-ScapeForensicTool -ToolName $ToolName
             if ($installResult.Success) {
-                $rows += @{ LeftText = "Packager"; RightText = "$ToolName successfully deployed! Run again to launch."; Flag = "Success"; RightFlag = "Success" }
+                $rows += @{ LeftText = "Packager"; RightText = (Invoke-ScapeI18NFormat -Key "ACTION_PACKAGER_SUCCESS" -Args @($ToolName)); Flag = "Success"; RightFlag = "Success" }
             }
             else {
-                $rows += @{ LeftText = "Packager"; RightText = "Setup failed or requires manual license: $($installResult.Message)"; Flag = "Warning"; RightFlag = "Failure" }
+                $rows += @{ LeftText = "Packager"; RightText = ((Invoke-ScapeI18NFormat -Key "ACTION_PACKAGER_FAIL") + ": $($installResult.Message)"); Flag = "Warning"; RightFlag = "Failure" }
             }
         }
         else {
-            $rows += @{ LeftText = "Missing"; RightText = "$ToolName ($CommandName) is not installed on this system."; Flag = "Failure"; RightFlag = "Failure" }
-            $rows += @{ LeftText = "Hint"; RightText = "Use the built-in packager or install manually."; Flag = "Info"; RightFlag = "Info" }
+            $rows += @{ LeftText = "Missing"; RightText = (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_MISSING" -Args @($ToolName, $CommandName)); Flag = "Failure"; RightFlag = "Failure" }
+            $rows += @{ LeftText = "Hint"; RightText = (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_MISSING_HINT"); Flag = "Info"; RightFlag = "Info" }
         }
     }
     
@@ -54,7 +54,7 @@ function Invoke-ThirdPartyTool {
         TitleKey = $TitleKey
         Rows     = $rows
     }
-    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText "$ToolName AUDIT COMPLETE" -StatusFlag "Success"
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_COMPLETE" -Args @($ToolName)) -StatusFlag "Success" -RunProgress 100 -StepProgress 100
 }
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.ThirdParty.AUTOSPSY' -Handler {

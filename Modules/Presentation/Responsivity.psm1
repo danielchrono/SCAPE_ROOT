@@ -65,8 +65,8 @@ function Set-ScapeViewportLocks {
     process {
         try {
             $layout = Get-ScapeConstant -Path "ui::Layout"
-            $minWidth = $layout.MinWidth
-            $minHeight = $layout.MinHeight
+            $minWidth = if ($layout.MinWidth) { $layout.MinWidth } else { 80 }
+            $minHeight = if ($layout.MinHeight) { $layout.MinHeight } else { 24 }
 
             $raw = $Host.UI.RawUI
             $curW = $raw.WindowSize.Width
@@ -75,9 +75,17 @@ function Set-ScapeViewportLocks {
             $newW = [Math]::Max($curW, $minWidth)
             $newH = [Math]::Max($curH, $minHeight)
 
-            if ($raw.BufferSize.Height -ne $newH -or $raw.BufferSize.Width -ne $newW) {
-                $raw.WindowSize = New-Object System.Management.Automation.Host.Size($newW, $newH)
-                $raw.BufferSize = New-Object System.Management.Automation.Host.Size($newW, $newH)
+            if ($curW -lt $newW -or $curH -lt $newH) {
+                # Se precisa crescer, ajusta o Buffer primeiro para comportar a nova Window
+                $bSize = $raw.BufferSize
+                if ($newW -gt $bSize.Width) { $bSize.Width = $newW }
+                if ($newH -gt $bSize.Height) { $bSize.Height = $newH }
+                $raw.BufferSize = $bSize
+
+                $wSize = $raw.WindowSize
+                $wSize.Width = $newW
+                $wSize.Height = $newH
+                $raw.WindowSize = $wSize
             }
         }
         catch { }

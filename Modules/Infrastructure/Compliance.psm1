@@ -243,3 +243,25 @@ Export-ModuleMember -Function 'Initialize-ScapeCompliance',
                               'Test-ScapeSegmentIntegrity',
                               'Test-ScapeModuleIntegrity',
                               'Export-ScapeComplianceReport'
+Register-ScapeActionHandler -Target 'Scape.Infrastructure.Compliance' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_GENERATING") -StatusFlag "INFO"
+    $root = (Get-ScapeColdState)["ROOT"]
+    if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
+    $exportDir = Join-Path $root "Data\Exports"
+    if (-not (Test-Path $exportDir)) { New-Item -ItemType Directory -Path $exportDir -Force | Out-Null }
+    $exportPath = Join-Path $exportDir "ComplianceReport_$(Get-Date -f 'yyyyMMdd_HHmmss').json"
+    
+    if (Get-Command Export-ScapeComplianceReport -ErrorAction SilentlyContinue) {
+        $result = Export-ScapeComplianceReport -OutputPath $exportPath
+        if ($result.Success) {
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText ((Invoke-ScapeI18NFormat -Key "COMPLIANCE_GENERATED") + ": $($result.Status)") -StatusFlag "Success"
+        } else {
+            Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_FAILED") -StatusFlag "Failure"
+            throw "Compliance export failed"
+        }
+    } else {
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_NO_MODULE") -StatusFlag "Failure"
+        throw "Compliance module not available."
+    }
+}

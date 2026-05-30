@@ -128,19 +128,36 @@ function Invoke-ScapeTelemetryWorkflow {
             $ram = Get-ScapeTelemetryRam
             $cpu = Get-ScapeTelemetryCpu
 
-            $limits = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
-            $critT = if ($limits.ContainsKey("THERMAL_CRITICAL")) { $limits["THERMAL_CRITICAL"] } else { 85 }
-            $critQ = if ($limits.ContainsKey("QUEUE_CRITICAL")) { $limits["QUEUE_CRITICAL"] } else { 10 }
+            $critT = Get-ScapeConstant -Path "hardware::Metrics::ThermalCritical" -Fallback 85
+            $warnT = Get-ScapeConstant -Path "hardware::Metrics::ThermalWarning" -Fallback 75
+            $critQ = Get-ScapeConstant -Path "hardware::Limits::IoQueueCritical" -Fallback 10
+            $warnQ = Get-ScapeConstant -Path "hardware::Limits::IoQueueWarning" -Fallback 5
 
             $actionNeeded = ($temp -ge $critT) -or ($queue -ge $critQ)
 
             $metrics = @{
-                Thermal = @{ Value = $temp; Critical = ($temp -ge $critT); Warning = ($temp -ge 75) }
-                IO      = @{ Value = $queue; Critical = ($queue -ge $critQ); Warning = ($queue -ge 5) }
+                Thermal = @{ Value = $temp; Critical = ($temp -ge $critT); Warning = ($temp -ge $warnT) }
+                IO      = @{ Value = $queue; Critical = ($queue -ge $critQ); Warning = ($queue -ge $warnQ) }
                 Ram     = @{ UsedPct = $ram }
                 CPU     = @{ UsedPct = $cpu }
                 ActionNeeded = $actionNeeded
             }
+            
+            # Atualiza o cache global (Correção do bug de zeros contínuos apontado pelo auditor)
+            $Script:Metrics.Thermal.Current = $temp
+            $Script:Metrics.Thermal.Warning = $metrics.Thermal.Warning
+            $Script:Metrics.Thermal.Critical = $metrics.Thermal.Critical
+            if ($temp -gt $Script:Metrics.Thermal.Peak) { $Script:Metrics.Thermal.Peak = $temp }
+
+            $Script:Metrics.IO.QueueDepth = $queue
+            $Script:Metrics.IO.Warning = $metrics.IO.Warning
+            $Script:Metrics.IO.Critical = $metrics.IO.Critical
+
+            $Script:Metrics.RAM.Current = $ram
+            if ($ram -gt $Script:Metrics.RAM.Peak) { $Script:Metrics.RAM.Peak = $ram }
+
+            $Script:Metrics.CPU.Current = $cpu
+            if ($cpu -gt $Script:Metrics.CPU.Peak) { $Script:Metrics.CPU.Peak = $cpu }
             
             if ($actionNeeded) {
                 Publish-ScapeEvent -Type "TELEMETRY_CRITICAL" -Severity "FATAL" -Payload $metrics

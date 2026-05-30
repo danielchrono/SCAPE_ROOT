@@ -49,7 +49,20 @@ function Invoke-ScapeResilientRead {
                 Publish-ScapeEvent -Type "LOG_ERR" -Payload @{ Action = "LogLine"; Message = $badBlockMsg }
                 return @{ Success = $false; BytesRead = 0; Error = $_.Exception.Message }
             }
-            Start-Sleep -Milliseconds $delayMs
+            
+            # Non-blocking delay
+            $sw = [System.Diagnostics.Stopwatch]::StartNew()
+            while ($sw.ElapsedMilliseconds -lt $delayMs) {
+                if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) {
+                    Invoke-ScapeIdlePump | Out-Null
+                }
+            }
+            $sw.Stop()
         }
     }
+}
+Register-ScapeActionHandler -Target 'Scape.Acquisition.Resilience' -Handler {
+    param($Task, $PayloadDef, $Target)
+    $targetId = Resolve-ScapeActiveTarget
+    if ([string]::IsNullOrWhiteSpace($targetId)) { throw "No Target Bound" }
 }

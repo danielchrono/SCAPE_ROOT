@@ -31,3 +31,9 @@ function Get-ScapePhysicalTarget {
         return $null
     }
 }
+Register-ScapeActionHandler -Target 'Scape.Acquisition.Selection' -Handler {
+    param($Task, $PayloadDef, $Target)
+    if (Get-Command Get-ScapePhysicalTarget -ErrorAction SilentlyContinue) {
+        Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{ Key = "INVENTORY_PHYSICAL_DISKS"; Targets = @(Get-ScapePhysicalTarget) }
+    } else { throw "Not Implemented" }
+}

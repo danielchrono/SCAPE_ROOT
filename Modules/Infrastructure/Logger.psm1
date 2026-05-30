@@ -13,6 +13,38 @@ $Script:Config = $null
 $Script:RotationCounter = "0"
 $Script:Initialized = $false
 
+function Resolve-LogLevel {
+    param([hashtable]$LoggerConfig)
+    $minLevelName = $LoggerConfig["DEFAULT_LEVEL_NAME"]
+    if ([string]::IsNullOrWhiteSpace($minLevelName)) { $minLevelName = "INFO" }
+
+    try { $cs = Get-ScapeColdState } catch { $cs = $null }
+    if ($cs -and $cs.ContainsKey('LOG_LEVEL_OVERRIDE')) { return $cs['LOG_LEVEL_OVERRIDE'] }
+    if ($cs -and $cs.ContainsKey('DEV_MODE') -and $cs['DEV_MODE']) { return 'TRACE' }
+
+    return $minLevelName
+}
+
+function Initialize-LogDirectories {
+    param([hashtable]$LoggerConfig, [hashtable]$DirsConfig)
+    $logDir = $null
+    try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch {}
+
+    if ([string]::IsNullOrWhiteSpace($logDir)) {
+        $root = $null
+        try { $root = (Get-ScapeColdState)["ROOT"] } catch {}
+        if ([string]::IsNullOrWhiteSpace($root)) { return $null }
+        $logFolder = $DirsConfig["LOGS"]
+        if ([string]::IsNullOrWhiteSpace($logFolder)) { $logFolder = "Logs" }
+        $logDir = Join-Path $root $logFolder
+    }
+
+    if (-not (Test-Path -LiteralPath $logDir)) {
+        $null = New-Item -ItemType Directory -Path $logDir -Force
+    }
+    return $logDir
+}
+
 function Initialize-ScapeLogger {
     [CmdletBinding()]
     [OutputType([bool])]
@@ -23,10 +55,8 @@ function Initialize-ScapeLogger {
     $loggerCfg = Get-ScapeConstant -Path "infrastructure::Logger"
     if ($null -eq $loggerCfg) {
         if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
-            Publish-ScapeEvent -Type "SYSTEM_FAULT" -Severity "LOG_WARN" -Payload @{
-                Context = "Logger_Config"
-                Message = Get-ScapeLogMsg -Key "ROUTER_FATAL" -MsgArgs @("LOGGER_CONFIG_MISSING")
-            }
+            $msg = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ROUTER_FATAL" -Args @("LOGGER_CONFIG_MISSING") } else { "LOGGER_CONFIG_MISSING" }
+            Publish-ScapeEvent -Type "SYSTEM_FAULT" -Severity "LOG_WARN" -Payload @{ Context = "Logger_Config"; Message = $msg }
         }
         return $false
     }
@@ -43,74 +73,26 @@ function Initialize-ScapeLogger {
         $Script:SeverityMap = @{ DEBUG = 0; INFO = 1; WARNING = 2; ERROR = 3; FATAL = 4 }
     }
 
-    # Allow runtime override of minimum log level via env var or ColdState keys (no hardcode)
-    $minLevelName = $Script:Config.Logger["DEFAULT_LEVEL_NAME"]
-    if ($null -eq $minLevelName) { $minLevelName = "INFO" }
-
-    $overrideLevel = $null
-    if ($env:SCAPE_LOG_LEVEL) { $overrideLevel = $env:SCAPE_LOG_LEVEL }
-    else {
-        try { $cs = Get-ScapeColdState } catch { $cs = $null }
-        if ($cs -and $cs.ContainsKey('LOG_LEVEL_OVERRIDE')) { $overrideLevel = $cs['LOG_LEVEL_OVERRIDE'] }
-        elseif ($cs -and $cs.ContainsKey('DEV_MODE') -and $cs['DEV_MODE']) { $overrideLevel = 'TRACE' }
-    }
-
-    if ($overrideLevel -and -not [string]::IsNullOrWhiteSpace($overrideLevel)) { $minLevelName = $overrideLevel }
-
+    $minLevelName = Resolve-LogLevel -LoggerConfig $Script:Config.Logger
     $Script:MinSeverityValue = $Script:SeverityMap[$minLevelName]
     if ($null -eq $Script:MinSeverityValue) { $Script:MinSeverityValue = 1 }
 
     try {
-        $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"]
-        if ([string]::IsNullOrWhiteSpace($logDir)) {
-            $root = (Get-ScapeColdState)["ROOT"]
-            if ([string]::IsNullOrWhiteSpace($root)) { return $false }
-            $logFolder = $Script:Config.Dirs["LOGS"]
-            if ($null -eq $logFolder) { $logFolder = "Logs" }
-            $logDir = Join-Path $root $logFolder
-        }
-
-        if (-not (Test-Path $logDir)) {
-            $null = New-Item -ItemType Directory -Path $logDir -Force
-        }
+        $logDir = Initialize-LogDirectories -LoggerConfig $Script:Config.Logger -DirsConfig $Script:Config.Dirs
+        if ($null -eq $logDir) { return $false }
 
         $pattern = $Script:Config.Logger["LOG_FILE_PATTERN"]
-        if ($null -eq $pattern) { $pattern = "scape_{0:yyyyMMdd_HHmmss}.log" }
+        if ([string]::IsNullOrWhiteSpace($pattern)) { $pattern = "scape_{0:yyyyMMdd_HHmmss}.log" }
 
-        $requestedLogFile = $env:SCAPE_LOG_FILE_OVERRIDE
-        $requestedParentLog = $env:SCAPE_LOG_PARENT_FILE
-        $openFailedOnOverride = $false
-
-        if (-not [string]::IsNullOrWhiteSpace($requestedLogFile)) {
-            $overrideDir = Split-Path -Path $requestedLogFile -Parent
-            if (-not [string]::IsNullOrWhiteSpace($overrideDir) -and -not (Test-Path -LiteralPath $overrideDir)) {
-                $null = New-Item -ItemType Directory -Path $overrideDir -Force
-            }
-            try {
-                $Script:CurrentLogFile = $requestedLogFile
-                $Script:LogStream = [System.IO.StreamWriter]::new($Script:CurrentLogFile, $true, [System.Text.Encoding]::UTF8)
-                $Script:LogStream.AutoFlush = ($Script:Config.Logger["LOG_IMMEDIATE_FLUSH"] -eq $true)
-            }
-            catch {
-                $openFailedOnOverride = $true
-                $Script:LogStream = $null
-            }
-        }
-
-        if ($null -eq $Script:LogStream) {
-            $suffix = if ($openFailedOnOverride) { "_child" } else { "" }
-            $localPattern = if ($suffix) { "scape_{0:yyyyMMdd_HHmmss}${suffix}.log" } else { $pattern }
-            $Script:CurrentLogFile = Join-Path $logDir ($localPattern -f [DateTime]::Now)
-            $Script:LogStream = [System.IO.StreamWriter]::new($Script:CurrentLogFile, $true, [System.Text.Encoding]::UTF8)
-            $Script:LogStream.AutoFlush = ($Script:Config.Logger["LOG_IMMEDIATE_FLUSH"] -eq $true)
-        }
+        $Script:CurrentLogFile = Join-Path $logDir ($pattern -f [DateTime]::Now)
+        $Script:LogStream = [System.IO.StreamWriter]::new($Script:CurrentLogFile, $true, [System.Text.Encoding]::UTF8)
+        $Script:LogStream.AutoFlush = ($Script:Config.Logger["LOG_IMMEDIATE_FLUSH"] -eq $true)
 
         $maxOps = $Script:Config.Limits["MAX_CONCURRENT_OPS"]
         if ($null -eq $maxOps) { $maxOps = 16 }
         $Script:Semaphore = [System.Threading.SemaphoreSlim]::new($maxOps, $maxOps)
 
         if (Get-Command "Register-ScapeEventListener" -ErrorAction SilentlyContinue) {
-            # Capture module-scoped state into closure variables for cross-module execution
             $loggerRef = [ref]$Script:LogStream
             $semRef = [ref]$Script:Semaphore
             $configRef = $Script:Config
@@ -145,7 +127,6 @@ function Initialize-ScapeLogger {
                     }
 
                     try {
-                        # Inline rotation check
                         $maxSizeMB = $configRef.Logger["MAX_LOG_SIZE_MB"]
                         if ($null -eq $maxSizeMB) { $maxSizeMB = 10 }
                         $curFile = $currentFileRef.Value
@@ -166,7 +147,6 @@ function Initialize-ScapeLogger {
                             }
                         }
 
-                        # Write the log record
                         if ($stream.BaseStream.CanWrite) {
                             $timeFormat = $configRef.Logger["TIMESTAMP_FORMAT"]
                             if ($null -eq $timeFormat) { $timeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ" }
@@ -187,15 +167,13 @@ function Initialize-ScapeLogger {
                         $null = $sem.Release()
                     }
                 }
-                catch {
-                    # Suppress to prevent loop — logger must never throw into EventBus
-                }
+                catch {}
             }.GetNewClosure()
 
             Register-ScapeEventListener -EventMatch "*" -Action $logAction
 
             $stopEvents = $Script:Config.Logger["SHUTDOWN_EVENTS"]
-            if ($null -eq $stopEvents) { $stopEvents = @("ROUTER_STOP", "SYSTEM_CRASH", "DEPLOYER_DONE") }
+            if ($null -eq $stopEvents) { $stopEvents = @("SYSTEM_CRASH", "DEPLOYER_DONE") }
             $stopEvents = @($stopEvents | Where-Object { $_ -ne "ROUTER_STOP" })
             if ($stopEvents.Count -gt 0) {
                 $stopRegex = "($($stopEvents -join '|'))"
@@ -210,30 +188,15 @@ function Initialize-ScapeLogger {
             LogFile   = $Script:CurrentLogFile
             MinLevel  = $minLevelName
             MaxSizeMB = $maxSize
-            Message   = Get-ScapeLogMsg -Key "CORE_ENGINE_START"
-        }
-
-        if (-not [string]::IsNullOrWhiteSpace($requestedParentLog)) {
-            Publish-ScapeEvent -Type "LOGGER_HANDOVER_CHILD" -Severity "LOG_INFO" -Payload @{
-                ParentLog = $requestedParentLog
-                ChildLog  = $Script:CurrentLogFile
-                Continuity = $true
-            }
-        }
-
-        if ($openFailedOnOverride -and -not [string]::IsNullOrWhiteSpace($requestedLogFile)) {
-            Publish-ScapeEvent -Type "LOGGER_HANDOVER_FALLBACK" -Severity "LOG_WARN" -Payload @{
-                RequestedLog = $requestedLogFile
-                FallbackLog  = $Script:CurrentLogFile
-            }
+            Message   = $(if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "CORE_ENGINE_START" -Args @() } else { "CORE_ENGINE_START" })
         }
 
         $Script:Initialized = $true
         return $true
     }
     catch {
-        Publish-ScapeFault -ErrorRecord $_ -Context "Logger_Init" -Message (
-            Get-ScapeLogMsg -Key "ROUTER_FATAL" -MsgArgs @($_.Exception.Message)
+        Publish-ScapeFault -ErrorRecord $_ -Context "Logger_Init" -Message $(
+            if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ROUTER_FATAL" -Args @($_.Exception.Message) } else { $_.Exception.Message }
         )
         return $false
     }
@@ -338,7 +301,7 @@ function _RotateLogIfNeeded {
 
         Publish-ScapeEvent -Type "LOG_ROTATED" -Severity "LOG_INFO" -Payload @{
             OldFile = $archived; NewFile = $Script:CurrentLogFile; Counter = $Script:RotationCounter
-            Message = Get-ScapeLogMsg -Key "LOG_ROTATED" -MsgArgs @($archived, $Script:CurrentLogFile, $Script:RotationCounter)
+            Message = $(if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "LOG_ROTATED" -Args @($archived, $Script:CurrentLogFile, $Script:RotationCounter) } else { "LOG_ROTATED" })
         }
     }
     catch { }

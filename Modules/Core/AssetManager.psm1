@@ -17,9 +17,19 @@ function Invoke-ScapeLoadAsset {
     try {
         $state = Get-ScapeColdState
         if ($null -eq $state) { throw "STATE_UNINITIALIZED" }
-        if (-not $state.ContainsKey("Assets")) { $state["Assets"] = @{} }
-        if (-not $state["Assets"].ContainsKey($Category)) { $state["Assets"][$Category] = @{} }
-        if ($state["Assets"][$Category].ContainsKey($AssetId)) { return $true }
+        
+        if (-not $state.ContainsKey("Assets")) { 
+            $assetsContainer = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new([System.StringComparer]::OrdinalIgnoreCase)
+            Update-ScapeColdState -NewProperties @{ Assets = $assetsContainer } | Out-Null
+        }
+        
+        $assets = $state["Assets"]
+        if (-not $assets.ContainsKey($Category)) { 
+            $assets[$Category] = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        }
+        
+        if ($assets[$Category].ContainsKey($AssetId)) { return $true }
+        
         $rawData = $null
         $devMode = $state["DEV_MODE"] -eq $true
         if (-not $devMode) {
@@ -34,7 +44,9 @@ function Invoke-ScapeLoadAsset {
             $rawData = Invoke-Command -ScriptBlock ([scriptblock]::Create($payload))
         }
         if ($null -eq $rawData) { throw "PARSE_FAILED" }
-        $state["Assets"][$Category][$AssetId] = $rawData
+        
+        $assets[$Category][$AssetId] = $rawData
+        
         if (-not $Silent) { Publish-ScapeEvent -Type "ASSET_LOADED" -Severity "INFO" -Payload "$Category/$AssetId" }
         return $true
     }

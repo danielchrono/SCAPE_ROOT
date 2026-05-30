@@ -86,3 +86,14 @@ function Get-ScapePipelineStat {
         Dropped        = $Script:Stats.Dropped
     }
 }
+Register-ScapeActionHandler -Target 'Scape.Infrastructure.Pipeline' -Handler {
+    param($Task, $PayloadDef, $Target)
+    Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "PIPELINE_INIT") -StatusFlag "INFO" -RunProgress 20 -StepProgress 30
+    if (Get-Command Initialize-ScapePipeline -ErrorAction SilentlyContinue) {
+        Initialize-ScapePipeline | Out-Null
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "PIPELINE_ACTIVE") -StatusFlag "Success" -RunProgress 100 -StepProgress 100
+    } else {
+        Write-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "PIPELINE_NO_MODULE") -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
+        throw "Pipeline module not available."
+    }
+}

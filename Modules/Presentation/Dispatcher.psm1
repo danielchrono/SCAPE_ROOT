@@ -39,7 +39,7 @@ function Test-ScapeUiEventCategory {
             $out.RenderTarget = 'MasterRedraw'
             $out.Priority = 0
         }
-        elseif ($typ -match 'HINT|WARN|DEBUG|ROUTER|SYSTEM|INFO|ERROR|LAZY_WAKEUP') {
+        elseif ($typ -match 'HINT|WARN|DEBUG|ROUTER|SYSTEM|INFO|ERROR') {
             $out.ShouldRender = $true
             $out.RenderTarget = 'TransientLog'
             $out.Priority = 3
@@ -95,12 +95,26 @@ function Format-ScapeTransientMessage {
         if ([string]::IsNullOrWhiteSpace($msg)) {
             $k = $pay['Key']
             if ($k) {
-                $i18n = Get-ScapeConstant -Path "i18n::$k"
-                $msg = if ($i18n -and $i18n.T) { $i18n.T } else { $k }
+                $args = if ($pay['Tokens']) { $pay['Tokens'] } else { @() }
+                if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) {
+                    $msg = Invoke-ScapeI18NFormat -Key $k -Args $args
+                } else {
+                    $i18n = Get-ScapeConstant -Path "i18n::$k"
+                    $msg = if ($i18n -and $i18n.T) { $i18n.T } else { $k }
+                    if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch {} }
+                }
             }
             else {
                 $tgt = $pay['Target']
-                $msg = if ($tgt) { "Target: $tgt" } else { $typ }
+                if ($tgt) {
+                    if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) {
+                        $msg = Invoke-ScapeI18NFormat -Key "DISPATCHER_TARGET_LABEL" -Args @($tgt)
+                    } else {
+                        $msg = "Target: $tgt"
+                    }
+                } else {
+                    $msg = $typ
+                }
             }
         }
 
@@ -108,7 +122,6 @@ function Format-ScapeTransientMessage {
         switch ($typ) {
             'ROUTER_FATAL' { $iconKey = 'Failure' }
             'SYSTEM' { $iconKey = 'Info' }
-            'LAZY_WAKEUP' { $iconKey = 'Loading' }
             'PROGRESS' { $iconKey = 'Processing' }
             default {
                 switch ($Severity) {
@@ -124,7 +137,7 @@ function Format-ScapeTransientMessage {
         if ($Severity -in @('ERROR', 'FATAL') -or $typ -match 'ERR|FATAL|FAULT') { $flag = 'FATAL' }
         elseif ($Severity -eq 'WARN' -or $typ -match 'WARN') { $flag = 'WARN' }
         elseif ($Severity -in @('DEBUG', 'TRACE') -or $typ -match 'DEBUG|TRACE') { $flag = 'DEBUG' }
-        elseif ($typ -match 'HINT|SYSTEM|INFO|LAZY_WAKEUP') { $flag = 'HINT' }
+        elseif ($typ -match 'HINT|SYSTEM|INFO') { $flag = 'HINT' }
 
         return @{ Text = $msg; Flag = $flag; SemanticIcon = $iconKey }
     }

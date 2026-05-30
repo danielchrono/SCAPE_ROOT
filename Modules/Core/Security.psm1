@@ -20,23 +20,23 @@ function Enable-ScapePrivilege {
     $access = $tokenAdj -bor $tokenQry
 
     $token = [IntPtr]::Zero
-    $process = [Scape.Core.Native.Win32DiskBridge]::GetCurrentProcess()
+    $process = [Scape.Core.Native.Win32Security]::GetCurrentProcess()
 
-    if (-not [Scape.Core.Native.Win32DiskBridge]::OpenProcessToken($process, $access, [ref]$token)) {
+    if (-not [Scape.Core.Native.Win32Security]::OpenProcessToken($process, $access, [ref]$token)) {
         return $false
     }
 
-    $luid = New-Object Scape.Core.Native.Win32DiskBridge+LUID
-    if (-not [Scape.Core.Native.Win32DiskBridge]::LookupPrivilegeValue($null, $privilegeName, [ref]$luid)) {
+    $luid = New-Object Scape.Core.Native.Win32Security+LUID
+    if (-not [Scape.Core.Native.Win32Security]::LookupPrivilegeValue($null, $privilegeName, [ref]$luid)) {
         return $false
     }
 
-    $tp = New-Object Scape.Core.Native.Win32DiskBridge+TOKEN_PRIVILEGES
+    $tp = New-Object Scape.Core.Native.Win32Security+TOKEN_PRIVILEGES
     $tp.PrivilegeCount = 1
     $tp.Luid = $luid
     $tp.Attributes = Get-ScapeConstant -Path "core::SECURITY::SE_PRIVILEGE_ENABLED" -Fallback 0x00000002
 
-    $res = [Scape.Core.Native.Win32DiskBridge]::AdjustTokenPrivileges($token, $false, [ref]$tp, 0, [IntPtr]::Zero, [IntPtr]::Zero)
+    $res = [Scape.Core.Native.Win32Security]::AdjustTokenPrivileges($token, $false, [ref]$tp, 0, [IntPtr]::Zero, [IntPtr]::Zero)
 
     if ($res) {
         Publish-ScapeEvent -Type "SECURITY_ELEVATED" -Severity "LOG_INFO" -Payload $privilegeName

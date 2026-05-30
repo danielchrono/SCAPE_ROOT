@@ -12,36 +12,64 @@ function Invoke-ScapeDirectoryPicker {
     [OutputType([void])]
     param([hashtable]$Payload)
     process {
-        Publish-ScapeEvent -Type "NET_MAP_INIT" -Severity "INFO" -Payload @{ Message = "Initializing secure directory selection sandbox..." }
+        $initMsg = Invoke-ScapeI18NFormat -Key "FILEPICKER_INIT"
+        Publish-ScapeEvent -Type "NET_MAP_INIT" -Severity "INFO" -Payload @{ Message = $initMsg }
 
         $selectedPath = $null
 
         try {
             $shell = New-Object -ComObject Shell.Application
-            $folder = $shell.BrowseForFolder(0, "SCAPE STAGING: Select Destination Sandbox", 0x0240, 0)
+            $dialogTitle = Invoke-ScapeI18NFormat -Key "FILEPICKER_DIALOG"
+            $folder = $shell.BrowseForFolder(0, $dialogTitle, 0x0240, 0)
 
             if ($null -ne $folder) {
                 $selectedPath = $folder.Self.Path
             }
         }
         catch {
-            Publish-ScapeEvent -Type "UI_SELECT_DIR_ERROR" -Severity "WARN" -Payload @{ Message = "COM Interface failed. Engaging CLI manual prompt." }
+            $failMsg = Invoke-ScapeI18NFormat -Key "FILEPICKER_COM_FAIL"
+            Publish-ScapeEvent -Type "UI_SELECT_DIR_ERROR" -Severity "WARN" -Payload @{ Message = $failMsg }
 
             [Console]::CursorVisible = $true
             [Console]::WriteLine("`n")
-            $selectedPath = [Console]::ReadLine()
+            
+            $buf = ""
+            while ($true) {
+                if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+                if ($Host.UI.RawUI.KeyAvailable) {
+                    $k = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+                    if ($k.VirtualKeyCode -eq 13) { break }
+                    if ($k.VirtualKeyCode -eq 8) { 
+                        if ($buf.Length -gt 0) { 
+                            $buf = $buf.Substring(0, $buf.Length - 1)
+                            $x = [Console]::CursorLeft
+                            $y = [Console]::CursorTop
+                            if ($x -gt 0) { [Console]::SetCursorPosition($x - 1, $y); [Console]::Write(" "); [Console]::SetCursorPosition($x - 1, $y) }
+                        } 
+                    }
+                    elseif ($k.Character -ne 0) { 
+                        $buf += $k.Character
+                        [Console]::Write($k.Character) 
+                    }
+                } else {
+                    Start-Sleep -Milliseconds 15
+                }
+            }
+            $selectedPath = $buf
             [Console]::CursorVisible = $false
         }
 
         if ([string]::IsNullOrWhiteSpace($selectedPath)) {
-            Publish-ScapeEvent -Type "NET_MAP_CANCELLED" -Severity "WARN" -Payload @{ Message = "Operation cancelled by operator." }
+            $cancelMsg = Invoke-ScapeI18NFormat -Key "FILEPICKER_CANCEL"
+            Publish-ScapeEvent -Type "NET_MAP_CANCELLED" -Severity "WARN" -Payload @{ Message = $cancelMsg }
             return
         }
 
         if (-not (Test-Path $selectedPath)) {
             try { New-Item -ItemType Directory -Path $selectedPath -Force | Out-Null }
             catch {
-                Publish-ScapeEvent -Type "ERR_PATH_INVALID" -Severity "ERROR" -Payload @{ Message = "Cannot create staging path: $selectedPath" }
+                $invalidMsg = (Invoke-ScapeI18NFormat -Key "FILEPICKER_INVALID") -f $selectedPath
+                Publish-ScapeEvent -Type "ERR_PATH_INVALID" -Severity "ERROR" -Payload @{ Message = $invalidMsg }
                 return
             }
         }
@@ -54,7 +82,12 @@ function Invoke-ScapeDirectoryPicker {
                 SelectionId = "FOLDER"
                 Timestamp   = [DateTime]::Now
             }
-            Publish-ScapeEvent -Type "RC_SPACE_CHECK" -Severity "SUCCESS" -Payload @{ Message = "Staging locked to: $selectedPath" }
+            $lockedMsg = (Invoke-ScapeI18NFormat -Key "FILEPICKER_LOCKED") -f $selectedPath
+            Publish-ScapeEvent -Type "RC_SPACE_CHECK" -Severity "SUCCESS" -Payload @{ Message = $lockedMsg }
         }
     }
+}
+Register-ScapeActionHandler -Target 'Scape.Presentation.FilePicker' -Handler {
+    param($Task, $PayloadDef, $Target)
+    if (Get-Command Invoke-ScapeDirectoryPicker -ErrorAction SilentlyContinue) { Invoke-ScapeDirectoryPicker -Payload $PayloadDef }
 }
