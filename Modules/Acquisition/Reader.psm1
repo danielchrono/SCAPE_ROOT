@@ -1,4 +1,4 @@
-﻿<#.SYNOPSIS
+<#.SYNOPSIS
     Domain: Acquisition
     Module: Scape.Acquisition.Reader
     Description: Chunk-based raw disk reader. Aligns reads to sector boundaries and feeds the Analysis layer.
@@ -24,7 +24,9 @@ function Read-ScapeDiskStream {
         [Parameter(Mandatory = $true)]
         [long]$EndOffset,
 
-        [string]$VolumeSerial = "RAW_VOL"
+        [string]$VolumeSerial = "RAW_VOL",
+        
+        [scriptblock]$OnChunkAnalyzed = $null
     )
 
     if (-not $Script:C) { Initialize-ScapeReader }
@@ -75,7 +77,10 @@ function Read-ScapeDiskStream {
                 [System.Array]::Copy($readResult.Buffer, 0, $validSlice, 0, $readResult.BytesRead)
 
                 if (Get-Command "Start-ScapeAnalysisStream" -ErrorAction SilentlyContinue) {
-                    Start-ScapeAnalysisStream -SectorBuffer $validSlice -PhysicalOffset $currentOffset -VolumeSerial $VolumeSerial
+                    $chunkResult = Start-ScapeAnalysisStream -SectorBuffer $validSlice -PhysicalOffset $currentOffset -VolumeSerial $VolumeSerial
+                    if ($null -ne $OnChunkAnalyzed -and $null -ne $chunkResult) {
+                        & $OnChunkAnalyzed $chunkResult
+                    }
                 }
 
                 # Avança o ponteiro. O overlap garante que assinaturas na borda não sejam perdidas
