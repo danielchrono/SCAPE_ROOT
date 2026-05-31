@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.FS.Metadata
     Description: High-performance filesystem metadata parser, timestamp normalizer, and forensic record mapper.
@@ -13,31 +13,31 @@ $Script:Limits = $null
 # Helper functions com parÃ¢metros tipados para evitar PSReviewUnusedParameter
 function Read-ScapeUInt16LE {
     [CmdletBinding()][OutputType([uint16])]
-    param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
+    param([Parameter(Mandatory = $true)][byte[]]$Buf, [Parameter(Mandatory = $true)][int]$Off)
     return [BitConverter]::ToUInt16($Buf, $Off)
 }
 function Read-ScapeUInt32LE {
     [CmdletBinding()][OutputType([uint32])]
-    param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
+    param([Parameter(Mandatory = $true)][byte[]]$Buf, [Parameter(Mandatory = $true)][int]$Off)
     return [BitConverter]::ToUInt32($Buf, $Off)
 }
 function Read-ScapeUInt64LE {
     [CmdletBinding()][OutputType([uint64])]
-    param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
+    param([Parameter(Mandatory = $true)][byte[]]$Buf, [Parameter(Mandatory = $true)][int]$Off)
     return [BitConverter]::ToUInt64($Buf, $Off)
 }
 function Read-ScapeInt64LE {
     [CmdletBinding()][OutputType([int64])]
-    param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
+    param([Parameter(Mandatory = $true)][byte[]]$Buf, [Parameter(Mandatory = $true)][int]$Off)
     return [BitConverter]::ToInt64($Buf, $Off)
 }
 
 function Read-ScapeAsciiString {
     [CmdletBinding()][OutputType([string])]
     param(
-        [Parameter(Mandatory=$true)][byte[]]$Buf,
-        [Parameter(Mandatory=$true)][int]$Off,
-        [Parameter(Mandatory=$true)][int]$Len
+        [Parameter(Mandatory = $true)][byte[]]$Buf,
+        [Parameter(Mandatory = $true)][int]$Off,
+        [Parameter(Mandatory = $true)][int]$Len
     )
     if ($Len -le 0 -or ($Off + $Len) -gt $Buf.Length) { return "" }
     $bytes = $Buf[$Off..($Off + $Len - 1)]
@@ -48,9 +48,9 @@ function Read-ScapeAsciiString {
 function Read-ScapeUTF16LEString {
     [CmdletBinding()][OutputType([string])]
     param(
-        [Parameter(Mandatory=$true)][byte[]]$Buf,
-        [Parameter(Mandatory=$true)][int]$Off,
-        [Parameter(Mandatory=$true)][int]$Len
+        [Parameter(Mandatory = $true)][byte[]]$Buf,
+        [Parameter(Mandatory = $true)][int]$Off,
+        [Parameter(Mandatory = $true)][int]$Len
     )
     if ($Len -le 0 -or ($Off + $Len) -gt $Buf.Length) { return "" }
     $text = [System.Text.Encoding]::Unicode.GetString($Buf, $Off, $Len).Trim()
@@ -59,7 +59,7 @@ function Read-ScapeUTF16LEString {
 
 function Convert-ScapeNTFSTime {
     [CmdletBinding()][OutputType([DateTime])]
-    param([Parameter(Mandatory=$true)][long]$Raw100ns)
+    param([Parameter(Mandatory = $true)][long]$Raw100ns)
     if ($Raw100ns -le 0) { return $null }
     try {
         $base = [DateTime]::new(1601, 1, 1, 0, 0, 0, [System.DateTimeKind]::Utc)
@@ -70,7 +70,7 @@ function Convert-ScapeNTFSTime {
 
 function Convert-ScapeFATTime {
     [CmdletBinding()][OutputType([DateTime])]
-    param([Parameter(Mandatory=$true)][uint16]$Time, [Parameter(Mandatory=$true)][uint16]$Date)
+    param([Parameter(Mandatory = $true)][uint16]$Time, [Parameter(Mandatory = $true)][uint16]$Date)
     if ($Date -eq 0 -or $Time -eq 0) { return $null }
     $year = (($Date -shr 9) -band 0x7F) + 1980
     $month = ($Date -shr 5) -band 0x0F; $day = $Date -band 0x1F
@@ -81,7 +81,7 @@ function Convert-ScapeFATTime {
 
 function Convert-ScapeUnixTime {
     [CmdletBinding()][OutputType([DateTime])]
-    param([Parameter(Mandatory=$true)][uint32]$Epoch)
+    param([Parameter(Mandatory = $true)][uint32]$Epoch)
     if ($Epoch -eq 0) { return $null }
     try { return [DateTimeOffset]::FromUnixTimeSeconds($Epoch).UtcDateTime }
     catch { return $null }
@@ -90,8 +90,8 @@ function Convert-ScapeUnixTime {
 function Get-ScapeNTFSMFT {
     [CmdletBinding()][OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory=$true)][byte[]]$Buffer,
-        [Parameter(Mandatory=$true)][int]$Offset
+        [Parameter(Mandatory = $true)][byte[]]$Buffer,
+        [Parameter(Mandatory = $true)][int]$Offset
     )
     if (-not $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
 
@@ -152,8 +152,8 @@ function Get-ScapeNTFSMFT {
 function Get-ScapeFATEntry {
     [CmdletBinding()][OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory=$true)][byte[]]$Buffer,
-        [Parameter(Mandatory=$true)][int]$Offset
+        [Parameter(Mandatory = $true)][byte[]]$Buffer,
+        [Parameter(Mandatory = $true)][int]$Offset
     )
     if (-not $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
 
@@ -185,8 +185,8 @@ function Get-ScapeFATEntry {
 function Get-ScapeEXTInode {
     [CmdletBinding()][OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory=$true)][byte[]]$Buffer,
-        [Parameter(Mandatory=$true)][int]$Offset
+        [Parameter(Mandatory = $true)][byte[]]$Buffer,
+        [Parameter(Mandatory = $true)][int]$Offset
     )
     if (-not $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
 
@@ -219,9 +219,9 @@ function Get-ScapeEXTInode {
 function Get-ScapeFSMeta {
     [CmdletBinding()][OutputType([PSCustomObject])]
     param(
-        [Parameter(Mandatory=$true)][byte[]]$Buffer,
-        [Parameter(Mandatory=$true)][int]$Offset,
-        [Parameter(Mandatory=$true)][ValidateSet("NTFS", "FAT32", "EXT4", "RAW")][string]$FSType,
+        [Parameter(Mandatory = $true)][byte[]]$Buffer,
+        [Parameter(Mandatory = $true)][int]$Offset,
+        [Parameter(Mandatory = $true)][ValidateSet("NTFS", "FAT32", "EXT4", "RAW")][string]$FSType,
         [string]$VolumeSerial = ""
     )
     if (-not $Script:FSConstants) { Initialize-ScapeFSMetadataEngine }
@@ -236,7 +236,7 @@ function Get-ScapeFSMeta {
     if ($null -eq $result) {
         Publish-ScapeEvent -Type "LOG_WARN" -Payload @{
             Action = "LogLine"
-            Key = "ERR_CORRUPTED_RECORD"
+            Key    = "ERR_CORRUPTED_RECORD"
             Offset = $Offset
             FSType = $FSType
         }
@@ -254,7 +254,7 @@ function Get-ScapeFSMeta {
 
 function Convert-ScapeMetadataToDBRecord {
     [CmdletBinding()][OutputType([PSCustomObject])]
-    param([Parameter(Mandatory=$true)][PSCustomObject]$Meta)
+    param([Parameter(Mandatory = $true)][PSCustomObject]$Meta)
 
     if ($null -eq $Meta) { return $null }
     if (-not $Script:DBConstants) { Initialize-ScapeFSMetadataEngine }
@@ -278,7 +278,7 @@ function Convert-ScapeMetadataToDBRecord {
 
 function Test-ScapeMetadataIntegrity {
     [CmdletBinding()][OutputType([bool])]
-    param([Parameter(Mandatory=$true)][PSCustomObject]$Record)
+    param([Parameter(Mandatory = $true)][PSCustomObject]$Record)
 
     if ($null -eq $Record) { return $false }
     if (-not $Script:Limits) { Initialize-ScapeFSMetadataEngine }

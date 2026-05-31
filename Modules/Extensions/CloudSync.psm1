@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.CloudSync
     Architecture: Robocopy Cloud Engine integration and pre-flight space checks.
@@ -74,7 +74,7 @@ function Get-ScapeSyncSpaceRequirement {
             if ($r -is [long] -or $r -is [int]) { $reqBytes = [long]$r }
             $conn.Close()
         }
-        catch { Write-Verbose "Suppressed error:         catch {}";}
+        catch { Write-Verbose "Suppressed error:         catch {}"; }
     }
 
     $availGB = if (Test-Path $StagingPath) { (Get-PSDrive -Name ($StagingPath.Substring(0, 1))).Free / 1GB } else { 0 }
@@ -125,8 +125,8 @@ function Start-ScapeRobocopyConfiguration {
 }
 
 Export-ModuleMember -Function 'Start-ScapeRobocopyConfiguration',
-    'Get-ScapeSyncSpaceRequirement',
-    'Invoke-ScapeRobocopy'
+'Get-ScapeSyncSpaceRequirement',
+'Invoke-ScapeRobocopy'
 
 Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync' -Handler {
     param($Task, $PayloadDef, $Target)

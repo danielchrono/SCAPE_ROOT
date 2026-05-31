@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Analyzer
@@ -100,7 +100,7 @@ function Invoke-ScapeBatchAnalysis {
                 # MVVM estrito: Presentation nÃ£o deve buscar ProgressStyle em ColdState/estado global.
                 # Aqui derivamos ProgressStyle como read-only e injetamos no Payload.
                 $progressStyle = $null
-                try { $progressStyle = (Get-ScapeColdState)['ProgressStyle'] } catch { Write-Verbose "Suppressed error:                 try { $progressStyle = (Get-ScapeColdState)['ProgressStyle'] } catch {}";}
+                try { $progressStyle = (Get-ScapeColdState)['ProgressStyle'] } catch { Write-Verbose "Suppressed error:                 try { $progressStyle = (Get-ScapeColdState)['ProgressStyle'] } catch {}"; }
                 Publish-ScapeEvent -Type "PROGRESS" -Payload @{
                     Action        = "ProgressBar"
                     TaskID        = 1

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.Parser.Core
     Architecture: Deterministic Metadata Orchestrator (Plan A)
@@ -12,7 +12,7 @@ function Invoke-ScapeTargetedParsing {
     [OutputType([void])]
     param([hashtable]$Payload)
     process {
-        $state  = Get-ScapeColdState
+        $state = Get-ScapeColdState
         $target = if ($Payload -and $Payload.ContainsKey('Target')) { $Payload['Target'] } else { Get-ScapeProperty -Object $state -PropertyName 'ActiveTarget' -Fallback $null }
 
         if ($null -eq $target) {

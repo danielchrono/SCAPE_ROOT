@@ -42,11 +42,11 @@ if (Get-Module PSReadLine -ErrorAction SilentlyContinue) { Remove-Module PSReadL
 if ([string]::IsNullOrWhiteSpace($env:SCAPE_GRAPHIC_MODE)) { $env:SCAPE_GRAPHIC_MODE = "1" }
 
 $topoPath = Join-Path -Path $Global:AppRoot -ChildPath "Data\Manifests\Topology.psd1"
-$regPath  = Join-Path -Path $Global:AppRoot -ChildPath "Data\Manifests\Registry.psd1"
+$regPath = Join-Path -Path $Global:AppRoot -ChildPath "Data\Manifests\Registry.psd1"
 if (-not (Test-Path $topoPath)) { throw "HANDOFF_FATAL: Topology.psd1 not found at $topoPath" }
 if (-not (Test-Path $regPath)) { throw "HANDOFF_FATAL: Registry.psd1 not found at $regPath" }
 $rawTopo = [System.IO.File]::ReadAllText($topoPath, [System.Text.Encoding]::UTF8).Trim((([char]0xFEFF), " "))
-$rawReg  = [System.IO.File]::ReadAllText($regPath, [System.Text.Encoding]::UTF8).Trim((([char]0xFEFF), " "))
+$rawReg = [System.IO.File]::ReadAllText($regPath, [System.Text.Encoding]::UTF8).Trim((([char]0xFEFF), " "))
 $manifest = Invoke-Command -ScriptBlock ([scriptblock]::Create($rawTopo))
 $registry = Invoke-Command -ScriptBlock ([scriptblock]::Create($rawReg))
 if ($null -eq $manifest) { throw "HANDOFF_FATAL: Failed to parse Topology.psd1." }
@@ -83,7 +83,7 @@ if (Get-Command Invoke-ScapeLoadAsset -ErrorAction SilentlyContinue) {
         $isLazy = if ($seg -is [hashtable]) { $seg["IsLazy"] } else { $seg.IsLazy }
         if ($isLazy -eq $false) {
             $file = if ($seg -is [hashtable]) { $seg["File"] } else { $seg.File }
-            $cat  = if ($seg -is [hashtable]) { $seg["Category"] } else { $seg.Category }
+            $cat = if ($seg -is [hashtable]) { $seg["Category"] } else { $seg.Category }
             $assetPath = Join-Path -Path $Global:AppRoot -ChildPath $file
             if (Test-Path -LiteralPath $assetPath) {
                 $rawAsset = [System.IO.File]::ReadAllText($assetPath, [System.Text.Encoding]::UTF8).Trim((([char]0xFEFF), " "))
@@ -102,7 +102,7 @@ if (Get-Command Initialize-ScapeTheme -ErrorAction SilentlyContinue) { Initializ
 if (Get-Command Initialize-ScapeRenderer -ErrorAction SilentlyContinue) { Initialize-ScapeRenderer | Out-Null }
 
 if (Get-Command Resolve-ScapeManifestLayer -ErrorAction SilentlyContinue) { Resolve-ScapeManifestLayer -LayerKey "Presentation" | Out-Null }
-if (Get-Command Invoke-ScapeWakeAssets -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAssets -Domain "Presentation" | Out-Null }
+if (Get-Command Invoke-ScapeWakeAsset -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAsset -Domain "Presentation" | Out-Null }
 $defaultLang = Get-ScapeConstant -Path "system::Defaults::LANG" -Fallback "en-US"
 Publish-ScapeEvent -Type "LANG_SWITCH" -Severity "INFO" -Payload @{ Language = $defaultLang }
 
@@ -112,7 +112,7 @@ if ($null -eq $navCheck) { throw "HANDOFF_FATAL: Navigation manifest failed to m
 try {
     if ($SimulateUX) {
         if (Get-Command Resolve-ScapeManifestLayer -ErrorAction SilentlyContinue) { Resolve-ScapeManifestLayer -LayerKey "Diagnostics" | Out-Null }
-        if (Get-Command Invoke-ScapeWakeAssets -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAssets -Domain "Diagnostics" | Out-Null }
+        if (Get-Command Invoke-ScapeWakeAsset -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAsset -Domain "Diagnostics" | Out-Null }
         if (Get-Command Start-ScapeUXSimulation -ErrorAction SilentlyContinue) {
             Start-ScapeUXSimulation -Steps 20 -DelayMs 250
         }

@@ -184,7 +184,7 @@ Initialize-ScapeSetting -ForceReset:$false | Out-Null
 if (Get-Command Initialize-ScapeTheme -ErrorAction SilentlyContinue) { Initialize-ScapeTheme | Out-Null }
 if (Get-Command Initialize-ScapeRenderer -ErrorAction SilentlyContinue) { Initialize-ScapeRenderer | Out-Null }
 if (Get-Command Initialize-ScapeResolver -ErrorAction SilentlyContinue) { Initialize-ScapeResolver | Out-Null }
-if (Get-Command Invoke-ScapeWakeAssets -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAssets -Domain "Presentation" | Out-Null }
+if (Get-Command Invoke-ScapeWakeAsset -ErrorAction SilentlyContinue) { Invoke-ScapeWakeAsset -Domain "Presentation" | Out-Null }
 if (Get-Command Initialize-ScapeStateObserver -ErrorAction SilentlyContinue) { Initialize-ScapeStateObserver -AutoRegister -Confirm:$false | Out-Null }
 
 # 8. Start deploy router integrated with Forge workflow

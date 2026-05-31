@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Forensics | Module: Scape.Forensics.NativeTools
     Architecture: Specialized Native Forensics Handler

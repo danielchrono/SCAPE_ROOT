@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Carving.Carver
@@ -6,7 +6,7 @@
     Architecture: FP Strict | Zero Hardcode | Event-Pipeline | Backpressure-Aware
 #>
 
-$Script:Stats = @{ Processed = 0; Carved = 0; Errors = 0 } # Deprecated in favor of FP
+
 
 
 function Invoke-ScapeRawCarving {
@@ -72,7 +72,7 @@ function Invoke-ScapeRawCarving {
             $localStats.Carved++
 
             if ($carvedBatch.Count -ge $batchSize) {
-                _FlushCarvedBatch -Batch $carvedBatch
+                Invoke-ScapeCarvedBatchFlush -Batch $carvedBatch
                 $carvedBatch.Clear()
             }
             $i += $carveSize
@@ -84,7 +84,7 @@ function Invoke-ScapeRawCarving {
     }
 
     if ($carvedBatch.Count -gt 0) {
-        _FlushCarvedBatch -Batch $carvedBatch
+        Invoke-ScapeCarvedBatchFlush -Batch $carvedBatch
     }
 
     Publish-ScapeEvent -Type "METRIC" -Payload @{ Action = "LogLine"; Key = "CARVING_STATS"; Args = @("Processed: $($localStats.Processed)", "Carved: $($localStats.Carved)", "Errors: $($localStats.Errors)"); Severity = "LOG_DEBUG" }
@@ -92,7 +92,7 @@ function Invoke-ScapeRawCarving {
     return @{ Processed = $localStats.Processed; Carved = $localStats.Carved }
 }
 
-function _FlushCarvedBatch {
+function Invoke-ScapeCarvedBatchFlush {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][System.Collections.Generic.List[PSCustomObject]]$Batch)
 
@@ -101,18 +101,3 @@ function _FlushCarvedBatch {
     Publish-ScapeEvent -Type "CARVED_ARTIFACT_BATCH" -Payload @{ VolumeSerial = $Batch[0].VolumeSerial; Count = $Batch.Count; Artifacts = $Batch; Timestamp = [DateTime]::UtcNow }
 }
 
-function Get-ScapeCarverStat {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
-    param()
-    return $Script:Stats.Clone()
-}
-
-function Reset-ScapeCarverStat {
-    [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([void])]
-    param()
-    if ($PSCmdlet.ShouldProcess("CarverStats", "Reset Data")) {
-        $Script:Stats = @{ Processed = 0; Carved = 0; Errors = 0 }
-    }
-}

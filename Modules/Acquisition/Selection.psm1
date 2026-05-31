@@ -1,4 +1,4 @@
-﻿<#.SYNOPSIS
+<#.SYNOPSIS
     Domain: Acquisition
     Module: Scape.Acquisition.Selection
     Description: Discovers and maps physical drives and logical volumes using WMI/CIM.
@@ -36,5 +36,6 @@ Register-ScapeActionHandler -Target 'Scape.Acquisition.Selection' -Handler {
     [void]$Task; [void]$PayloadDef; [void]$Target
     if (Get-Command Get-ScapePhysicalTarget -ErrorAction SilentlyContinue) {
         Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{ Key = "INVENTORY_PHYSICAL_DISKS"; Targets = @(Get-ScapePhysicalTarget) }
-    } else { throw "Not Implemented" }
+    }
+    else { throw "Not Implemented" }
 }

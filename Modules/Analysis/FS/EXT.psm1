@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.FS.EXT
     Description: EXT2/3/4 inode parser, indirect block resolver, and deleted inode recovery.
@@ -138,5 +138,5 @@ function Get-ScapeEXTMeta {
     return $null
 }
 Export-ModuleMember -Function 'Initialize-ScapeEXTParser',
-    'Get-ScapeEXTJournal',
-    'Restore-ScapeEXTDeletedInode'
+'Get-ScapeEXTJournal',
+'Restore-ScapeEXTDeletedInode'

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.Abstraction
@@ -49,29 +49,29 @@ function Get-ScapeAbstractionConfig {
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # BYTE READING UTILS
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function _ReadBytes {
+function Read-ScapeRawBytes {
     param($Buf, $Off, $Len)
     if (($Off + $Len) -gt $Buf.Length) { return @() }
     return $Buf[$Off..($Off + $Len - 1)]
 }
 
-function _BytesMatch {
+function Test-ScapeBytePatternMatch {
     param($Buf, $Off, $Pattern)
-    $actual = _ReadBytes -Buf $Buf -Off $Off -Len $Pattern.Length
+    $actual = Read-ScapeRawBytes -Buf $Buf -Off $Off -Len $Pattern.Length
     return ($actual -join ',') -eq ($Pattern -join ',')
 }
 
-function _ReadUInt16LE { param($Buf, $Off) return [BitConverter]::ToUInt16($Buf, $Off) }
-function _ReadUInt32LE { param($Buf, $Off) return [BitConverter]::ToUInt32($Buf, $Off) }
-function _ReadUInt64LE { param($Buf, $Off) return [BitConverter]::ToUInt64($Buf, $Off) }
-function _ReadInt64LE { param($Buf, $Off) return [BitConverter]::ToInt64($Buf, $Off) }
-function _ReadUInt32BE {
+function Read-ScapeUInt16LE { param($Buf, $Off) return [BitConverter]::ToUInt16($Buf, $Off) }
+function Read-ScapeUInt32LE { param($Buf, $Off) return [BitConverter]::ToUInt32($Buf, $Off) }
+function Read-ScapeUInt64LE { param($Buf, $Off) return [BitConverter]::ToUInt64($Buf, $Off) }
+function Read-ScapeInt64LE { param($Buf, $Off) return [BitConverter]::ToInt64($Buf, $Off) }
+function Read-ScapeUInt32BE {
     param($Buf, $Off)
     $b = $Buf[$Off..($Off + 3)]
     [Array]::Reverse($b)
     return [BitConverter]::ToUInt32($b, 0)
 }
-function _ReadUInt64BE {
+function Read-ScapeUInt64BE {
     param($Buf, $Off)
     $b = $Buf[$Off..($Off + 7)]
     [Array]::Reverse($b)
@@ -101,11 +101,11 @@ function Resolve-ScapeFSType {
 
     $result = "STATE_UNKNOWN"
 
-    if (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.NTFS_MFT) { $result = "NTFS_MFT" }
-    elseif ($Buffer.Length -ge ($Offset + 11) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 3) -Pattern $c.FS_SIGS.NTFS_BOOT)) { $result = "NTFS_BOOT" }
-    elseif ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.REFS_SB)) { $result = "FS_REFS" }
+    if (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.NTFS_MFT) { $result = "NTFS_MFT" }
+    elseif ($Buffer.Length -ge ($Offset + 11) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off ($Offset + 3) -Pattern $c.FS_SIGS.NTFS_BOOT)) { $result = "NTFS_BOOT" }
+    elseif ($Buffer.Length -ge ($Offset + 4) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.REFS_SB)) { $result = "FS_REFS" }
     elseif ($Buffer.Length -ge ($Offset + 512)) {
-        $bootSig = _ReadUInt16LE -Buf $Buffer -Off ($Offset + 510)
+        $bootSig = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + 510)
         $fatBootSig = $c.FS["FAT_BOOT_SIG"]
         if ($fatBootSig -and $bootSig -eq $fatBootSig) {
             $oem = [System.Text.Encoding]::ASCII.GetString($Buffer, ($Offset + 3), 8).Trim()
@@ -113,25 +113,25 @@ function Resolve-ScapeFSType {
             elseif ($oem -match 'EXFAT|exFAT') { $result = "EXFAT" }
         }
     }
-    elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.EXFAT_VBR)) { $result = "EXFAT" }
+    elseif ($Buffer.Length -ge ($Offset + 8) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.EXFAT_VBR)) { $result = "EXFAT" }
 
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 0x43A)) {
-        $extMagic = _ReadUInt16LE -Buf $Buffer -Off ($Offset + 0x438)
+        $extMagic = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + 0x438)
         $extSig = $c.FS["EXT4_SB_SIG"]
         if ($extSig -and $extMagic -eq $extSig) { $result = "EXT4" }
     }
-    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.XFS_SB)) { $result = "XFS" }
-    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 72) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 0x40) -Pattern $c.FS_SIGS.BTRFS_SB)) { $result = "FS_BTRFS" }
+    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 4) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.XFS_SB)) { $result = "XFS" }
+    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 72) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off ($Offset + 0x40) -Pattern $c.FS_SIGS.BTRFS_SB)) { $result = "FS_BTRFS" }
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 0x404)) {
-        $f2fsMagic = _ReadUInt32LE -Buf $Buffer -Off ($Offset + 0x400)
+        $f2fsMagic = Read-ScapeUInt32LE -Buf $Buffer -Off ($Offset + 0x400)
         $f2fsSig = $c.FS["F2FS_SB_SIG"]
         if ($f2fsSig -and $f2fsMagic -eq $f2fsSig) { $result = "F2FS" }
     }
-    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.JFS_SUPER)) { $result = "JFS" }
+    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 4) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.JFS_SUPER)) { $result = "JFS" }
 
-    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 36) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 0x20) -Pattern $c.FS_SIGS.APFS_SB)) { $result = "FS_APFS" }
+    if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 36) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off ($Offset + 0x20) -Pattern $c.FS_SIGS.APFS_SB)) { $result = "FS_APFS" }
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 1026)) {
-        $hfsSig = _ReadUInt16LE -Buf $Buffer -Off ($Offset + 1024)
+        $hfsSig = Read-ScapeUInt16LE -Buf $Buffer -Off ($Offset + 1024)
         $hfsPlusSig = $c.FS["HFS_PLUS_SIG"]
         $hfsxSig = $c.FS["HFSX_SIG"]
         if ($hfsPlusSig -and $hfsSig -eq $hfsPlusSig) { $result = "HFS_PLUS" }
@@ -139,29 +139,29 @@ function Resolve-ScapeFSType {
     }
 
     if ($result -eq "STATE_UNKNOWN") {
-        if ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.ZFS_LABEL)) { $result = "ZFS_LABEL" }
+        if ($Buffer.Length -ge ($Offset + 8) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.ZFS_LABEL)) { $result = "ZFS_LABEL" }
         elseif ($Buffer.Length -ge ($Offset + 4)) {
-            $uberMagic = _ReadUInt32LE -Buf $Buffer -Off $Offset
+            $uberMagic = Read-ScapeUInt32LE -Buf $Buffer -Off $Offset
             $uberSig = $c.FS["ZFS_UBER_SIG"]
             if ($uberSig -and $uberMagic -eq $uberSig) { $result = "ZFS_UBER" }
         }
     }
 
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 0x8005)) {
-        if (_BytesMatch -Buf $Buffer -Off ($Offset + 0x8000) -Pattern $c.FS_SIGS.UDF_VRS) { $result = "UDF" }
+        if (Test-ScapeBytePatternMatch -Buf $Buffer -Off ($Offset + 0x8000) -Pattern $c.FS_SIGS.UDF_VRS) { $result = "UDF" }
     }
     if ($result -eq "STATE_UNKNOWN" -and $Buffer.Length -ge ($Offset + 0x8006)) {
-        if (_BytesMatch -Buf $Buffer -Off ($Offset + 0x8001) -Pattern $c.FS_SIGS.ISO9660) { $result = "ISO9660" }
+        if (Test-ScapeBytePatternMatch -Buf $Buffer -Off ($Offset + 0x8001) -Pattern $c.FS_SIGS.ISO9660) { $result = "ISO9660" }
     }
 
     if ($result -eq "STATE_UNKNOWN") {
-        if ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VMDK)) { $result = "VMDK" }
-        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VHD)) { $result = "VHD" }
-        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VHDX)) { $result = "VHDX" }
-        elseif ($Buffer.Length -ge ($Offset + 4) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.QCOW2)) { $result = "QCOW2" }
-        elseif ($Buffer.Length -ge ($Offset + 7) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.DMG)) { $result = "DMG" }
-        elseif ($Buffer.Length -ge ($Offset + 8) -and (_BytesMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.GPT_HEADER)) { $result = "GPT" }
-        elseif ($Buffer.Length -ge ($Offset + 512) -and (_BytesMatch -Buf $Buffer -Off ($Offset + 510) -Pattern $c.FS_SIGS.MBR_SIG)) { $result = "MBR" }
+        if ($Buffer.Length -ge ($Offset + 4) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VMDK)) { $result = "VMDK" }
+        elseif ($Buffer.Length -ge ($Offset + 8) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VHD)) { $result = "VHD" }
+        elseif ($Buffer.Length -ge ($Offset + 8) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.VHDX)) { $result = "VHDX" }
+        elseif ($Buffer.Length -ge ($Offset + 4) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.QCOW2)) { $result = "QCOW2" }
+        elseif ($Buffer.Length -ge ($Offset + 7) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.DMG)) { $result = "DMG" }
+        elseif ($Buffer.Length -ge ($Offset + 8) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off $Offset -Pattern $c.FS_SIGS.GPT_HEADER)) { $result = "GPT" }
+        elseif ($Buffer.Length -ge ($Offset + 512) -and (Test-ScapeBytePatternMatch -Buf $Buffer -Off ($Offset + 510) -Pattern $c.FS_SIGS.MBR_SIG)) { $result = "MBR" }
     }
 
     $Script:DetectionCache[$cacheKey] = $result
@@ -182,7 +182,7 @@ function Resolve-ScapeFSType {
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # PARSER LOADING (Lazy, On-Demand)
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function _LoadParserModule {
+function Invoke-ScapeParserModuleLoad {
     param([string]$FSType)
 
     if ($Script:LoadedParsers.ContainsKey($FSType)) { return $true }
@@ -276,7 +276,7 @@ function Invoke-ScapeFSParser {
 
 
 
-    if (-not (_LoadParserModule -FSType $FSType)) {
+    if (-not (Invoke-ScapeParserModuleLoad -FSType $FSType)) {
         Publish-ScapeEvent -Type "LOG_WARN" -Payload @{ Action = "LogLine"; Key = "PARSER_NOT_AVAILABLE"; Args = @($FSType); Severity = "WARN" }
 
         if (Get-Command "Set-ScapeFSMeta" -ErrorAction SilentlyContinue) {
@@ -462,7 +462,7 @@ function Invoke-ScapeContainerParser {
 Export-ModuleMember -Function 'Get-ScapeAbstractionConfig',
     'Invoke-ScapeContainerParser',
     'Invoke-ScapeBatchFSAnalysis',
-    '_ReadUInt64BE',
-    '_ReadUInt32BE',
-    '_ReadInt64LE',
-    '_ReadUInt64LE'
+    'Read-ScapeUInt64BE',
+    'Read-ScapeUInt32BE',
+    'Read-ScapeInt64LE',
+    'Read-ScapeUInt64LE'

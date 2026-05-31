@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.BinWrappers
     Architecture: Immutable execution of native forensic utilities with pure parsers.

@@ -1,4 +1,4 @@
-﻿
+
 $Script:DisplayList = New-Object System.Text.StringBuilder
 
 function Clear-ScapeDisplayList {
@@ -20,7 +20,7 @@ function Add-ScapeDisplayListAt {
 
 function Out-ScapeDisplayList {
     if ($Script:DisplayList.Length -gt 0) {
-        [Console]::WriteLine($Script:DisplayList.ToString() -NoNewline
+        [Console]::Write($Script:DisplayList.ToString())
         $Script:DisplayList.Clear() | Out-Null
     }
 }
@@ -67,7 +67,7 @@ function Initialize-ScapeRenderer {
             [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
             [Console]::CursorVisible = $false
         }
-        catch { Write-Verbose "Suppressed error:         catch {}";}
+        catch { Write-Verbose "Suppressed error:         catch {}"; }
 
         try { Initialize-ScapeGeometry | Out-Null }
         catch { Write-Verbose "Geometry init failed: $_" }
@@ -127,7 +127,7 @@ function Close-ScapeRenderer {
             [Console]::CursorVisible = $true
             [Console]::Clear()
         }
-        catch { Write-Verbose "Suppressed error:         catch {}";}
+        catch { Write-Verbose "Suppressed error:         catch {}"; }
         if ($Script:RenderCache) {
             $Script:RenderCache.LastTransientConfig = $null
         }
@@ -147,7 +147,7 @@ function Close-ScapeRenderer {
 # HELPERS & UTILITIES (Pure-ish Functions)
 # ==============================================================================
 
-function _GetCachedResolvedIcon {
+function Invoke-ScapeCachedIconResolve {
     param(
         [Parameter(Mandatory = $true)][string]$RouteId,
         [Parameter(Mandatory = $true)][int]$IconLevel
@@ -193,7 +193,7 @@ function Write-ScapeScrollIndicator {
     process {
 
 
-        $arrow = if ($Direction -eq 'up') { 'Ã¢â€“Â²' } else { 'Ã¢â€“Â¼' }
+        $arrow = if ($Direction -eq 'up') { '▲' } else { '▼' }
         $dimPrefix = Get-ScapeConstant -Path "ui::ANSI::SGR::Dim"
         $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
         Set-ScapeCursorPosition -Left $X -Top $Y
@@ -642,8 +642,8 @@ function Write-ScapeActionScreen {
         $progressDef = Get-ScapeConstant -Path "ui::Progress::Default"
     }
 
-    $fullC = if ($progressDef) { $progressDef.FullChar } else { "Ã¢â€“Ë†" }
-    $emptyC = if ($progressDef) { $progressDef.EmptyChar } else { "Ã¢â€“â€˜" }
+    $fullC = if ($progressDef) { $progressDef.FullChar } else { "█" }
+    $emptyC = if ($progressDef) { $progressDef.EmptyChar } else { "░" }
 
     if ($progressRows -gt 0) {
         $yOffset++ # Padding row
@@ -793,7 +793,7 @@ function Format-ScapeThemifiedMenuBuffer {
             $text = if ($opt.PSObject.Properties['Text']) { $opt.Text } else { $opt.TitleKey }
             $dynText = if ($opt.PSObject.Properties['DynamicText']) { $opt.DynamicText } else { "" }
 
-            $selector = if ($isSelected) { "Ã¢â€“Â¶ " } else { "  " }
+            $selector = if ($isSelected) { "▶ " } else { "  " }
             $line = "$selector$icon $text"
 
             if ($dynText) { $line += " $dynText" }
@@ -809,8 +809,8 @@ function Format-ScapeThemifiedMenuBuffer {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeRenderer',
-    'Write-ScapeMenuRow',
-    '_GetCachedResolvedIcon',
+'Write-ScapeMenuRow',
+'Invoke-ScapeCachedIconResolve',
 'Close-ScapeRenderer',
 'Write-ScapeMenuBuffer',
 'Write-ScapeTransientView',

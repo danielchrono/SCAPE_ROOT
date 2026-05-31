@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.Utils
     Pure logic helpers: mathematics, data transformation, safe extraction, and I/O Wrapper.
@@ -252,18 +252,18 @@ function Convert-ScapeSeverityToInt {
     param([Parameter(Mandatory = $true)][string]$Severity)
     process {
         switch ($Severity.ToUpper()) {
-            "FATAL"     { return 0 }
-            "CRITICAL"  { return 1 }
-            "ERROR"     { return 2 }
-            "LOG_ERR"   { return 2 }
-            "WARN"      { return 3 }
-            "LOG_WARN"  { return 3 }
-            "INFO"      { return 4 }
-            "LOG_INFO"  { return 4 }
-            "DEBUG"     { return 5 }
+            "FATAL" { return 0 }
+            "CRITICAL" { return 1 }
+            "ERROR" { return 2 }
+            "LOG_ERR" { return 2 }
+            "WARN" { return 3 }
+            "LOG_WARN" { return 3 }
+            "INFO" { return 4 }
+            "LOG_INFO" { return 4 }
+            "DEBUG" { return 5 }
             "LOG_DEBUG" { return 5 }
-            "TRACE"     { return 6 }
-            default     { return 4 }
+            "TRACE" { return 6 }
+            default { return 4 }
         }
     }
 }
@@ -277,11 +277,11 @@ function Test-ScapeNullOrWhiteSpace {
     }
 }
 Export-ModuleMember -Function 'ConvertTo-ScapeHex',
-    'Test-ScapeNullOrWhiteSpace',
-    'Convert-ScapeSeverityToInt',
-    'Get-ScapeUtcTimestamp',
-    'Format-ScapeTemplate',
-    'Test-ScapePath',
-    'Invoke-ScapeMathClamp',
-    'Test-ScapeAlignment',
-    'ConvertTo-ScapeHexString'
+'Test-ScapeNullOrWhiteSpace',
+'Convert-ScapeSeverityToInt',
+'Get-ScapeUtcTimestamp',
+'Format-ScapeTemplate',
+'Test-ScapePath',
+'Invoke-ScapeMathClamp',
+'Test-ScapeAlignment',
+'ConvertTo-ScapeHexString'

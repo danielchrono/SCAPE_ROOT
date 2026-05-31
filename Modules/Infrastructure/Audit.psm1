@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Audit
     Description: Immutable forensic ledger for extracted artifacts chain-of-custody with hash chaining.
@@ -363,4 +363,4 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeAudit',
-    'Register-ScapeExtraction'
+'Register-ScapeExtraction'

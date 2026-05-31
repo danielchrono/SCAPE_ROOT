@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.Network
     Architecture: SMB/CIFS Network Discovery and Mounting
@@ -38,7 +38,7 @@ function Find-ScapeNetworkNode {
                     }
                     if ($client.Connected) { return $tIP }
                 }
-                catch { Write-Verbose "Suppressed error:                 catch {} finally { $client.Close() }";} finally { $client.Close() }
+                catch { Write-Verbose "Suppressed error:                 catch {} finally { $client.Close() }"; } finally { $client.Close() }
                 return $null
             }).AddArgument($ip).AddArgument($port).AddArgument($timeout)
         $ps.RunspacePool = $pool
@@ -68,7 +68,7 @@ function New-ScapeNetworkMount {
         [Parameter(Mandatory = $true)][string]$RemoteVault,
         [Parameter(Mandatory = $true)][string]$DriveLetter,
         [Parameter(Mandatory = $false)][string]$UserName,
-        [Parameter(Mandatory = $false)][string]$Password
+        [Parameter(Mandatory = $false)][SecureString]$Password
     )
 
     $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE"
@@ -163,7 +163,7 @@ function Invoke-ScapeNetworkRadarAction {
     param(
         [Parameter(Mandatory = $false)][string]$TargetShare,
         [Parameter(Mandatory = $false)][string]$UserName,
-        [Parameter(Mandatory = $false)][string]$Password
+        [Parameter(Mandatory = $false)][SecureString]$Password
     )
 
     if ([string]::IsNullOrWhiteSpace($TargetShare)) {
@@ -297,4 +297,4 @@ function Invoke-ScapeNetworkAction {
 # ==============================================================================
 
 Export-ModuleMember -Function 'Find-ScapeNetworkNode', 'New-ScapeNetworkMount', 'Remove-ScapeNetworkMount', 'Clear-ScapeNetworkMount', 'Start-ScapeNetworkScan', 'Invoke-ScapeNetworkRadarAction', 'Invoke-ScapeNetworkAction',
-    'Clear-ScapeNetworkMount'
+'Clear-ScapeNetworkMountssssss'

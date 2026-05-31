@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Forge | Module: Scape.Forge.Packager
     Architecture: Dependency Acquisition | Isolation | Zero Compilation Logic
@@ -64,4 +64,5 @@ function Invoke-ScapeFetchDependency {
 
     return @{ BinDir = $binDir; WixDir = $wixBin }
 }
-Export-ModuleMember -Function 'Invoke-ScapeFetchDependency'
+
+Export-ModuleMember -Function 'Invoke-ScapeFetchDependencieses'

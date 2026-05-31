@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Pipeline
     Description: High-throughput, backpressure-aware memory data pipeline.

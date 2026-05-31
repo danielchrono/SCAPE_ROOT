@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\StateObserver
     Module: Scape.Presentation.StateObserver
@@ -65,7 +65,7 @@ function Invoke-ScapeTreeUpdateEvent {
         }
     }
 
-    $vmStateSnapshot = Get-ScapeColdState
+    $vmStateSnapshot = if (Get-Command Get-ScapeColdState -ErrorAction SilentlyContinue) { Get-ScapeColdState } else { @{} }
     $frameStyle = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('FrameStyle')) { [string]$vmStateSnapshot['FrameStyle'] } else { $null }
 
     Publish-ScapeEvent -Type "VIEW_MODEL_TREE_READY" -Severity "TRACE" -Payload @{
@@ -91,7 +91,7 @@ function Invoke-ScapeActionScreenEvent {
         }
     }
 
-    $vmStateSnapshot = Get-ScapeColdState
+    $vmStateSnapshot = if (Get-Command Get-ScapeColdState -ErrorAction SilentlyContinue) { Get-ScapeColdState } else { @{} }
     $frameStyle = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('FrameStyle')) { [string]$vmStateSnapshot['FrameStyle'] } else { $null }
 
     Publish-ScapeEvent -Type "VIEW_MODEL_ACTION_READY" -Severity "TRACE" -Payload @{
@@ -143,7 +143,7 @@ function Invoke-ScapeRedrawRequestEvent {
     $cursorIdx = $routerState.Cursor
     $lastIdx = if ($null -ne $routerState.LastCursor) { $routerState.LastCursor } else { -1 }
 
-    $vmStateSnapshot = Get-ScapeColdState
+    $vmStateSnapshot = if (Get-Command Get-ScapeColdState -ErrorAction SilentlyContinue) { Get-ScapeColdState } else { @{} }
     $hydratedOpts = Update-ScapeMenuViewModel -MenuId $menuId -RawOptions $rawOpts -StateSnapshot $vmStateSnapshot
 
     $frameStyle = if ($vmStateSnapshot -and $vmStateSnapshot.ContainsKey('FrameStyle')) { [string]$vmStateSnapshot['FrameStyle'] } else { $null }
@@ -370,7 +370,7 @@ function Initialize-ScapeStateObserver {
 
                     $lastState = $Script:LastRouterState
                     $lastTitle = $Script:LastTitleKey
-                    $st = Get-ScapeColdState
+                    $st = if (Get-Command Get-ScapeColdState -ErrorAction SilentlyContinue) { Get-ScapeColdState } else { @{} }
                     $menuId = if ($lastState) { $lastState.CurrentMenu } elseif ($st) { $st.CurrentMenu } else { $null }
 
                     if ($menuId) {

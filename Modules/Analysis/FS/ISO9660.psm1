@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.ISO9660

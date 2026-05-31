@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.AssetManager
     Architecture: Zero-Recursion-Limit | Comment-Safe | Deterministic | Indexer-Safe

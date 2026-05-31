@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.Resolver
     .DESCRIPTION
@@ -164,7 +164,7 @@ function Resolve-ScapeManifestLayer {
     # debug/diagnÃ³stico: sempre listar keys quando falhar
     if (-not $manifest.ContainsKey($LayerKey)) {
         $keys = @()
-        try { $keys = @($manifest.Keys) } catch { Write-Verbose "Suppressed error:         try { $keys = @($manifest.Keys) } catch {}";}
+        try { $keys = @($manifest.Keys) } catch { Write-Verbose "Suppressed error:         try { $keys = @($manifest.Keys) } catch {}"; }
         $keysPreview = if ($keys.Count -gt 50) { (($keys[0..49]) -join ',') + ',...' } else { ($keys -join ',') }
         throw "RESOLVER_ERROR: Layer '$LayerKey' does not exist in Manifest. ManifestKeys=[$keysPreview]"
     }
@@ -338,4 +338,4 @@ function Initialize-ScapeResolver {
     }
 }
 Export-ModuleMember -Function 'Assert-ScapeCapability',
-    'Invoke-ScapeWakeAsset'
+'Invoke-ScapeWakeAsset'

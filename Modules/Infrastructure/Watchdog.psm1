@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Watchdog
     Description: Out-of-band execution integrity monitor (Runspace).
@@ -113,4 +113,4 @@ function Update-ScapeHeartbeat {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeWatchdog',
-    'Update-ScapeHeartbeat'
+'Update-ScapeHeartbeat'

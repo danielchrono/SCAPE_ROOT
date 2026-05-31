@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Forge | Module: Scape.Forge.Compiler
     Architecture: Artifact Generation | Executable Packaging | Setup/MSI Orchestration

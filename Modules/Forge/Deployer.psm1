@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Forge | Module: Scape.Forge.Deployer
 .DESCRIPTION
@@ -333,13 +333,13 @@ function Invoke-ScapeDeployWorkflow {
             Start-Process $pwsh -WorkingDirectory (Split-Path -Parent $monolithPath) -ArgumentList $handoverArgs -NoNewWindow
             throw "SCAPE_HANDOVER"
         }
-        'EXE_PORTABLE' { _ExecuteAtomicBuild -Task $Task -TargetBase $targetBase -Topology $topology -Registry $registry -OutDir $outDir -IconPath $IconPath }
-        'EXE_SETUP' { _ExecuteAtomicBuild -Task $Task -TargetBase $targetBase -Topology $topology -Registry $registry -OutDir $outDir -IconPath $IconPath }
-        'MSI' { _ExecuteAtomicBuild -Task $Task -TargetBase $targetBase -Topology $topology -Registry $registry -OutDir $outDir -IconPath $IconPath }
+        'EXE_PORTABLE' { Invoke-ScapeAtomicBuild -Task $Task -TargetBase $targetBase -Topology $topology -Registry $registry -OutDir $outDir -IconPath $IconPath }
+        'EXE_SETUP' { Invoke-ScapeAtomicBuild -Task $Task -TargetBase $targetBase -Topology $topology -Registry $registry -OutDir $outDir -IconPath $IconPath }
+        'MSI' { Invoke-ScapeAtomicBuild -Task $Task -TargetBase $targetBase -Topology $topology -Registry $registry -OutDir $outDir -IconPath $IconPath }
     }
 }
 
-function _ExecuteAtomicBuild {
+function Invoke-ScapeAtomicBuild {
     [CmdletBinding()]
     param(
         [string]$Task,

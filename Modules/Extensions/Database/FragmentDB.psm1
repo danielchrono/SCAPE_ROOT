@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions
     Module: Scape.Extensions.Database.FragmentDB

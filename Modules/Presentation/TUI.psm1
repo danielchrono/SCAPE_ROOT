@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\TUI
     Module: Scape.Presentation.TUI
@@ -150,7 +150,7 @@ function Clear-ScapeRegion {
             }
             else {
                 Set-ScapeCursorPosition -Left $Left -Top ($Top + $i)
-                [Console]::WriteLine($blankLine -NoNewline
+                [Console]::Write($blankLine)
             }
         }
     }
@@ -172,7 +172,7 @@ function Clear-ScapeLine {
         }
         else {
             Set-ScapeCursorPosition -Left $Left -Top $Top
-            [Console]::WriteLine($blankLine -NoNewline
+            [Console]::Write($blankLine)
         }
     }
 }

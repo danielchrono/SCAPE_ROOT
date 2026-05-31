@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Extensions
     Module: Scape.Extensions.Database.MetaDB
@@ -89,4 +89,4 @@ function Resolve-ScapeShadowPath {
 }
 
 Export-ModuleMember -Function 'Write-ScapeShadowRecord',
-    'Resolve-ScapeShadowPath'
+'Resolve-ScapeShadowPath'

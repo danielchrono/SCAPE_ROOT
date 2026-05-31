@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Geometry
     Module: Scape.Presentation.Geometry
@@ -229,5 +229,5 @@ function Get-ScapeBannerVariant {
 }
 
 Export-ModuleMember -Function 'Get-ScapeFrameCoordinate',
-    'Get-ScapeClampedCoordinate',
-    'Get-ScapeGridCoordinate'
+'Get-ScapeClampedCoordinate',
+'Get-ScapeGridCoordinate'

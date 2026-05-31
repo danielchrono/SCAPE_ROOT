@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\KeyBindings
     Module: Scape.Presentation.KeyBindings
@@ -41,7 +41,7 @@ function Register-ScapeKeyBinding {
     param(
         [Parameter(Mandatory = $true)][string]$KeySequence,
         [Parameter(Mandatory = $true)][string]$ActionName,
-        [string]$Profile = "Default",
+        [string]$DftProfile = "Default",
         [scriptblock]$Callback,
         [switch]$Chord
     )
@@ -56,7 +56,7 @@ function Register-ScapeKeyBinding {
             Action       = $ActionName
             Callback     = $Callback
             IsChord      = $Chord.IsPresent
-            Profile      = $Profile
+            Profile      = $DftProfile
             RegisteredAt = [DateTime]::Now
         }
 
@@ -76,7 +76,7 @@ function Unregister-ScapeKeyBinding {
     [OutputType([bool])]
     param(
         [Parameter(Mandatory = $true)][string]$KeySequence,
-        [string]$Profile = "Default"
+        [string]$DftProfile = "Default"
     )
     process {
         if ($null -eq $Script:KeyBindingRegistry) { return $false }
@@ -85,8 +85,8 @@ function Unregister-ScapeKeyBinding {
             $Script:KeyBindingRegistry.Remove($KeySequence) | Out-Null
         }
 
-        if ($Script:KeyBindingProfiles.ContainsKey($Profile)) {
-            $Script:KeyBindingProfiles[$Profile].Remove($KeySequence) | Out-Null
+        if ($Script:KeyBindingProfiles.ContainsKey($DftProfile)) {
+            $Script:KeyBindingProfiles[$DftProfile].Remove($KeySequence) | Out-Null
         }
 
         return $true
@@ -116,12 +116,12 @@ function Get-ScapeKeyBinding {
 function Get-ScapeKeyBinding {
     [CmdletBinding()]
     [OutputType([array])]
-    param([string]$Profile = "Default")
+    param([string]$DftProfile = "Default")
     process {
         if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
-        if ($null -ne $Profile -and $Script:KeyBindingProfiles.ContainsKey($Profile)) {
-            return @($Script:KeyBindingProfiles[$Profile].Values)
+        if ($null -ne $DftProfile -and $Script:KeyBindingProfiles.ContainsKey($DftProfile)) {
+            return @($Script:KeyBindingProfiles[$DftProfile].Values)
         }
         return @($Script:KeyBindingRegistry.Values)
     }
@@ -201,12 +201,12 @@ function Resolve-ScapeInputToAction {
     [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)][string]$KeyInput,
-        [string]$Profile
+        [string]$DftProfile
     )
     process {
         if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
-        $prof = if ([string]::IsNullOrWhiteSpace($Profile)) { $Script:ActiveProfile } else { $Profile }
+        $prof = if ([string]::IsNullOrWhiteSpace($DftProfile)) { $Script:ActiveProfile } else { $DftProfile }
         [void]$prof
 
         $binding = Get-ScapeKeyBinding -KeySequence $KeyInput
@@ -227,7 +227,7 @@ function Set-ScapeKeyBinding {
     param(
         [Parameter(Mandatory = $true)][string]$ActionName,
         [Parameter(Mandatory = $true)][string]$NewKeySequence,
-        [string]$Profile = "Default"
+        [string]$DftProfile = "Default"
     )
     process {
         if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
@@ -235,10 +235,10 @@ function Set-ScapeKeyBinding {
         $existing = $Script:KeyBindingRegistry.Values | Where-Object { $_.Action -eq $ActionName }
 
         foreach ($binding in $existing) {
-            Unregister-ScapeKeyBinding -KeySequence $binding.Sequence -Profile $Profile | Out-Null
+            Unregister-ScapeKeyBinding -KeySequence $binding.Sequence -Profile $DftProfile | Out-Null
         }
 
-        return Register-ScapeKeyBinding -KeySequence $NewKeySequence -ActionName $ActionName -Profile $Profile
+        return Register-ScapeKeyBinding -KeySequence $NewKeySequence -ActionName $ActionName -Profile $DftProfile
     }
 }
 
@@ -399,10 +399,10 @@ function Invoke-ScapeKeyBindingAction {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeKeyBinding',
-    'Import-ScapeKeyBinding',
-    'Export-ScapeKeyBinding',
-    'Get-ScapeKeyBinding',
-    'Initialize-ScapeKeyBinding',
+'Import-ScapeKeyBindingss',
+'Export-ScapeKeyBindingss',
+'Get-ScapeKeyBindingss',
+'Initialize-ScapeKeyBindingss',
 'Register-ScapeKeyBinding',
 'Unregister-ScapeKeyBinding',
 'Get-ScapeKeyBinding',

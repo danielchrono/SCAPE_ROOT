@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.NTFS
@@ -230,5 +230,5 @@ function Get-ScapeNTFSMeta {
     }
 }
 Export-ModuleMember -Function 'Initialize-ScapeNTFSParser',
-    'Unprotect-ScapeNTFSEFS',
-    'Resolve-ScapeNTFSHardLink'
+'Unprotect-ScapeNTFSEFS',
+'Resolve-ScapeNTFSHardLink'

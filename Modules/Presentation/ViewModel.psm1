@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\ViewModel
     Module: Scape.Presentation.ViewModel
@@ -171,12 +171,13 @@ function Invoke-ScapeStateMutation {
         [Parameter(Mandatory = $true)][string]$MenuId,
         [Parameter(Mandatory = $true)][AllowEmptyString()][string]$SelectionId,
         [Parameter()][hashtable]$Payload,
-        [ValidateSet('NEXT', 'PREV')][string]$Direction = 'NEXT'
+        [ValidateSet('NEXT', 'PREV')][string]$Direction = 'NEXT',
+        [Parameter()][hashtable]$StateSnapshot
     )
     process {
         [void]$SelectionId
         [void]$MenuId
-        $st = Get-ScapeColdState
+        $st = if ($null -ne $StateSnapshot) { $StateSnapshot } else { Get-ScapeColdState }
         $key = Get-ScapeProperty -Object $Payload -PropertyName 'Key'
         $op = Get-ScapeProperty -Object $Payload -PropertyName 'Value'
 

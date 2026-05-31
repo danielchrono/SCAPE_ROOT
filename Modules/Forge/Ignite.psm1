@@ -1,7 +1,11 @@
 <#
 .SYNOPSIS
-    Ignite.ps1 - Bootstrapper Passivo (Loader)
+    Domain: Forge\Ignite
+    Module: Scape.Forge.Ignite
+    Architecture: Passive Bootstrapper | Memory-Mapped Asset Loader
 #>
+[CmdletBinding()] param()
+
 $ErrorActionPreference = "Stop"
 
 function global:Read-ScapeAssetFile($Path) {
@@ -82,3 +86,5 @@ foreach ($domain in $topo.Keys) {
         }
     }
 }
+
+Export-ModuleMember -Function 'Read-ScapeAssetFile', 'Resolve-ScapeForgeModulePath'

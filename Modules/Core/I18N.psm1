@@ -1,11 +1,11 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.I18N
     Architecture: Strictly Functional | Bucket-Aware Resolution | Encapsulated Decoupling
 #>
 [CmdletBinding()] param()
 
-function _GetRawI18NEntry {
+function Invoke-ScapeRawI18NLookup {
     [CmdletBinding()] [OutputType([object])]
     param([Parameter(Mandatory = $true)][string]$Key)
 
@@ -56,7 +56,7 @@ function Get-ScapeI18NNode {
     [CmdletBinding()] [OutputType([psobject])]
     param([Parameter(Mandatory = $true)][string]$Key)
 
-    $entry = _GetRawI18NEntry -Key $Key
+    $entry = Invoke-ScapeRawI18NLookup -Key $Key
     $Node = [PSCustomObject]@{ Text = $Key; Hint = ""; Flag = "UI" }
 
     if ($null -eq $entry) { return $Node }

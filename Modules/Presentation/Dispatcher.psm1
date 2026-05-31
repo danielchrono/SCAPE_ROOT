@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Dispatcher
     Module: Scape.Presentation.Dispatcher
@@ -96,14 +96,14 @@ function Format-ScapeTransientMessage {
         if ([string]::IsNullOrWhiteSpace($msg)) {
             $k = $pay['Key']
             if ($k) {
-                $args = if ($pay['Tokens']) { $pay['Tokens'] } else { @() }
+                $msgArgs = if ($pay['Tokens']) { $pay['Tokens'] } else { @() }
                 if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) {
-                    $msg = Invoke-ScapeI18NFormat -Key $k -Args $args
+                    $msg = Invoke-ScapeI18NFormat -Key $k -Args $msgArgs
                 }
                 else {
                     $i18n = Get-ScapeConstant -Path "i18n::$k"
                     $msg = if ($i18n -and $i18n.T) { $i18n.T } else { $k }
-                    if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch { Write-Verbose "Suppressed error:                     if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch {} }";} }
+                    if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch { Write-Verbose "Suppressed error:                     if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch {} }"; } }
                 }
             }
             else {

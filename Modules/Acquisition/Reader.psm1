@@ -1,4 +1,4 @@
-﻿<#.SYNOPSIS
+<#.SYNOPSIS
     Domain: Acquisition
     Module: Scape.Acquisition.Reader
     Description: Chunk-based raw disk reader. Aligns reads to sector boundaries and feeds the Analysis layer.

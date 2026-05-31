@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Logger
     Description: Thread-safe operational logging with rotation, severity filtering, and zero hardcode.
@@ -29,11 +29,11 @@ function Initialize-LogDirectory {
     param([hashtable]$LoggerConfig, [hashtable]$DirsConfig)
     [void]$LoggerConfig
     $logDir = $null
-    try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch { Write-Verbose "Suppressed error:     try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch {}";}
+    try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch { Write-Verbose "Suppressed error:     try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch {}"; }
 
     if ([string]::IsNullOrWhiteSpace($logDir)) {
         $root = $null
-        try { $root = (Get-ScapeColdState)["ROOT"] } catch { Write-Verbose "Suppressed error:         try { $root = (Get-ScapeColdState)["ROOT"] } catch {}";}
+        try { $root = (Get-ScapeColdState)["ROOT"] } catch { Write-Verbose "Suppressed error:         try { $root = (Get-ScapeColdState)["ROOT"] } catch {}"; }
         if ([string]::IsNullOrWhiteSpace($root)) { return $null }
         $logFolder = $DirsConfig["LOGS"]
         if ([string]::IsNullOrWhiteSpace($logFolder)) { $logFolder = "Logs" }
@@ -179,7 +179,7 @@ function Initialize-ScapeLogger {
                         $null = $sem.Release()
                     }
                 }
-                catch { Write-Verbose "Suppressed error:                 catch {}";}
+                catch { Write-Verbose "Suppressed error:                 catch {}"; }
             }.GetNewClosure()
 
             Register-ScapeEventListener -EventMatch "*" -Action $logAction
@@ -346,5 +346,5 @@ try {
 }
 catch { Write-Verbose "Suppressed error: catch { }"; }
 
-Export-ModuleMember -Function 'Initialize-LogDirectory',
-    '_RotateLogIfNeeded'
+Export-ModuleMember -Function 'Initialize-LogDirectories',
+'_RotateLogIfNeeded'

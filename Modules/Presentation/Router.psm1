@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Router
     Module: Scape.Presentation.Router
@@ -200,6 +200,17 @@ function Start-ScapeRouter {
                     $ViewportState.HasResized = $false
                 }
 
+                $intent = Get-ScapeInputIntent -CurrentMenuState $ns
+                if ($intent -ne 'IDLE') {
+                    $ns = Invoke-ScapeRouterReducer -State $ns -Intent $intent
+                    if ($ns.EventToPublish) {
+                        Publish-ScapeEvent -Type $ns.EventToPublish.Type -Severity $ns.EventToPublish.Severity -Payload $ns.EventToPublish.Payload
+                        $ns2 = $ns.Clone()
+                        $ns2.EventToPublish = $null
+                        $ns = $ns2
+                    }
+                }
+
                 if ($ns.NeedsFullRedraw -or $ns.NeedsCursorUpdate) {
                     $__rrType = $(if ($ns.NeedsFullRedraw) { 'FULL' } else { 'PARTIAL' })
                     Request-ScapeRedraw -MenuId $ns.CurrentMenu -Type $__rrType -RouterState $ns -TitleKey $ns.TitleKey
@@ -208,18 +219,6 @@ function Start-ScapeRouter {
                     $ns.NeedsCursorUpdate = $false
                 }
                 $State = $ns
-            }
-
-            $intent = Get-ScapeInputIntent -CurrentMenuState $State
-            if ($intent -ne 'IDLE') {
-                $State = Invoke-ScapeRouterReducer -State $State -Intent $intent
-                if ($State.EventToPublish) {
-                    Publish-ScapeEvent -Type $State.EventToPublish.Type -Severity $State.EventToPublish.Severity -Payload $State.EventToPublish.Payload
-                    $ns2 = $State.Clone()
-                    $ns2.EventToPublish = $null
-                    $State = $ns2
-                }
-                Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
             }
 
         }

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Theme
     Module: Scape.Presentation.Theme
@@ -383,7 +383,7 @@ function Format-ScapeANSIHighlight {
 }
 
 Export-ModuleMember -Function *,
-    'Format-ScapeANSIHighlight',
-    'Invoke-ScapeDaltonismMatrix',
-    'Convert-ScapeAnsiToReset',
-    'Get-ScapeIcon'
+'Format-ScapeANSIHighlight',
+'Invoke-ScapeDaltonismMatrix',
+'Convert-ScapeAnsiToReset',
+'Get-ScapeIcon'

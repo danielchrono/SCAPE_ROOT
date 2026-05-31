@@ -1,4 +1,4 @@
-﻿<#.SYNOPSIS
+<#.SYNOPSIS
     Domain: Acquisition
     Module: Scape.Acquisition.Resilience
     Description: Fault-tolerant invocation wrapper for raw disk I/O. Handles cyclic redundancy checks and bad blocks.

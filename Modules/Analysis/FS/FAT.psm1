@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.FS.FAT
     Description: FAT32/exFAT directory parser, cluster chain walker, and deleted entry recovery.
@@ -160,5 +160,5 @@ function Get-ScapeFATMeta {
     return $null
 }
 Export-ModuleMember -Function 'Initialize-ScapeFATParser',
-    'Restore-ScapeDeletedFATEntry',
-    'Trace-ScapeFATChain'
+'Restore-ScapeDeletedFATEntry',
+'Trace-ScapeFATChain'

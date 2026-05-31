@@ -1,8 +1,8 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Compliance
     Description: Verifies integrity of system segments (PSD1, modules, binaries) using cryptographic hashes.
-    Zero hardcode â€“ all configs via Get-ScapeConstant from infrastructure::Compliance.
+    Zero hardcode - all configs via Get-ScapeConstant from infrastructure::Compliance.
     Thread-safe, PowerShell 5.1 compatible.
 #>
 [CmdletBinding()] param()
@@ -16,7 +16,7 @@ function Initialize-ScapeCompliance {
     [OutputType([bool])]
     param()
 
-    # --- 1. CONFIGURAÃ‡ÃƒO (DECLARATIVA + ESCOPO CORRETO) ---
+    # --- 1. CONFIGURAÇÃO (DECLARATIVA + ESCOPO CORRETO) ---
     $Script:Config = @{
         Compliance = Get-ScapeConstant -Path "infrastructure::Compliance" -Fallback @{}
     }
@@ -30,7 +30,7 @@ function Initialize-ScapeCompliance {
         }
         else { @{} }
 
-        # --- 3. VALIDAÃ‡ÃƒO DE SEGMENTOS (PIPELINE FUNCIONAL) ---
+        # --- 3. VALIDAÇÃO DE SEGMENTOS (PIPELINE FUNCIONAL) ---
         if ($Script:Config.Compliance -and $Script:Config.Compliance["SEGMENT_VERIFY_ON_LOAD"] -eq $true) {
 
             $criticalSegments = $Script:Config.Compliance["CRITICAL_SEGMENTS"]
@@ -55,7 +55,7 @@ function Initialize-ScapeCompliance {
             }
         }
 
-        # --- 4. FINALIZAÃ‡ÃƒO ---
+        # --- 4. FINALIZAÇÃO ---
         $hashAlgo = Get-DefaultHashAlgorithm
 
         Publish-ScapeEvent -Type "COMPLIANCE_INITIALIZED" -Severity "LOG_INFO" -Payload @{
@@ -74,7 +74,7 @@ function Initialize-ScapeCompliance {
     }
 }
 
-# --- 1. ALGORITMO PADRÃƒO (EXPRESSÃƒO PURA) ---
+# --- 1. ALGORITMO PADRÃO (EXPRESSÃO PURA) ---
 function Get-DefaultHashAlgorithm {
     [CmdletBinding()] [OutputType([string])]
     param()

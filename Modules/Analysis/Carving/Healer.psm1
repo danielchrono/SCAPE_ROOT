@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Carving.Healer
@@ -254,5 +254,5 @@ function Reset-ScapeHealerStat {
     }
 }
 Export-ModuleMember -Function 'Invoke-ScapeHealingPipeline',
-    'Reset-ScapeHealerStat',
-    'Get-ScapeHealerStat'
+'Reset-ScapeHealerStat',
+'Get-ScapeHealerStat'

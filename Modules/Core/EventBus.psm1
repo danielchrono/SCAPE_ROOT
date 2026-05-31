@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.EventBus
     Architecture: Thread-Safe, Lock-Free Asynchronous Event Bus.
@@ -184,4 +184,4 @@ function Invoke-ScapeIdlePump {
     }
 }
 Export-ModuleMember -Function 'Publish-ScapeError',
-    'Receive-ScapeEvent'
+'Receive-ScapeEvent'

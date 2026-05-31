@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.Settings
     Architecture: Dynamic State Mutator | JSON Portable Persistence | SSOT Compliant
@@ -33,7 +33,7 @@ function Get-ScapeSettingDefault {
         $termCaps = Get-ScapeConstant -Path "ui::TerminalCapabilities"
         $defaultPersona = if ($uiDefaults.ThemeProfile) { $uiDefaults.ThemeProfile } else { "PowerShell" }
         return [ordered]@{
-            # ConfiguraÃ§Ãµes nÃ£o-UI
+            # Configurações não-UI
             Theme                      = Get-ScapeConstant -Path "theme::DynamicTheme::Fallback"
             CurrentLanguage            = Get-ScapeConstant -Path "system::DEFAULTS::LANG"
             UiMargin                   = Get-ScapeConstant -Path "ui::Layout::Margin"
@@ -45,7 +45,7 @@ function Get-ScapeSettingDefault {
             SmbTimeoutMs               = Get-ScapeConstant -Path "network::PROTOCOLS::TIMEOUT_MS"
             IoChunkSize                = Get-ScapeConstant -Path "storage::BUFFER::CHUNK_READ"
             RobocopyThreads            = Get-ScapeConstant -Path "system::LIMITS::ROBOCOPY_THREAD_AUTO"
-            # ConfiguraÃ§Ãµes de UI
+            # Configurações de UI
             IconLevel                  = $uiDefaults.IconLevel
             FrameStyle                 = $uiDefaults.FrameStyle
             ProgressStyle              = $uiDefaults.ProgressStyle
@@ -182,7 +182,7 @@ function Set-ScapeSettingMutation {
 
             Update-ScapeColdState -NewProperties @{ $Key = $effectiveValue } | Out-Null
 
-            # --- ROTEAMENTO E AÃ‡Ã•ES PÃ“S-MUTAÃ‡ÃƒO ---
+            # --- ROTEAMENTO E AÇÕES PÓS-MUTAÇÃO ---
 
             Publish-ScapeEvent -Type "SETTING_MUTATED" -Severity "TRACE" -Payload @{ Key = $Key; Value = $effectiveValue }
 
@@ -211,7 +211,7 @@ function Set-ScapeSettingMutation {
                 }
             }
 
-            # 3. Color Mode e Capabilities Visuais (SincronizaÃ§Ã£o Bidirecional)
+            # 3. Color Mode e Capabilities Visuais (Sincronização Bidirecional)
             if ($Key -eq "ColorMode" -or $Key -eq "Capability_TrueColor") {
                 $useTrueColor = $false
                 if ($Key -eq "ColorMode") {
@@ -285,7 +285,7 @@ function Reset-ScapeSettingToFactory {
     }
 }
 
-function _LoadSettingsFromJson {
+function Invoke-LoadSettingsFromJson {
     param([hashtable]$Defaults)
     process {
         try {
@@ -393,5 +393,5 @@ function Optimize-ScapeSettingsState {
 }
 
 Export-ModuleMember -Function 'Sync-ScapeThemeHydration',
-    'Optimize-ScapeSettingsState',
-    '_LoadSettingsFromJson'
+'Optimize-ScapeSettingsState',
+'Invoke-LoadSettingsFromJson'

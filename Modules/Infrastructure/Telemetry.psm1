@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Telemetry
     Description: Real-time hardware health monitoring and WMI polling.
@@ -172,4 +172,4 @@ function Invoke-ScapeTelemetryWorkflow {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeTelemetry',
-    'Get-ScapeTelemetrySnapshot'
+'Get-ScapeTelemetrySnapshot'
