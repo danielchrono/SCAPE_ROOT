@@ -848,25 +848,5 @@
                 CAP_TRUECOLOR = "Television"; CAP_HYPERLINKS = "Link"; CAP_BRACKETEDPASTE = "Paste"; CAP_MOUSETRACKING = "Settings"
                 CAP_ALTERNATESCREEN = "WindowFull"; CAP_FOCUSEVENTS = "FocusIn"; CAP_KITTYKEYBOARD = "KeyboardDev"; CAP_SIXELGRAPHICS = "FileMedia"
                 CAP_CSIUKEYBOARD = "KeyboardDev"; CAP_FALLBACK256 = "Color256"; CAP_FALLBACK16 = "Color16"
- 
-                # DEPLOYER & FORGE SEMANTICS
-                INIT_SYSTEM = "Lightning"; FORGE_ORCHESTRATOR = "Tools"; BUILD_MONOLITH = "PSPipeline"; BUILD_EXE_PORTABLE = "Package"
-                BUILD_EXE_SETUP = "Install"; BUILD_MSI = "Install"; FRAME_STYLE = "WindowTile"; ICON_LEVEL = "LightBulb"
-                PROGRESS_STYLE = "Processing"; THEME_COLOR = "Television"; THEME_PERSONA = "Persona"; RANDOM_THEME = "Random"
-                TERMINAL_CAPABILITIES = "Monitor"; RC_BTN_SAVE = "Save"; RC_BTN_CANCEL = "Close"
-
-                # Flags Booleanas (Checkboxes / Toggles)
-                RC_FLAG_E = "Label"; RC_FLAG_M = "Label"; RC_FLAG_ZB = "Label"; RC_FLAG_FFT = "Label"
-                RC_FLAG_XO = "Label"; RC_FLAG_XN = "Label"; RC_FLAG_XJ = "Label"; RC_FLAG_B = "Label"
-                RC_FLAG_NP = "Label"; RC_FLAG_COPYALL = "Label"; RC_FLAG_DCOPY_T = "Label"; RC_FLAG_L = "Label"
-                RC_FLAG_V = "Label"
-
-                # Parâmetros Numéricos (Sliders / Inputs)
-                RC_FLAG_MT = "CPU"; RC_RETRY_R = "Refresh"; RC_RETRY_W = "Timer"
-
-                # Terminal Capabilities
-                CAP_TRUECOLOR = "Television"; CAP_HYPERLINKS = "Link"; CAP_BRACKETEDPASTE = "Paste"; CAP_MOUSETRACKING = "Settings"
-                CAP_ALTERNATESCREEN = "WindowFull"; CAP_FOCUSEVENTS = "FocusIn"; CAP_KITTYKEYBOARD = "KeyboardDev"; CAP_SIXELGRAPHICS = "FileMedia"
-                CAP_CSIUKEYBOARD = "KeyboardDev"; CAP_FALLBACK256 = "Color256"; CAP_FALLBACK16 = "Color16"
         }
 }

@@ -131,6 +131,10 @@ function Get-ScapeManifest {
     }
 }
 
-Export-ModuleMember -Function 'Get-ScapeHotState',
+Export-ModuleMember -Function 'Initialize-ScapeState',
+'Update-ScapeColdState',
+'Get-ScapeColdState',
+'Get-ScapeHotState',
 'Test-ScapeDevMode',
-'Get-ScapeRoot'
+'Get-ScapeRoot',
+'Get-ScapeManifest'
