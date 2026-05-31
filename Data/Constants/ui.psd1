@@ -848,8 +848,7 @@
                 CAP_TRUECOLOR = "Television"; CAP_HYPERLINKS = "Link"; CAP_BRACKETEDPASTE = "Paste"; CAP_MOUSETRACKING = "Settings"
                 CAP_ALTERNATESCREEN = "WindowFull"; CAP_FOCUSEVENTS = "FocusIn"; CAP_KITTYKEYBOARD = "KeyboardDev"; CAP_SIXELGRAPHICS = "FileMedia"
                 CAP_CSIUKEYBOARD = "KeyboardDev"; CAP_FALLBACK256 = "Color256"; CAP_FALLBACK16 = "Color16"
-        }
-} }
+ 
                 # DEPLOYER & FORGE SEMANTICS
                 INIT_SYSTEM = "Lightning"; FORGE_ORCHESTRATOR = "Tools"; BUILD_MONOLITH = "PSPipeline"; BUILD_EXE_PORTABLE = "Package"
                 BUILD_EXE_SETUP = "Install"; BUILD_MSI = "Install"; FRAME_STYLE = "WindowTile"; ICON_LEVEL = "LightBulb"
