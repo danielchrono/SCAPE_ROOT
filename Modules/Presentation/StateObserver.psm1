@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\StateObserver
     Module: Scape.Presentation.StateObserver
@@ -98,6 +98,26 @@ function Invoke-ScapeActionScreenEvent {
         RenderConfig = $renderConfig
         FrameStyle   = $frameStyle
     }
+}
+
+function Invoke-ScapeActionWaitEvent {
+    [CmdletBinding()]
+    param($IncomingEventData)
+
+    if ($IncomingEventData.Type -ne 'ACTION_SCREEN_WAIT') { return }
+
+    $hint = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) {
+        Invoke-ScapeI18NFormat -Key "LBL_PRESS_ANY_KEY" -Fallback "Press any key to return..."
+    } else { "Press any key to return..." }
+
+    Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
+        ScreenId = "ActionScreen"
+        Rows     = @(@{ LeftText = ""; RightText = $hint; Flag = "HINT" })
+    }
+
+    # Wait for key from async runspace event queue
+    $evt = Wait-Event -SourceIdentifier "KEY_PRESSED"
+    Remove-Event -SourceIdentifier "KEY_PRESSED" -ErrorAction SilentlyContinue
 }
 
 function Invoke-ScapeRedrawRequestEvent {
@@ -355,6 +375,7 @@ function Initialize-ScapeStateObserver {
                 $reg3 = Register-ScapeEventListener -EventMatch "^(PROGRESS|SYSTEM|SYSTEM_.*|SYS_CORE|HINT|UI_HINT|INFO|WARN|ERROR|FATAL|ROUTER_FATAL|STATE_MUTATED|UI_SELECTION)$" -Action { Invoke-ScapeTransientEvent -IncomingEventData $args[0] }
                 $reg4 = Register-ScapeEventListener -EventMatch "UI_SELECTION" -Action { Invoke-ScapeSelectionEvent -IncomingEventData $args[0] }
                 $reg5 = Register-ScapeEventListener -EventMatch "ACTION_SCREEN_UPDATE" -Action { Invoke-ScapeActionScreenEvent -IncomingEventData $args[0] }
+                $reg7 = Register-ScapeEventListener -EventMatch "ACTION_SCREEN_WAIT" -Action { Invoke-ScapeActionWaitEvent -IncomingEventData $args[0] }
 
                 $reg6 = Register-ScapeEventListener -EventMatch "^(SETTING_MUTATED)$" -Action {
                     param($EventFrame)
@@ -381,7 +402,7 @@ function Initialize-ScapeStateObserver {
 
                 $config.IsActive = $true
                 $Script:ObserverInitialized = $true
-                $config.RegisteredHandlers += $reg1, $reg2, $reg3, $reg4, $reg5, $reg6
+                $config.RegisteredHandlers += $reg1, $reg2, $reg3, $reg4, $reg5, $reg6, $reg7
             }
             return $config
         }

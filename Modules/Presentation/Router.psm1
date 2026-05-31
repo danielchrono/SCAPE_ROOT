@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Router
     Module: Scape.Presentation.Router
@@ -68,6 +68,10 @@ function Invoke-ScapeRouterReducer {
                 $selTarget = $resolved.Target
                 $selPayload = $resolved.Payload
                 $selWake = $resolved.Layer
+                
+                if ($selAction -eq 'TRIGGER') {
+                    $ns.NeedsFullRedraw = $true
+                }
             }
             'LEFT' {
                 $resolved = & $resolveSelection
@@ -79,6 +83,7 @@ function Invoke-ScapeRouterReducer {
                 $selWake = $resolved.Layer
                 $mutationDirection = 'PREV'
                 $ns.NeedsCursorUpdate = $true
+                $ns.NeedsFullRedraw = $true
             }
             'RIGHT' {
                 $resolved = & $resolveSelection
@@ -90,6 +95,7 @@ function Invoke-ScapeRouterReducer {
                 $selWake = $resolved.Layer
                 $mutationDirection = 'NEXT'
                 $ns.NeedsCursorUpdate = $true
+                $ns.NeedsFullRedraw = $true
             }
             default { return $ns }
         }
@@ -184,7 +190,7 @@ function Start-ScapeRouter {
                     $menuData = Get-ScapeMenuData -MenuId $ns.CurrentMenu
                     if ($menuData) {
                         $ns.RawOptions = @($menuData.Items)
-                        $ns.TitleKey = $menuData.TitleKey
+                        $ns.TitleKey = if (-not [string]::IsNullOrWhiteSpace($menuData.TitleKey)) { $menuData.TitleKey } else { "MENU_$($ns.CurrentMenu.ToUpper())_TITLE" }
                     }
                 }
 

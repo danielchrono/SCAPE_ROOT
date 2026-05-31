@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Logger
     Description: Thread-safe operational logging with rotation, severity filtering, and zero hardcode.
@@ -166,7 +166,7 @@ function Initialize-ScapeLogger {
 
                             $payloadStr = "{}"
                             if ($IncomingEvt.Payload) {
-                                try { $payloadStr = $IncomingEvt.Payload | ConvertTo-Json -Depth 6 -Compress -ErrorAction Stop }
+                                try { $payloadStr = $IncomingEvt.Payload | ConvertTo-Json -Depth 100 -Compress -WarningAction SilentlyContinue -ErrorAction Stop }
                                 catch { $payloadStr = '{"Error":"JSON_SERIALIZE_FAILED"}' }
                             }
 
@@ -230,7 +230,7 @@ function Write-ScapeLogRecord {
 
         $payloadStr = "{}"
         if ($EventFrame.Payload) {
-            try { $payloadStr = $EventFrame.Payload | ConvertTo-Json -Depth 6 -Compress -ErrorAction Stop }
+            try { $payloadStr = $EventFrame.Payload | ConvertTo-Json -Depth 100 -Compress -WarningAction SilentlyContinue -ErrorAction Stop }
             catch { $payloadStr = '{"Error":"JSON_SERIALIZE_FAILED"}' }
         }
 
