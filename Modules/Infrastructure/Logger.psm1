@@ -2,7 +2,7 @@
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Logger
     Description: Thread-safe operational logging with rotation, severity filtering, and zero hardcode.
-    [PATCH] Fixed _EnrichWithCallerInfo to handle runspace failures, protected Register-EngineEvent
+    [PATCH] Fixed Resolve-ScapeCallerInfo to handle runspace failures, protected Register-EngineEvent
 #>
 [CmdletBinding()] param()
 
@@ -29,11 +29,11 @@ function Initialize-LogDirectory {
     param([hashtable]$LoggerConfig, [hashtable]$DirsConfig)
     [void]$LoggerConfig
     $logDir = $null
-    try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch { Write-Verbose "Suppressed error:     try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch {}"; }
+    try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch { Write-Verbose "Suppressed error:     try { `$logDir = (Get-ScapeColdState)[`"WORKSPACE_LOGS`"] } catch {}"; }
 
     if ([string]::IsNullOrWhiteSpace($logDir)) {
         $root = $null
-        try { $root = (Get-ScapeColdState)["ROOT"] } catch { Write-Verbose "Suppressed error:         try { $root = (Get-ScapeColdState)["ROOT"] } catch {}"; }
+        try { $root = (Get-ScapeColdState)["ROOT"] } catch { Write-Verbose "Suppressed error:         try { `$root = (Get-ScapeColdState)[`"ROOT`"] } catch {}"; }
         if ([string]::IsNullOrWhiteSpace($root)) { return $null }
         $logFolder = $DirsConfig["LOGS"]
         if ([string]::IsNullOrWhiteSpace($logFolder)) { $logFolder = "Logs" }
@@ -226,7 +226,7 @@ function Write-ScapeLogRecord {
         if ($null -eq $timeFormat) { $timeFormat = "yyyy-MM-ddTHH:mm:ss.fffZ" }
         $timestamp = [DateTime]::UtcNow.ToString($timeFormat)
 
-        $enriched = _EnrichWithCallerInfo -EventFrame $EventFrame
+        $enriched = Resolve-ScapeCallerInfo -EventFrame $EventFrame
 
         $payloadStr = "{}"
         if ($EventFrame.Payload) {
@@ -242,13 +242,13 @@ function Write-ScapeLogRecord {
     }
 }
 
-function _EnrichWithCallerInfo {
+function Resolve-ScapeCallerInfo {
     [CmdletBinding()] [OutputType([PSCustomObject])]
     param([PSCustomObject]$EventFrame)
 
     if ($EventFrame.Source -and $EventFrame.Layer) { return $EventFrame }
 
-    $ignorePattern = 'Publish-ScapeEvent|Write-ScapeLogRecord|_EnrichWithCallerInfo|<ScriptBlock>'
+    $ignorePattern = 'Publish-ScapeEvent|Write-ScapeLogRecord|Resolve-ScapeCallerInfo|<ScriptBlock>'
     $callerFrame = $null
     try {
         $callerFrame = Get-PSCallStack | Select-Object -Skip 1 |
@@ -289,7 +289,7 @@ function _EnrichWithCallerInfo {
     }
 }
 
-function _RotateLogIfNeeded {
+function Invoke-ScapeLogRotation {
     $maxSizeMB = $Script:Config.Logger["MAX_LOG_SIZE_MB"]
     if ($null -eq $maxSizeMB) { $maxSizeMB = 10 }
 
@@ -346,5 +346,9 @@ try {
 }
 catch { Write-Verbose "Suppressed error: catch { }"; }
 
-Export-ModuleMember -Function 'Initialize-LogDirectories',
-'_RotateLogIfNeeded'
+Export-ModuleMember -Function 'Resolve-LogLevel',
+'Initialize-LogDirectory',
+'Initialize-ScapeLogger',
+'Write-ScapeLogRecord',
+'Close-ScapeLogStream',
+'Get-ScapeActiveLogFile'

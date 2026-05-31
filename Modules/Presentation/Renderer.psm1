@@ -808,17 +808,24 @@ function Format-ScapeThemifiedMenuBuffer {
     }
 }
 
-Export-ModuleMember -Function 'Initialize-ScapeRenderer',
-'Write-ScapeMenuRow',
-'Invoke-ScapeCachedIconResolve',
-'Close-ScapeRenderer',
-'Write-ScapeMenuBuffer',
-'Write-ScapeTransientView',
-'Write-ScapeTreeView',
-'Write-ScapeActionScreen',
-'Format-ScapeGridLayout',
-'Format-ScapeThemifiedMenuBuffer'
-
+Export-ModuleMember -Function 'Clear-ScapeDisplayList',
+    'Add-ScapeDisplayList',
+    'Add-ScapeDisplayListAt',
+    'Out-ScapeDisplayList',
+    'Initialize-ScapeRenderer',
+    'Close-ScapeRenderer',
+    'Invoke-ScapeCachedIconResolve',
+    'Format-ScapeArtBlock',
+    'Write-ScapeScrollIndicator',
+    'Write-ScapeMenuLayout',
+    'Write-ScapeScrollIndicatorsView',
+    'Write-ScapeMenuRow',
+    'Write-ScapeMenuBuffer',
+    'Write-ScapeTransientView',
+    'Write-ScapeTreeView',
+    'Write-ScapeActionScreen',
+    'Format-ScapeGridLayout',
+    'Format-ScapeThemifiedMenuBuffer'
 
 
 
