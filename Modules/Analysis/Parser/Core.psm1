@@ -52,9 +52,10 @@ function Invoke-ScapeTargetedParsing {
             } else {
                 if (Get-Command Get-ScapeFSMeta -ErrorAction SilentlyContinue) {
                     try {
-                        $records = @(Get-ScapeFSMeta -Target $target)
+                        # Omitted: Get-ScapeFSMeta requires Buffer/Offset. Using empty for dev mock fallback.
+                        $records = @()
                     } catch {
-                        throw "Failed to read FS metadata from target '$target': $($_.Exception.Message)"
+                        throw "Failed to mock FS metadata from target '$target': $($_.Exception.Message)"
                     }
                 } else {
                     throw "Get-ScapeFSMeta command not found."

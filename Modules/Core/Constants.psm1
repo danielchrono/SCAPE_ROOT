@@ -36,11 +36,19 @@ function Get-ScapeConstant {
         $asset = $null
 
         foreach ($cat in $assets.Keys) {
-            $foundKey = $assets[$cat].Keys | Where-Object { $_ -ieq $root } | Select-Object -First 1
-            if ($foundKey) {
-                $asset = $assets[$cat][$foundKey]
+            $catHash = $assets[$cat]
+            if ($catHash.ContainsKey($root)) {
+                $asset = $catHash[$root]
                 break
             }
+            # Fallback case-insensitive
+            foreach ($k in $catHash.Keys) {
+                if ($k -ieq $root) {
+                    $asset = $catHash[$k]
+                    break
+                }
+            }
+            if ($null -ne $asset) { break }
         }
         if ($null -eq $asset) { return $Fallback }
 
@@ -51,12 +59,23 @@ function Get-ScapeConstant {
             $next = $null
 
             if ($current -is [System.Collections.IDictionary]) {
-                $match = $current.Keys | Where-Object { $_ -ieq $key } | Select-Object -First 1
-                if ($match) { $next = $current[$match] }
+                if ($current.ContainsKey($key)) {
+                    $next = $current[$key]
+                } else {
+                    foreach ($k in $current.Keys) {
+                        if ($k -ieq $key) { $next = $current[$k]; break }
+                    }
+                }
             }
             elseif ($null -ne $current.PSObject) {
-                $match = $current.PSObject.Properties | Where-Object { $_.Name -ieq $key } | Select-Object -First 1
-                if ($match) { $next = $match.Value }
+                $prop = $current.PSObject.Properties[$key]
+                if ($null -ne $prop) {
+                    $next = $prop.Value
+                } else {
+                    foreach ($p in $current.PSObject.Properties) {
+                        if ($p.Name -ieq $key) { $next = $p.Value; break }
+                    }
+                }
             }
 
             if ($null -eq $next) { return $Fallback }
