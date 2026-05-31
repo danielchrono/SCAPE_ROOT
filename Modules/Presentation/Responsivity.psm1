@@ -106,5 +106,8 @@ function Get-ScapeViewportRange {
         return @{ Start = $start; End = $end; Visible = $visible }
     }
 }
-Export-ModuleMember -Function 'Get-ScapeSafeCoordinate',
-'Set-ScapeViewportLocks'
+Export-ModuleMember -Function 'Initialize-ScapeViewportState',
+    'Test-ScapeViewportChanged',
+    'Get-ScapeSafeCoordinate',
+    'Set-ScapeViewportLock',
+    'Get-ScapeViewportRange'

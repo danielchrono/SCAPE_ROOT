@@ -448,5 +448,14 @@ function Remove-ScapeStateObserver {
     }
 }
 
-Export-ModuleMember -Function 'Invoke-ScapeEventBatchProcessing',
+Export-ModuleMember -Function 'Invoke-ScapeTreeUpdateEvent',
+    'Invoke-ScapeActionScreenEvent',
+    'Invoke-ScapeRedrawRequestEvent',
+    'Invoke-ScapeTransientEvent',
+    'Get-ScapePayloadField',
+    'Invoke-ScapeSelectionEvent',
+    'Request-ScapeRedraw',
+    'Initialize-ScapeStateObserver',
+    'Convert-ScapeObservedEventData',
+    'Invoke-ScapeEventBatchProcessing',
     'Remove-ScapeStateObserver'

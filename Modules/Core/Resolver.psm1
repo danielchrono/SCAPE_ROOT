@@ -338,4 +338,8 @@ function Initialize-ScapeResolver {
     }
 }
 Export-ModuleMember -Function 'Assert-ScapeCapability',
-'Invoke-ScapeWakeAsset'
+    'Invoke-ScapeResolveModule',
+    'Resolve-ScapeManifestLayer',
+    'Invoke-ScapeWakeAsset',
+    'Resolve-ScapeAsset',
+    'Initialize-ScapeResolver'
