@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.JFS
@@ -29,7 +29,7 @@ function Get-ScapeJFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     if ($Buffer.Length -lt ($Offset + 4)) { return $null }
     $magic = [System.Text.Encoding]::ASCII.GetString($Buffer, $Offset, 4)
@@ -63,3 +63,4 @@ function Get-ScapeJFSMeta {
 
     return $result
 }
+Export-ModuleMember -Function 'Initialize-ScapeJFSParser'

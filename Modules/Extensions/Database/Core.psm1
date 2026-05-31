@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.Parser.Core
     Architecture: Deterministic Metadata Orchestrator (Plan A)
@@ -12,6 +12,7 @@ function Invoke-ScapeTargetedParsing {
     [OutputType([void])]
     param([hashtable]$Payload)
     process {
+        [void]$Payload
         $state = Get-ScapeColdState
         $target = Get-ScapeProperty -Object $state -PropertyName 'ActiveTarget' -Fallback $null
 
@@ -27,6 +28,7 @@ function Invoke-ScapeTargetedParsing {
         try {
             # 1. Preflight
             $engineMode = Get-ScapeProperty -Object $state -PropertyName 'EngineMode' -Fallback 'STANDARD'
+            [void]$engineMode
             Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{ Key = "PIPE_TRAVERSAL_START"; Target = $target }
 
             # 2. Inicia barra de progresso transiente

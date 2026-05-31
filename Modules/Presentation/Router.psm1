@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Router
     Module: Scape.Presentation.Router
@@ -133,6 +133,7 @@ function Invoke-ScapeRouterReducer {
 }
 
 function Start-ScapeRouter {
+    [CmdletBinding(SupportsShouldProcess=$true)]
     param([string]$InitialMenu = 'MainMenu')
     process {
         $ViewportState = @{}
@@ -168,6 +169,7 @@ function Start-ScapeRouter {
                     }
                 }) | Out-Null
             $inputAsync = $inputPs.BeginInvoke()
+            [void]$inputAsync
 
             while ($State.IsRunning) {
                 Invoke-ScapeIdlePump | Out-Null
@@ -177,7 +179,7 @@ function Start-ScapeRouter {
                 }
 
                 $ns = $State.Clone()
-                
+
                 if ([string]::IsNullOrWhiteSpace($ns.TitleKey) -or $ns.RawOptions.Count -eq 0) {
                     $menuData = Get-ScapeMenuData -MenuId $ns.CurrentMenu
                     if ($menuData) {
@@ -185,7 +187,7 @@ function Start-ScapeRouter {
                         $ns.TitleKey = $menuData.TitleKey
                     }
                 }
-                
+
                 $resizeCheck = Test-ScapeViewportChanged -LastWidth $ViewportState.LastWidth -LastHeight $ViewportState.LastHeight
                 if ($resizeCheck.HasResized) {
                     $ViewportState.LastWidth = $resizeCheck.NewWidth
@@ -219,7 +221,7 @@ function Start-ScapeRouter {
                 }
                 Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
             }
-            
+
         }
         finally {
             Close-ScapeRenderer

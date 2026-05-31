@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Responsivity
     Module: Scape.Presentation.Responsivity
@@ -61,7 +61,7 @@ function Get-ScapeSafeCoordinate {
     }
 }
 
-function Set-ScapeViewportLocks {
+function Set-ScapeViewportLock {
     [CmdletBinding()]
     [OutputType([void])]
     param()
@@ -106,3 +106,5 @@ function Get-ScapeViewportRange {
         return @{ Start = $start; End = $end; Visible = $visible }
     }
 }
+Export-ModuleMember -Function 'Get-ScapeSafeCoordinate',
+    'Set-ScapeViewportLock'

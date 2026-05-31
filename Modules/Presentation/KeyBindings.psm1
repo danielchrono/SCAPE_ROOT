@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\KeyBindings
     Module: Scape.Presentation.KeyBindings
@@ -13,7 +13,7 @@ $Script:ActiveProfile = "Default"
 $Script:ChordBuffer = @()
 $Script:ChordTimeoutMs = 500
 
-function Initialize-ScapeKeyBindings {
+function Initialize-ScapeKeyBinding {
     [CmdletBinding()]
     param()
     process {
@@ -31,7 +31,7 @@ function Initialize-ScapeKeyBindings {
             $Script:KeyBindingRegistry = [hashtable]$defaultProfile
         }
 
-        Import-ScapeKeyBindings | Out-Null
+        Import-ScapeKeyBinding | Out-Null
     }
 }
 
@@ -46,7 +46,7 @@ function Register-ScapeKeyBinding {
         [switch]$Chord
     )
     process {
-        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBindings }
+        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
         $key = $KeySequence
         if ($Chord) { $key = "CHORD:$KeySequence" }
@@ -101,7 +101,7 @@ function Get-ScapeKeyBinding {
         [switch]$Chord
     )
     process {
-        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBindings }
+        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
         $key = $KeySequence
         if ($Chord) { $key = "CHORD:$KeySequence" }
@@ -113,12 +113,12 @@ function Get-ScapeKeyBinding {
     }
 }
 
-function Get-ScapeKeyBindings {
+function Get-ScapeKeyBinding {
     [CmdletBinding()]
     [OutputType([array])]
     param([string]$Profile = "Default")
     process {
-        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBindings }
+        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
         if ($null -ne $Profile -and $Script:KeyBindingProfiles.ContainsKey($Profile)) {
             return @($Script:KeyBindingProfiles[$Profile].Values)
@@ -135,7 +135,7 @@ function Set-ScapeKeyBindingProfile {
         [ValidateSet('Default', 'Vim', 'Emacs', 'Windows')][string]$Preset
     )
     process {
-        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBindings }
+        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
         $Script:ActiveProfile = $ProfileName
 
@@ -204,9 +204,10 @@ function Resolve-ScapeInputToAction {
         [string]$Profile
     )
     process {
-        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBindings }
+        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
         $prof = if ([string]::IsNullOrWhiteSpace($Profile)) { $Script:ActiveProfile } else { $Profile }
+        [void]$prof
 
         $binding = Get-ScapeKeyBinding -KeySequence $KeyInput
         if ($null -ne $binding) {
@@ -229,7 +230,7 @@ function Set-ScapeKeyBinding {
         [string]$Profile = "Default"
     )
     process {
-        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBindings }
+        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
         $existing = $Script:KeyBindingRegistry.Values | Where-Object { $_.Action -eq $ActionName }
 
@@ -241,12 +242,12 @@ function Set-ScapeKeyBinding {
     }
 }
 
-function Export-ScapeKeyBindings {
+function Export-ScapeKeyBinding {
     [CmdletBinding()]
     [OutputType([bool])]
     param([string]$Path)
     process {
-        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBindings }
+        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
         $configPath = if ([string]::IsNullOrWhiteSpace($Path)) {
             Join-Path -Path (Get-ScapeConstant -Path "project::home") -ChildPath ".scape/keybindings.json"
@@ -286,7 +287,7 @@ function Export-ScapeKeyBindings {
     }
 }
 
-function Import-ScapeKeyBindings {
+function Import-ScapeKeyBinding {
     [CmdletBinding()]
     [OutputType([bool])]
     param([string]$Path)
@@ -326,7 +327,7 @@ function Import-ScapeKeyBindings {
     }
 }
 
-Initialize-ScapeKeyBindings
+Initialize-ScapeKeyBinding
 
 function Invoke-ScapeKeyBindingAction {
     [CmdletBinding()]
@@ -335,13 +336,13 @@ function Invoke-ScapeKeyBindingAction {
     $initText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_INIT"
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $initText -StatusFlag "INFO"
 
-    if (-not (Get-Command Initialize-ScapeKeyBindings -ErrorAction SilentlyContinue)) {
+    if (-not (Get-Command Initialize-ScapeKeyBinding -ErrorAction SilentlyContinue)) {
         $noModuleText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_NO_MODULE"
         Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $noModuleText -StatusFlag "Failure"
         throw "KeyBindings module not available"
     }
 
-    Initialize-ScapeKeyBindings | Out-Null
+    Initialize-ScapeKeyBinding | Out-Null
 
     if ($Task -eq 'REBIND_INTERACTIVE') {
         $actions = @('UP', 'DOWN', 'LEFT', 'RIGHT', 'SELECT', 'BACK')
@@ -356,7 +357,7 @@ function Invoke-ScapeKeyBindingAction {
         }
 
         foreach ($action in $actions) {
-            $currentBinding = Get-ScapeKeyBindings | Where-Object { $_.Action -eq $action } | Select-Object -First 1
+            $currentBinding = Get-ScapeKeyBinding | Where-Object { $_.Action -eq $action } | Select-Object -First 1
             $currentSeq = if ($currentBinding) { $currentBinding.Sequence } else { "UNBOUND" }
 
             Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
@@ -381,7 +382,7 @@ function Invoke-ScapeKeyBindingAction {
         }
     }
     elseif ($Task -eq 'SAVE_BINDINGS') {
-        $result = Export-ScapeKeyBindings
+        $result = Export-ScapeKeyBinding
         if ($result) {
             $savedText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_SAVED"
             Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $savedText -StatusFlag "Success"
@@ -397,15 +398,19 @@ function Invoke-ScapeKeyBindingAction {
     }
 }
 
-Export-ModuleMember -Function 'Initialize-ScapeKeyBindings',
+Export-ModuleMember -Function 'Initialize-ScapeKeyBinding',
+    'Import-ScapeKeyBinding',
+    'Export-ScapeKeyBinding',
+    'Get-ScapeKeyBinding',
+    'Initialize-ScapeKeyBinding',
 'Register-ScapeKeyBinding',
 'Unregister-ScapeKeyBinding',
 'Get-ScapeKeyBinding',
-'Get-ScapeKeyBindings',
+'Get-ScapeKeyBinding',
 'Set-ScapeKeyBindingProfile',
 'Invoke-ScapeChordDetection',
 'Resolve-ScapeInputToAction',
 'Set-ScapeKeyBinding',
-'Export-ScapeKeyBindings',
-'Import-ScapeKeyBindings',
+'Export-ScapeKeyBinding',
+'Import-ScapeKeyBinding',
 'Invoke-ScapeKeyBindingAction'

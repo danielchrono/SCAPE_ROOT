@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.F2FS
@@ -29,7 +29,7 @@ function Get-ScapeF2FSMeta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     $sbOff = 0x400
     if ($Buffer.Length -lt ($Offset + $sbOff + 0x200)) { return $null }
@@ -66,3 +66,4 @@ function Get-ScapeF2FSMeta {
 
     return $result
 }
+Export-ModuleMember -Function 'Initialize-ScapeF2FSParser'

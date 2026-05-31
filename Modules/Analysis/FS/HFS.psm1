@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.HFS
@@ -29,7 +29,7 @@ function Get-ScapeHFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     $vhOff = (Get-ScapeConstant -Path "storage::FS").HFS.VOLUME_HEADER_OFF
     if ($Buffer.Length -lt ($Offset + $vhOff + 0x200)) { return $null }
@@ -74,3 +74,4 @@ function Get-ScapeHFSMeta {
 
     return $result
 }
+Export-ModuleMember -Function 'Initialize-ScapeHFSParser'

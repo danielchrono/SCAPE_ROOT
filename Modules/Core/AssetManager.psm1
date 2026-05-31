@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.AssetManager
     Architecture: Zero-Recursion-Limit | Comment-Safe | Deterministic | Indexer-Safe
@@ -17,19 +17,19 @@ function Invoke-ScapeLoadAsset {
     try {
         $state = Get-ScapeColdState
         if ($null -eq $state) { throw "STATE_UNINITIALIZED" }
-        
-        if (-not $state.ContainsKey("Assets")) { 
+
+        if (-not $state.ContainsKey("Assets")) {
             $assetsContainer = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new([System.StringComparer]::OrdinalIgnoreCase)
             Update-ScapeColdState -NewProperties @{ Assets = $assetsContainer } | Out-Null
         }
-        
+
         $assets = $state["Assets"]
-        if (-not $assets.ContainsKey($Category)) { 
+        if (-not $assets.ContainsKey($Category)) {
             $assets[$Category] = [System.Collections.Concurrent.ConcurrentDictionary[string, object]]::new([System.StringComparer]::OrdinalIgnoreCase)
         }
-        
+
         if ($assets[$Category].ContainsKey($AssetId)) { return $true }
-        
+
         $rawData = $null
         $devMode = $state["DEV_MODE"] -eq $true
         if (-not $devMode) {
@@ -44,9 +44,9 @@ function Invoke-ScapeLoadAsset {
             $rawData = Invoke-Command -ScriptBlock ([scriptblock]::Create($payload))
         }
         if ($null -eq $rawData) { throw "PARSE_FAILED" }
-        
+
         $assets[$Category][$AssetId] = $rawData
-        
+
         if (-not $Silent) { Publish-ScapeEvent -Type "ASSET_LOADED" -Severity "INFO" -Payload "$Category/$AssetId" }
         return $true
     }
@@ -66,7 +66,7 @@ function Get-ScapeAsset {
     $state = Get-ScapeColdState
     if ($null -eq $state -or -not $state.ContainsKey("Assets")) { return $null }
 
-    # Busca Case-Insensitive manual para evitar quebras em transições de RAM
+    # Busca Case-Insensitive manual para evitar quebras em transiÃ§Ãµes de RAM
     $catKey = $state["Assets"].Keys | Where-Object { $_ -ieq $Category } | Select-Object -First 1
     if (-not $catKey) { return $null }
 

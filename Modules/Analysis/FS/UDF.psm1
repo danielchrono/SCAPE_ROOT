@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.UDF
@@ -29,7 +29,7 @@ function Get-ScapeUDFMeta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     $anchorOff = (Get-ScapeConstant -Path "storage::FS").UDF.ANCHOR_OFF
     if ($Buffer.Length -lt ($Offset + $anchorOff + 0x200)) { return $null }
@@ -67,3 +67,4 @@ function Get-ScapeUDFMeta {
 
     return $result
 }
+Export-ModuleMember -Function 'Initialize-ScapeUDFParser'

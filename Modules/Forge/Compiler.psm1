@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Forge | Module: Scape.Forge.Compiler
     Architecture: Artifact Generation | Executable Packaging | Setup/MSI Orchestration
@@ -28,9 +28,9 @@ function Invoke-ScapeCompileExe {
     }
 
     $process = Start-Process -FilePath $ps2exePath.Source -ArgumentList $ps2exeArgs -Wait -NoNewWindow -PassThru
-    if ($process.ExitCode -ne 0) { throw "Falha de compilação durante a execução do PS2EXE: $($process.ExitCode)" }
+    if ($process.ExitCode -ne 0) { throw "Falha de compilaÃ§Ã£o durante a execuÃ§Ã£o do PS2EXE: $($process.ExitCode)" }
 
-    # Ofuscação: altera a string "Windows Defender" no binário para não acionar falsos positivos
+    # OfuscaÃ§Ã£o: altera a string "Windows Defender" no binÃ¡rio para nÃ£o acionar falsos positivos
     try {
         $bytes = [System.IO.File]::ReadAllBytes($outExe)
         $defenderPattern = [System.Text.Encoding]::ASCII.GetBytes('Windows Defender')
@@ -45,7 +45,7 @@ function Invoke-ScapeCompileExe {
     }
     catch {
         if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
-            Publish-ScapeEvent -Type "LOG_WARN" -Severity "WARN" -Payload "Falha na ofuscação do executável. O binário foi gerado, mas sem ofuscação."
+            Publish-ScapeEvent -Type "LOG_WARN" -Severity "WARN" -Payload "Falha na ofuscaÃ§Ã£o do executÃ¡vel. O binÃ¡rio foi gerado, mas sem ofuscaÃ§Ã£o."
         }
     }
 
@@ -128,7 +128,7 @@ Filename: "powershell.exe"; Parameters: "-WindowStyle Hidden -ExecutionPolicy By
     Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item $issPath -Force -ErrorAction SilentlyContinue
 
-    if ($proc.ExitCode -ne 0) { throw "Inno Setup falhou com código $($proc.ExitCode)" }
+    if ($proc.ExitCode -ne 0) { throw "Inno Setup falhou com cÃ³digo $($proc.ExitCode)" }
 
     $finalOut = Join-ScapePath $OutputDir 'SCAPE_Setup.exe'
     if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
@@ -170,7 +170,7 @@ function Invoke-ScapeCompileMsi {
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
     <Product Id='*' Name='$appName' Language='1033' Version='$appVersion' Manufacturer='Industrial Forensics' UpgradeCode='$guidUpgrade'>
         <Package InstallerVersion='200' Compressed='yes' InstallScope='perMachine' />
-        <MajorUpgrade DowngradeErrorMessage='Uma versão mais recente já está instalada.' />
+        <MajorUpgrade DowngradeErrorMessage='Uma versÃ£o mais recente jÃ¡ estÃ¡ instalada.' />
         <MediaTemplate EmbedCab='yes' />
         <Feature Id='ProductFeature' Title='SCAPE' Level='1'>
             <ComponentGroupRef Id='ProductComponents' />

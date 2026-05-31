@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.DiskImage
@@ -25,7 +25,7 @@ function Get-ScapeVMDKMeta {
     [OutputType([psobject])]
     param([Parameter(Mandatory = $true)][byte[]]$Buffer, [Parameter(Mandatory = $true)][int]$Offset, [string]$VolumeSerial = "")
 
-    
+
     if ($Buffer.Length -lt 4) { return $null }
 
     $sig = [System.Text.Encoding]::ASCII::GetString($Buffer, $Offset, 4)
@@ -48,7 +48,7 @@ function Get-ScapeVHDMeta {
     [OutputType([psobject])]
     param([Parameter(Mandatory = $true)][byte[]]$Buffer, [Parameter(Mandatory = $true)][int]$Offset, [string]$VolumeSerial = "")
 
-    
+
     if ($Buffer.Length -lt 8) { return $null }
 
     $sig = [System.Text.Encoding]::ASCII::GetString($Buffer, $Offset, 8)
@@ -69,7 +69,7 @@ function Get-ScapeVHDXMeta {
     [OutputType([psobject])]
     param([Parameter(Mandatory = $true)][byte[]]$Buffer, [Parameter(Mandatory = $true)][int]$Offset, [string]$VolumeSerial = "")
 
-    
+
     if ($Buffer.Length -lt 8) { return $null }
 
     $sig = [System.Text.Encoding]::ASCII::GetString($Buffer, $Offset, 8)
@@ -91,7 +91,7 @@ function Get-ScapeQCOW2Meta {
     [OutputType([psobject])]
     param([Parameter(Mandatory = $true)][byte[]]$Buffer, [Parameter(Mandatory = $true)][int]$Offset, [string]$VolumeSerial = "")
 
-    
+
     if ($Buffer.Length -lt 4) { return $null }
 
     $magic = [System.BitConverter]::ToUInt32($Buffer, $Offset)
@@ -115,7 +115,7 @@ function Get-ScapeDMGMeta {
     [OutputType([psobject])]
     param([Parameter(Mandatory = $true)][byte[]]$Buffer, [Parameter(Mandatory = $true)][int]$Offset, [string]$VolumeSerial = "")
 
-    
+
     if ($Buffer.Length -lt 0x10) { return $null }
 
     $sig = [System.Text.Encoding]::ASCII::GetString($Buffer, $Offset + 0x0C, 4)
@@ -130,3 +130,4 @@ function Get-ScapeDMGMeta {
         DataForkOffset = $dataForkOffset; ParsedAtOffset = $Offset
     }
 }
+Export-ModuleMember -Function 'Initialize-ScapeDiskImageParser'

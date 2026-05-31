@@ -1,4 +1,4 @@
-<#.SYNOPSIS
+﻿<#.SYNOPSIS
     Domain: Acquisition
     Module: Scape.Acquisition.Resilience
     Description: Fault-tolerant invocation wrapper for raw disk I/O. Handles cyclic redundancy checks and bad blocks.
@@ -20,6 +20,7 @@ function Invoke-ScapeResilientRead {
         [Parameter(Mandatory = $true)]
         [long]$TargetOffset
     )
+    [void]$TargetOffset
 
     if (-not $Script:C) { Initialize-ScapeResilience }
 
@@ -29,7 +30,7 @@ function Invoke-ScapeResilientRead {
 
     while ($attempt -lt $maxRetries) {
         try {
-            # Executa a operação de I/O bloqueante (C# P/Invoke)
+            # Executa a operaÃ§Ã£o de I/O bloqueante (C# P/Invoke)
             $result = & $ReadOperation
 
             if ($result.Success) {
@@ -49,7 +50,7 @@ function Invoke-ScapeResilientRead {
                 Publish-ScapeEvent -Type "LOG_ERR" -Payload @{ Action = "LogLine"; Message = $badBlockMsg }
                 return @{ Success = $false; BytesRead = 0; Error = $_.Exception.Message }
             }
-            
+
             # Non-blocking delay
             $sw = [System.Diagnostics.Stopwatch]::StartNew()
             while ($sw.ElapsedMilliseconds -lt $delayMs) {
@@ -63,6 +64,10 @@ function Invoke-ScapeResilientRead {
 }
 Register-ScapeActionHandler -Target 'Scape.Acquisition.Resilience' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$TargetOffset
+    [void]$Task
+    [void]$Target
+    [void]$PayloadDef
     $targetId = Resolve-ScapeActiveTarget
     if ([string]::IsNullOrWhiteSpace($targetId)) { throw "No Target Bound" }
 }

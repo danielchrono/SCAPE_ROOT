@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Audit
     Description: Immutable forensic ledger for extracted artifacts chain-of-custody with hash chaining.
@@ -24,13 +24,13 @@ function Initialize-ScapeAudit {
     if (-not $PSCmdlet.ShouldProcess("Audit Module", "Initialize Forensic Ledger")) { return $false }
 
     try {
-        # --- 2. CONFIGURAÃ‡ÃƒO DECLARATIVA ---
+        # --- 2. CONFIGURAÃƒâ€¡ÃƒÆ’O DECLARATIVA ---
         $Script:C = @{
             Audit  = Get-ScapeConstant -Path "infrastructure::Audit" -Fallback @{}
             Limits = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
         }
 
-        # --- 3. LÃ“GICA DE GÃŠNESIS ---
+        # --- 3. LÃƒâ€œGICA DE GÃƒÅ NESIS ---
         $genesis = $Script:C.Audit["GENESIS_BLOCK"]
         if ($null -eq $genesis) { $genesis = "SCAPE_AUDIT_GENESIS_v1.0" }
 
@@ -78,7 +78,7 @@ function Initialize-ScapeAudit {
 
                     $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
                     $timeToWait = [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds
-                    
+
                     $acquired = $false
                     while (-not $acquired -and $timeToWait -gt 0) {
                         $acquired = $Script:Semaphore.Wait(0)
@@ -104,7 +104,7 @@ function Initialize-ScapeAudit {
             Register-ScapeEventListener -EventMatch "*" -Action $script:AuditAction
         }
 
-        # --- 7. FINALIZAÃ‡ÃƒO ---
+        # --- 7. FINALIZAÃƒâ€¡ÃƒÆ’O ---
         $Script:Initialized = $true
 
         Publish-ScapeEvent -Type "AUDIT_INITIALIZED" -Severity "LOG_INFO" -Payload @{
@@ -221,7 +221,7 @@ function Export-ScapeAuditLedger {
             $state = Get-ScapeColdState
             $sessionId = $state["DATA_SESSION_ID"]
             if ($null -eq $sessionId) { $sessionId = [guid]::NewGuid().ToString() }
-            $engineVersion = Get-ScapeConstant -Path "system::META::VERSION" 
+            $engineVersion = Get-ScapeConstant -Path "system::META::VERSION"
             $report = [PSCustomObject]@{
                 ExportTime    = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
                 SessionId     = $sessionId
@@ -326,24 +326,25 @@ Register-EngineEvent -SourceIdentifier PowerShell.OnExit -Action {
 }
 Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 10 -StepProgress 10
-    
-    
+
+
     $workspace = Get-ScapeConstant -Path "system::Workspace" -Fallback @{}
     $exportSubDir = if ($workspace.ContainsKey("Exports")) { $workspace["Exports"] } else { "Data\Exports" }
-    
+
     $root = (Get-ScapeColdState)["ROOT"]
     if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
     $exportDir = Join-Path $root $exportSubDir
-    
+
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 30 -StepProgress 40
-    
+
 
     if (-not (Test-Path $exportDir)) { New-Item -ItemType Directory -Path $exportDir -Force | Out-Null }
     $exportPath = Join-Path $exportDir "AuditLedger_$(Get-Date -f 'yyyyMMdd_HHmmss').json"
-    
+
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORTING" ) -StatusFlag "INFO" -RunProgress 70 -StepProgress 80
-    
+
 
     if (Get-Command Export-ScapeAuditLedger -ErrorAction SilentlyContinue) {
         $result = Export-ScapeAuditLedger -OutputPath $exportPath -Format "JSON"
@@ -360,3 +361,6 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
         throw "Audit module not available."
     }
 }
+
+Export-ModuleMember -Function 'Initialize-ScapeAudit',
+    'Register-ScapeExtraction'

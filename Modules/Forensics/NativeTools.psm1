@@ -8,6 +8,7 @@ $ErrorActionPreference = 'Stop'
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.Native.DiskPart' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @("DISKPART")) -StatusFlag "WARN"
     try {
         $proc = Start-Process -FilePath "diskpart.exe" -Wait -PassThru -ErrorAction Stop
@@ -32,10 +33,12 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.DiskPart' -Handler {
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.Native.Chkdsk' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @("CHKDSK")) -StatusFlag "WARN"
     try {
         # Needs parameters normally, but we launch interactive cmd for now
         $proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/k chkdsk.exe" -Wait -PassThru -ErrorAction Stop
+        [void]$proc
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "ChkdskScreen"
             TitleKey = "TOOL_CHKDSK"
@@ -56,9 +59,11 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.Chkdsk' -Handler {
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.Native.WinFR' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @("WINFR")) -StatusFlag "WARN"
     try {
         $proc = Start-Process -FilePath "winfr.exe" -Wait -PassThru -ErrorAction Stop
+        [void]$proc
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "WinFRScreen"
             TitleKey = "TOOL_WINFR"
@@ -79,9 +84,11 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.WinFR' -Handler {
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.Native.Fsutil' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @("FSUTIL")) -StatusFlag "WARN"
     try {
         $proc = Start-Process -FilePath "cmd.exe" -ArgumentList "/k fsutil.exe dirty query C:" -Wait -PassThru -ErrorAction Stop
+        [void]$proc
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "FsutilScreen"
             TitleKey = "TOOL_FSUTIL"
@@ -102,9 +109,11 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.Fsutil' -Handler {
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.Native.Sfc' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @("SFC")) -StatusFlag "WARN"
     try {
         $proc = Start-Process -FilePath "sfc.exe" -ArgumentList "/scannow" -Wait -PassThru -ErrorAction Stop
+        [void]$proc
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "SfcScreen"
             TitleKey = "TOOL_SFC"
@@ -123,9 +132,11 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.Sfc' -Handler {
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.Native.Dism' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @("DISM")) -StatusFlag "WARN"
     try {
         $proc = Start-Process -FilePath "dism.exe" -ArgumentList "/Online /Cleanup-Image /RestoreHealth" -Wait -PassThru -ErrorAction Stop
+        [void]$proc
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "DismScreen"
             TitleKey = "TOOL_DISM"
@@ -144,9 +155,11 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.Dism' -Handler {
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.Native.EventVwr' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @("EVENT VIEWER")) -StatusFlag "WARN"
     try {
         $proc = Start-Process -FilePath "eventvwr.exe" -PassThru -ErrorAction Stop
+        [void]$proc
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "EventVwrScreen"
             TitleKey = "TOOL_EVENTVWR"
@@ -165,6 +178,7 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.EventVwr' -Handler {
 
 Register-ScapeActionHandler -Target 'Scape.Forensics.Native.FileHash' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "ACTION_TOOL_LAUNCH" -Args @("FILEHASH")) -StatusFlag "WARN"
     Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
         ScreenId = "HashScreen"
@@ -177,16 +191,3 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.FileHash' -Handler {
 # Registration-only module: handlers are registered via Register-ScapeActionHandler at load time.
 # No public functions to export directly.
 Export-ModuleMember -Function @()
-
-
-
-# --- INJECTED I18N KEYS ---
-# NATIVE_JOURNAL_EXPORTED
-# NATIVE_LINUX_DIAG
-# NATIVE_LINUX_ISOLATE
-
-
-# --- INJECTED I18N KEYS ---
-# NATIVE_JOURNAL_EXPORTED
-# NATIVE_LINUX_DIAG
-# NATIVE_LINUX_ISOLATE

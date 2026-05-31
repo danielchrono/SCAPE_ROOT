@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.ReFS
@@ -29,7 +29,7 @@ function Get-ScapeREFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     if ($Buffer.Length -lt ($Offset + 4)) { return $null }
     $magic = [System.BitConverter]::ToUInt32($Buffer, $Offset)
@@ -69,3 +69,4 @@ function Get-ScapeREFSMeta {
 
     return $result
 }
+Export-ModuleMember -Function 'Initialize-ScapeREFSParser'

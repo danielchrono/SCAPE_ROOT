@@ -1,4 +1,4 @@
-
+﻿
 $Script:DisplayList = New-Object System.Text.StringBuilder
 
 function Clear-ScapeDisplayList {
@@ -20,7 +20,7 @@ function Add-ScapeDisplayListAt {
 
 function Out-ScapeDisplayList {
     if ($Script:DisplayList.Length -gt 0) {
-        Write-Host $Script:DisplayList.ToString() -NoNewline
+        [Console]::WriteLine($Script:DisplayList.ToString() -NoNewline
         $Script:DisplayList.Clear() | Out-Null
     }
 }
@@ -36,7 +36,7 @@ function Out-ScapeDisplayList {
 #>
 [CmdletBinding()]
 
-# ANSI strip pattern — definido uma vez, reusado em todo o módulo (DRY)
+# ANSI strip pattern Ã¢â‚¬â€ definido uma vez, reusado em todo o mÃƒÂ³dulo (DRY)
 $Script:AnsiStrip = [regex]"(?:\x1B)\[[0-9;]*[a-zA-Z]"
 
 $Script:IconResolveCache = @{}
@@ -67,7 +67,7 @@ function Initialize-ScapeRenderer {
             [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
             [Console]::CursorVisible = $false
         }
-        catch {}
+        catch { Write-Verbose "Suppressed error:         catch {}";}
 
         try { Initialize-ScapeGeometry | Out-Null }
         catch { Write-Verbose "Geometry init failed: $_" }
@@ -127,7 +127,7 @@ function Close-ScapeRenderer {
             [Console]::CursorVisible = $true
             [Console]::Clear()
         }
-        catch {}
+        catch { Write-Verbose "Suppressed error:         catch {}";}
         if ($Script:RenderCache) {
             $Script:RenderCache.LastTransientConfig = $null
         }
@@ -193,7 +193,7 @@ function Write-ScapeScrollIndicator {
     process {
 
 
-        $arrow = if ($Direction -eq 'up') { '▲' } else { '▼' }
+        $arrow = if ($Direction -eq 'up') { 'Ã¢â€“Â²' } else { 'Ã¢â€“Â¼' }
         $dimPrefix = Get-ScapeConstant -Path "ui::ANSI::SGR::Dim"
         $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
         Set-ScapeCursorPosition -Left $X -Top $Y
@@ -232,7 +232,7 @@ function Write-ScapeMenuLayout {
     $cleanTitle = $titleNode.Text -replace '^\[\s*|\s*\]$', ''
 
     $box = Get-ScapeMenuLayout  -ItemCount $VisibleItems -ConsoleWidth $Dims.Width -ConsoleHeight $Dims.Height -HeaderHeight $y
-    $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
+    $frameCoords = Get-ScapeFrameCoordinate -BoxLayout $box
 
     $effectiveFrameStyle = if (-not [string]::IsNullOrWhiteSpace($FrameStyle)) { $FrameStyle } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
     $frame = Get-ScapeConstant -Path "ui::Frames::$effectiveFrameStyle"
@@ -286,7 +286,7 @@ function Write-ScapeScrollIndicatorsView {
     }
 }
 
-function Write-ScapeMenuRows {
+function Write-ScapeMenuRow {
     param(
         $Box,
         $Dims,
@@ -308,11 +308,12 @@ function Write-ScapeMenuRows {
     else {
         $selIcon = $rawSelIcon
     }
-    $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $Box
-    
+    $frameCoords = Get-ScapeFrameCoordinate -BoxLayout $Box
+
     $effectiveFrameStyle = if (-not [string]::IsNullOrWhiteSpace($FrameStyle)) { $FrameStyle } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
     $frame = Get-ScapeConstant -Path "ui::Frames::$effectiveFrameStyle"
     $wallChar = if ($frame -and $frame.VL) { $frame.VL } else { '|' }
+    [void]$wallChar
 
     for ($i = $ViewportStart; $i -lt $ViewportEnd; $i++) {
         $displayIndex = $i - $ViewportStart
@@ -325,18 +326,18 @@ function Write-ScapeMenuRows {
             $icon = $opt.Icon
             $flag = if ($opt.Type -eq 'UI') { 'MENU' } else { $opt.Type }
 
-            $coords = Get-ScapeGridCoordinates -BoxLayout $Box -ActiveIcon $icon -Index $displayIndex -ViewportOffset $ViewportStart
+            $coords = Get-ScapeGridCoordinate -BoxLayout $Box -ActiveIcon $icon -Index $displayIndex -ViewportOffset $ViewportStart
 
             $strSel = if ($isCurrent) { $selIcon } else { " " }
             $strIcon = $icon
-            
+
             $dynLen = if ($opt.PSObject.Properties['DynWidth']) { $opt.DynWidth } else { 0 }
             $visStrW = if ($opt.PSObject.Properties['TextWidth']) { $opt.TextWidth } else { $i18nStr.Length }
             $formattedDynText = $opt.DynamicText
-            
+
             $maxTextW = $coords.RightEdge - $coords.TextX - $dynLen
             if ($maxTextW -lt 0) { $maxTextW = 0 }
-            
+
             $clippedText = if ($visStrW -gt $maxTextW) { Invoke-ScapeStringClip -Text $i18nStr -MaxWidth $maxTextW } else { $i18nStr }
             $finalVisW = if ($visStrW -gt $maxTextW) { $maxTextW } else { $visStrW }
             $padText = [Math]::Max(0, $maxTextW - $finalVisW)
@@ -348,10 +349,10 @@ function Write-ScapeMenuRows {
             $cleanStrFull = "${strSel}$(" " * $padIcon)${strIcon}$(" " * $padTextSpace)${clippedText}$(" " * $padText)${formattedDynStr}"
             $cleanStrPlain = $cleanStrFull -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
             $visW = Get-ScapeVisualWidth $cleanStrPlain
-            
+
             $usableClearWidth = [Math]::Max(1, $frameCoords.RightWallX - $coords.SelectorX - 1)
             $padEnd = [Math]::Max(0, $usableClearWidth - $visW)
-            
+
             if ($isCurrent) {
                 $cleanLineWithEndPadding = $cleanStrFull + (" " * $padEnd)
                 $ESC = Get-ScapeConstant -Path "ui::ANSI::ESC"
@@ -415,7 +416,7 @@ function Write-ScapeMenuBuffer {
     process {
         if ($null -eq $CursorIndex) { $CursorIndex = 0 }
         if ($null -eq $LastCursorIndex) { $LastCursorIndex = -1 }
-        
+
         $ForceRowRedraw = ($FullRedraw -or $ForceRowRedraw)
 
         $dims = Get-ScapeConsoleDimension -WithMargins
@@ -439,13 +440,13 @@ function Write-ScapeMenuBuffer {
         }
 
 
-        $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
+        $frameCoords = Get-ScapeFrameCoordinate -BoxLayout $box
 
         # 4. Indicators Rendering
         Write-ScapeScrollIndicatorsView -ViewportStart $ViewportStart -ViewportEnd $ViewportEnd -ItemCount $itemCount -FrameCoords $frameCoords -FrameStyle $FrameStyle
 
         # 5. Rows Rendering (Dynamic Content)
-        Write-ScapeMenuRows -Box $box -Dims $dims -Options $Options -CursorIndex $CursorIndex -LastCursorIndex $LastCursorIndex -ViewportStart $ViewportStart -ViewportEnd $ViewportEnd -IconLevel $IconLevel -ForceRedrawItems $ForceRowRedraw -FrameStyle $FrameStyle
+        Write-ScapeMenuRow -Box $box -Dims $dims -Options $Options -CursorIndex $CursorIndex -LastCursorIndex $LastCursorIndex -ViewportStart $ViewportStart -ViewportEnd $ViewportEnd -IconLevel $IconLevel -ForceRedrawItems $ForceRowRedraw -FrameStyle $FrameStyle
 
         if ($FullRedraw) {
             $clearW = [Math]::Max(1, $safeDims.Width - 1)
@@ -531,7 +532,7 @@ function Write-ScapeTreeView {
         $visibleSlice = @($items[$viewportRange.Start..($viewportRange.End - 1)])
     }
     $box = Get-ScapeMenuLayout  -ItemCount $visibleItems -ConsoleWidth $dims.Width -ConsoleHeight $safeDimsHeight -HeaderHeight $y
-    $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
+    $frameCoords = Get-ScapeFrameCoordinate -BoxLayout $box
 
     $effectiveFrameStyle = if (-not [string]::IsNullOrWhiteSpace($FrameStyle)) { $FrameStyle } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
     $frame = Get-ScapeConstant -Path "ui::Frames::$effectiveFrameStyle"
@@ -577,16 +578,16 @@ function Write-ScapeActionScreen {
     $dims = Get-ScapeConsoleDimension -WithMargins
     $title = Get-ScapeI18NNode -Key $RenderConfig.Config.TitleKey
     $cleanTitle = if ($title -and $title.Text) { $title.Text -replace '^\[\s*|\s*\]$', '' } else { $RenderConfig.Config.TitleKey }
-    
+
     $rows = $RenderConfig.Config.Rows
     $totalItems = @($rows).Count
-    
+
     $runProgress = $RenderConfig.Config.RunProgress
     $stepProgress = $RenderConfig.Config.StepProgress
-    
+
     $hasRun = ($null -ne $runProgress -and $runProgress -ge 0 -and $runProgress -le 100)
     $hasStep = ($null -ne $stepProgress -and $stepProgress -ge 0 -and $stepProgress -le 100)
-    
+
     $progressRows = 0
     if ($hasRun) { $progressRows += 2 }
     if ($hasStep) { $progressRows += 2 }
@@ -598,7 +599,7 @@ function Write-ScapeActionScreen {
     $y = 1
     foreach ($line in $banner) { Add-ScapeDisplayListAt -X 0 -Y $y -Text $line; $y++ }
     $box = Get-ScapeMenuLayout  -ItemCount ($totalItems + $progressRows) -ConsoleWidth $dims.Width -ConsoleHeight $safeDimsHeight -HeaderHeight $y
-    $frameCoords = Get-ScapeFrameCoordinates -BoxLayout $box
+    $frameCoords = Get-ScapeFrameCoordinate -BoxLayout $box
 
     $effectiveFrameStyle = if (-not [string]::IsNullOrWhiteSpace($FrameStyle)) { $FrameStyle } else { Get-ScapeConstant -Path "ui::Defaults::FrameStyle" }
     $frame = Get-ScapeConstant -Path "ui::Frames::$effectiveFrameStyle"
@@ -625,55 +626,55 @@ function Write-ScapeActionScreen {
         if (-not $right) { $right = "" }
 
         $padding = Get-ScapeJustifiedPadding -LeftText $left -RightText $right -TotalWidth ($box.Width - 4)
-        
+
         Set-ScapeCursorPosition -Left $frameCoords.ContentX -Top $yOffset
-        
+
         $leftFmt = Format-ScapeANSIMessage -Text $left -Flag $row.Flag
         $rightFmt = Format-ScapeANSIMessage -Text $right -Flag $row.RightFlag
-        
+
         Add-ScapeDisplayList -Text "${leftFmt}${padding}${rightFmt}"
         $yOffset++
     }
 
     $effectiveProgressStyle = if (-not [string]::IsNullOrWhiteSpace($RenderConfig.Config.ProgressStyle)) { $RenderConfig.Config.ProgressStyle } else { Get-ScapeConstant -Path "ui::Defaults::ProgressStyle" -Fallback "Default" }
     $progressDef = Get-ScapeConstant -Path "ui::Progress::$effectiveProgressStyle"
-    if ($null -eq $progressDef -or -not $progressDef.ContainsKey("FullChar")) { 
-        $progressDef = Get-ScapeConstant -Path "ui::Progress::Default" 
+    if ($null -eq $progressDef -or -not $progressDef.ContainsKey("FullChar")) {
+        $progressDef = Get-ScapeConstant -Path "ui::Progress::Default"
     }
-    
-    $fullC = if ($progressDef) { $progressDef.FullChar } else { "█" }
-    $emptyC = if ($progressDef) { $progressDef.EmptyChar } else { "░" }
+
+    $fullC = if ($progressDef) { $progressDef.FullChar } else { "Ã¢â€“Ë†" }
+    $emptyC = if ($progressDef) { $progressDef.EmptyChar } else { "Ã¢â€“â€˜" }
 
     if ($progressRows -gt 0) {
         $yOffset++ # Padding row
         $barWidth = $box.Width - 4
-        
+
         if ($hasRun) {
             Set-ScapeCursorPosition -Left $frameCoords.ContentX -Top $yOffset
             $pctStr = " [$runProgress%]"
             $padTxt = Get-ScapeJustifiedPadding -LeftText (Invoke-ScapeI18NFormat -Key "LBL_OVERALL_PROGRESS" -Fallback "OVERALL RUN PROGRESS") -RightText $pctStr -TotalWidth $barWidth
             Add-ScapeDisplayList -Text (Format-ScapeANSIMessage -Text ((Invoke-ScapeI18NFormat -Key "LBL_OVERALL_PROGRESS" -Fallback "OVERALL RUN PROGRESS") + $padTxt + $pctStr) -Flag "HINT")
             $yOffset++
-            
+
             $filledChars = [Math]::Floor(($runProgress / 100.0) * $barWidth)
             $emptyChars = [Math]::Max(0, $barWidth - $filledChars)
             $barStr = ("$fullC" * $filledChars) + ("$emptyC" * $emptyChars)
-            
+
             Add-ScapeDisplayListAt -X $frameCoords.ContentX -Y $yOffset -Text (Format-ScapeANSIMessage -Text $barStr -Flag "SUCCESS")
             $yOffset++
         }
-        
+
         if ($hasStep) {
             Set-ScapeCursorPosition -Left $frameCoords.ContentX -Top $yOffset
             $pctStr = " [$stepProgress%]"
             $padTxt = Get-ScapeJustifiedPadding -LeftText (Invoke-ScapeI18NFormat -Key "LBL_CURRENT_PROGRESS" -Fallback "CURRENT TASK PROGRESS") -RightText $pctStr -TotalWidth $barWidth
             Add-ScapeDisplayList -Text (Format-ScapeANSIMessage -Text ((Invoke-ScapeI18NFormat -Key "LBL_CURRENT_PROGRESS" -Fallback "CURRENT TASK PROGRESS") + $padTxt + $pctStr) -Flag "HINT")
             $yOffset++
-            
+
             $filledChars = [Math]::Floor(($stepProgress / 100.0) * $barWidth)
             $emptyChars = [Math]::Max(0, $barWidth - $filledChars)
             $barStr = ("$fullC" * $filledChars) + ("$emptyC" * $emptyChars)
-            
+
             Add-ScapeDisplayListAt -X $frameCoords.ContentX -Y $yOffset -Text (Format-ScapeANSIMessage -Text $barStr -Flag "WARN")
             $yOffset++
         }
@@ -701,6 +702,7 @@ function Format-ScapeGridLayout {
 
         $ESC = Get-ScapeConstant -Path "ui::ANSI::ESC"
         $reset = "$ESC[0m"
+        [void]$reset
         $sb = [System.Text.StringBuilder]::new()
 
         $frame = Get-ScapeConstant -Path "ui::Frames::$FrameStyle"
@@ -765,10 +767,12 @@ function Format-ScapeThemifiedMenuBuffer {
         [string]$FrameStyle = 'Classic'
     )
     process {
+        [void]$MenuId
         if ($null -eq $HydratedOptions -or $HydratedOptions.Count -eq 0) { return "" }
 
         $ESC = Get-ScapeConstant -Path "ui::ANSI::ESC"
         $reset = "$ESC[0m"
+        [void]$reset
         $sb = [System.Text.StringBuilder]::new()
 
         $frame = Get-ScapeConstant -Path "ui::Frames::$FrameStyle"
@@ -789,7 +793,7 @@ function Format-ScapeThemifiedMenuBuffer {
             $text = if ($opt.PSObject.Properties['Text']) { $opt.Text } else { $opt.TitleKey }
             $dynText = if ($opt.PSObject.Properties['DynamicText']) { $opt.DynamicText } else { "" }
 
-            $selector = if ($isSelected) { "▶ " } else { "  " }
+            $selector = if ($isSelected) { "Ã¢â€“Â¶ " } else { "  " }
             $line = "$selector$icon $text"
 
             if ($dynText) { $line += " $dynText" }
@@ -805,6 +809,8 @@ function Format-ScapeThemifiedMenuBuffer {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeRenderer',
+    'Write-ScapeMenuRow',
+    '_GetCachedResolvedIcon',
 'Close-ScapeRenderer',
 'Write-ScapeMenuBuffer',
 'Write-ScapeTransientView',

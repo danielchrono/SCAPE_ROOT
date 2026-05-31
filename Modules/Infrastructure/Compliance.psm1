@@ -245,13 +245,14 @@ Export-ModuleMember -Function 'Initialize-ScapeCompliance',
 'Export-ScapeComplianceReport'
 Register-ScapeActionHandler -Target 'Scape.Infrastructure.Compliance' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "COMPLIANCE_GENERATING") -StatusFlag "INFO"
     $root = (Get-ScapeColdState)["ROOT"]
     if ([string]::IsNullOrWhiteSpace($root)) { $root = (Get-Location).Path }
     $exportDir = Join-Path $root "Data\Exports"
     if (-not (Test-Path $exportDir)) { New-Item -ItemType Directory -Path $exportDir -Force | Out-Null }
     $exportPath = Join-Path $exportDir "ComplianceReport_$(Get-Date -f 'yyyyMMdd_HHmmss').json"
-    
+
     if (Get-Command Export-ScapeComplianceReport -ErrorAction SilentlyContinue) {
         $result = Export-ScapeComplianceReport -OutputPath $exportPath
         if ($result.Success) {

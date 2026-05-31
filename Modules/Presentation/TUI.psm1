@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\TUI
     Module: Scape.Presentation.TUI
@@ -10,14 +10,14 @@
 function Get-ScapeConsoleDimension {
     [CmdletBinding()]
     param([switch]$WithMargins)
-    
+
     $maxW = Get-ScapeConstant -Path "ui::Config::MaxCanvasWidth" -Fallback 140
     $maxH = Get-ScapeConstant -Path "ui::Config::MaxCanvasHeight" -Fallback 40
     $layout = Get-ScapeConstant -Path "ui::Layout"
-    
+
     $width = Get-ScapeConstant -Path "ui::Config::DefaultWidth" -Fallback 120
     $height = Get-ScapeConstant -Path "ui::Config::DefaultHeight" -Fallback 30
-    
+
     try {
         $raw = Get-Host | Select-Object -ExpandProperty UI | Select-Object -ExpandProperty RawUI
         $width = $raw.WindowSize.Width
@@ -27,7 +27,7 @@ function Get-ScapeConsoleDimension {
         $width = [Console]::WindowWidth
         $height = [Console]::WindowHeight
     }
-    
+
     if ($WithMargins) {
         $m = $layout.Margin * 2
         return @{
@@ -35,7 +35,7 @@ function Get-ScapeConsoleDimension {
             Height = [Math]::Max($layout.MinHeight, [Math]::Min($height - $layout.HeaderHeight, $maxH))
         }
     }
-    
+
     return @{ Width = $width; Height = $height }
 }
 
@@ -82,7 +82,9 @@ function Read-ScapeKeyPress {
             $vKeyMap = Get-ScapeConstant -Path "ui::Input::VirtualKeyMap" -Fallback @{}
 
             $start = [DateTime]::Now
+            [void]$start
             $timeout = [TimeSpan]::FromMilliseconds($TimeoutMilliseconds)
+            [void]$timeout
 
             if ($true) {
                 try {
@@ -123,7 +125,7 @@ function Clear-ScapeInputBuffer {
                 $Host.UI.RawUI.FlushInputBuffer()
             }
         }
-        catch { }
+        catch { Write-Verbose "Suppressed error:         catch { }"; }
         finally {
             $ErrorActionPreference = $oldEap
         }
@@ -148,7 +150,7 @@ function Clear-ScapeRegion {
             }
             else {
                 Set-ScapeCursorPosition -Left $Left -Top ($Top + $i)
-                Write-Host $blankLine -NoNewline
+                [Console]::WriteLine($blankLine -NoNewline
             }
         }
     }
@@ -170,7 +172,7 @@ function Clear-ScapeLine {
         }
         else {
             Set-ScapeCursorPosition -Left $Left -Top $Top
-            Write-Host $blankLine -NoNewline
+            [Console]::WriteLine($blankLine -NoNewline
         }
     }
 }

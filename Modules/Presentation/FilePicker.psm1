@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation | Module: Scape.Presentation.FilePicker
     Architecture: Hybrid COM/TUI Input Dialog
@@ -12,6 +12,7 @@ function Invoke-ScapeDirectoryPicker {
     [OutputType([void])]
     param([hashtable]$Payload)
     process {
+        [void]$Payload
         $initMsg = Invoke-ScapeI18NFormat -Key "FILEPICKER_INIT"
         Publish-ScapeEvent -Type "NET_MAP_INIT" -Severity "INFO" -Payload @{ Message = $initMsg }
 
@@ -69,5 +70,7 @@ function Invoke-ScapeDirectoryPicker {
 }
 Register-ScapeActionHandler -Target 'Scape.Presentation.FilePicker' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$Task
+    [void]$Target
     if (Get-Command Invoke-ScapeDirectoryPicker -ErrorAction SilentlyContinue) { Invoke-ScapeDirectoryPicker -Payload $PayloadDef }
 }

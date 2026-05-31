@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.EventBus
     Architecture: Thread-Safe, Lock-Free Asynchronous Event Bus.
@@ -33,7 +33,7 @@ function Publish-ScapeEvent {
                     $cs = Get-ScapeColdState
                     if ($cs -and $cs.ContainsKey('LOG_LEVEL_OVERRIDE')) { $minLevelName = $cs['LOG_LEVEL_OVERRIDE'] }
                 }
-                catch { }
+                catch { Write-Verbose "Suppressed error:                 catch { }"; }
             }
 
             # Only drop if below configured min level
@@ -43,10 +43,10 @@ function Publish-ScapeEvent {
 
             if ($currValue -lt $minValue) { return }
         }
-        catch { }
+        catch { Write-Verbose "Suppressed error:         catch { }"; }
     }
 
-    # IDENTIFICAÇÃO DE ORIGEM (CALLER ID REAL)
+    # IDENTIFICAÃ‡ÃƒO DE ORIGEM (CALLER ID REAL)
     $caller = if (-not [string]::IsNullOrWhiteSpace($Source)) { $Source } else { "SYSTEM_CORE" }
 
     $timeFormat = if ($sysConfig["TIME_FORMAT"]) { $sysConfig["TIME_FORMAT"] } else { "yyyy-MM-ddTHH:mm:ss.fffZ" }
@@ -157,11 +157,11 @@ function Invoke-ScapeIdlePump {
                     $isMatch = $true
                 }
                 elseif ($pattern -match '[\^\$\(\)\|\+]') {
-                    # Contains regex metacharacters — use -match
+                    # Contains regex metacharacters â€” use -match
                     try { $isMatch = $eventFrame.Type -match $pattern } catch { $isMatch = $false }
                 }
                 elseif ($pattern -match '[\*\?]') {
-                    # Contains wildcard chars — use -like
+                    # Contains wildcard chars â€” use -like
                     try { $isMatch = $eventFrame.Type -like $pattern } catch { $isMatch = $false }
                 }
                 else {
@@ -183,3 +183,5 @@ function Invoke-ScapeIdlePump {
         [System.Threading.Interlocked]::Exchange([ref]$Script:PumpActive, 0) | Out-Null
     }
 }
+Export-ModuleMember -Function 'Publish-ScapeError',
+    'Receive-ScapeEvent'

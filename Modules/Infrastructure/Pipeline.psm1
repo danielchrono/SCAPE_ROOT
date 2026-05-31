@@ -88,6 +88,7 @@ function Get-ScapePipelineStat {
 }
 Register-ScapeActionHandler -Target 'Scape.Infrastructure.Pipeline' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "PIPELINE_INIT") -StatusFlag "INFO" -RunProgress 20 -StepProgress 30
     if (Get-Command Initialize-ScapePipeline -ErrorAction SilentlyContinue) {
         Initialize-ScapePipeline | Out-Null
@@ -98,3 +99,5 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Pipeline' -Handler {
         throw "Pipeline module not available."
     }
 }
+
+Export-ModuleMember -Function 'Get-ScapePipelineStat'

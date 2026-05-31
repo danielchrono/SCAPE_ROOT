@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Forge | Module: Scape.Forge.Packager
     Architecture: Dependency Acquisition | Isolation | Zero Compilation Logic
@@ -6,12 +6,12 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Invoke-ScapeFetchDependencies {
+function Invoke-ScapeFetchDependency {
     [CmdletBinding()]
     param([string]$TargetDir)
 
     $forgeConfig = Get-ScapeConstant -Path "forge::Urls" -Fallback @{}
-    if (-not $forgeConfig) { throw "Configurações do Forge ausentes no AssetManager." }
+    if (-not $forgeConfig) { throw "ConfiguraÃ§Ãµes do Forge ausentes no AssetManager." }
 
     $binDir = Join-ScapePath $TargetDir "Data\Bin"
     if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Path $binDir -Force | Out-Null }
@@ -64,3 +64,4 @@ function Invoke-ScapeFetchDependencies {
 
     return @{ BinDir = $binDir; WixDir = $wixBin }
 }
+Export-ModuleMember -Function 'Invoke-ScapeFetchDependency'

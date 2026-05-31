@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.Resolver
     .DESCRIPTION
@@ -161,10 +161,10 @@ function Resolve-ScapeManifestLayer {
         }
     }
 
-    # debug/diagnóstico: sempre listar keys quando falhar
+    # debug/diagnÃ³stico: sempre listar keys quando falhar
     if (-not $manifest.ContainsKey($LayerKey)) {
         $keys = @()
-        try { $keys = @($manifest.Keys) } catch {}
+        try { $keys = @($manifest.Keys) } catch { Write-Verbose "Suppressed error:         try { $keys = @($manifest.Keys) } catch {}";}
         $keysPreview = if ($keys.Count -gt 50) { (($keys[0..49]) -join ',') + ',...' } else { ($keys -join ',') }
         throw "RESOLVER_ERROR: Layer '$LayerKey' does not exist in Manifest. ManifestKeys=[$keysPreview]"
     }
@@ -177,7 +177,7 @@ function Resolve-ScapeManifestLayer {
     }
 }
 
-function Invoke-ScapeWakeAssets {
+function Invoke-ScapeWakeAsset {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$Domain)
 
@@ -312,7 +312,7 @@ function Initialize-ScapeResolver {
             if (Get-Command Resolve-ScapeManifestLayer -ErrorAction SilentlyContinue) {
                 Resolve-ScapeManifestLayer -LayerKey $wake | Out-Null
             }
-            Invoke-ScapeWakeAssets -Domain $wake | Out-Null
+            Invoke-ScapeWakeAsset -Domain $wake | Out-Null
             # Publish-ScapeEvent -Type "LAZY_WAKEUP" -Severity "TRACE" -Payload "Hydrated Domain: $wake"
         }
 
@@ -327,7 +327,7 @@ function Initialize-ScapeResolver {
         else { $null }
 
         if ($action -eq 'TRIGGER' -and $null -ne $actionPayload) {
-            # Resolução flexível dependendo se é hashtable ou psobject
+            # ResoluÃ§Ã£o flexÃ­vel dependendo se Ã© hashtable ou psobject
             $target = if ($actionPayload -is [hashtable]) { $actionPayload['Target'] } elseif ($null -ne $actionPayload.PSObject) { $actionPayload.Target } else { $null }
 
             if ($target) {
@@ -337,3 +337,5 @@ function Initialize-ScapeResolver {
         }
     }
 }
+Export-ModuleMember -Function 'Assert-ScapeCapability',
+    'Invoke-ScapeWakeAsset'

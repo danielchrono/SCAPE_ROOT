@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Extensions
     Module: Scape.Extensions.Database.FragmentDB
@@ -27,3 +27,4 @@ function Write-ScapeFragmentMap {
     $cmd.ExecuteNonQuery() | Out-Null
     $cmd.Dispose()
 }
+Export-ModuleMember -Function 'Write-ScapeFragmentMap'

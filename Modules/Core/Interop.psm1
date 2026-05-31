@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Foundation
     Module: Scape.Core.Interop
@@ -6,7 +6,7 @@
 #>
 
 # =============================================================================
-# DEFINIÇÕES C# CENTRALIZADAS (AppDomain-wide, compiladas uma vez)
+# DEFINIÃ‡Ã•ES C# CENTRALIZADAS (AppDomain-wide, compiladas uma vez)
 # =============================================================================
 $Script:InteropSignature = @"
 using System;
@@ -137,7 +137,7 @@ namespace Scape.Core.Native
 "@
 
 # =============================================================================
-# INICIALIZAÇÃO (Compila UMA vez no AppDomain)
+# INICIALIZAÃ‡ÃƒO (Compila UMA vez no AppDomain)
 # =============================================================================
 
 function Enable-ScapeVT100 {

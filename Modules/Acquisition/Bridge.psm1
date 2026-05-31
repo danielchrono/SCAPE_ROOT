@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Acquisition
     Module: Scape.Acquisition.Bridge
@@ -16,7 +16,7 @@ function Initialize-ScapeBridge {
     process {
         if ($Script:BridgeReady) { return $true }
 
-        # Garante que Interop esteja carregado (fail-fast se não)
+        # Garante que Interop esteja carregado (fail-fast se nÃ£o)
         if (-not ("Scape.Core.Native.Win32DiskBridge" -as [type])) {
             if (Get-Command Initialize-ScapeInterop -ErrorAction SilentlyContinue) {
                 $result = Initialize-ScapeInterop

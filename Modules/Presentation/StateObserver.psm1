@@ -1,10 +1,10 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\StateObserver
     Module: Scape.Presentation.StateObserver
     Architecture: SRP Event Handlers | Debounced Rendering
     [FIX] Corrigidos unapproved verbs (Handle -> Invoke).
-    [FIX] Restaurada a legibilidade e verificações defensivas profundas.
+    [FIX] Restaurada a legibilidade e verificaÃ§Ãµes defensivas profundas.
 #>
 [CmdletBinding()] param()
 
@@ -109,12 +109,13 @@ function Invoke-ScapeRedrawRequestEvent {
     $p = $IncomingEventData.Payload
     if ($null -eq $p) { return }
 
-    # Extração defensiva do RouterState
+    # ExtraÃ§Ã£o defensiva do RouterState
     $routerState = if ($p -is [System.Collections.IDictionary]) { $p['State'] }
     elseif ($null -ne $p.PSObject -and $p.PSObject.Properties['State']) { $p.State }
     else { $null }
 
     $rawOptsInput = if ($null -ne $routerState -and $null -ne $routerState.RawOptions) { $routerState.RawOptions } else { @() }
+    [void]$rawOptsInput
 
     $menuId = if ($p -is [System.Collections.IDictionary]) { $p['MenuId'] }
     elseif ($null -ne $p.PSObject -and $p.PSObject.Properties['MenuId']) { $p.MenuId }
@@ -137,7 +138,7 @@ function Invoke-ScapeRedrawRequestEvent {
     if ($null -eq $routerState) {
         $routerState = @{ Cursor = $null; LastCursor = -1; RawOptions = @() }
     }
-    
+
     $rawOpts = @($routerState.RawOptions)
     $cursorIdx = $routerState.Cursor
     $lastIdx = if ($null -ne $routerState.LastCursor) { $routerState.LastCursor } else { -1 }
@@ -151,12 +152,12 @@ function Invoke-ScapeRedrawRequestEvent {
     # Viewport Calculation (Moved from Renderer for Pure View)
     $viewportStart = if ($routerState.ContainsKey('ViewportStart')) { $routerState['ViewportStart'] } else { 0 }
     $viewportEnd = if ($routerState.ContainsKey('ViewportEnd')) { $routerState['ViewportEnd'] } else { $hydratedOpts.Count }
-    
+
     if ($Script:LastViewportStart -ne $viewportStart) {
         $isFull = $true
     }
     $Script:LastViewportStart = $viewportStart
-    
+
     $isDataMutated = ($type -eq 'DATA')
     $forceRowRedraw = ($isFull -or $isDataMutated)
 
@@ -195,7 +196,7 @@ function Invoke-ScapeTransientEvent {
         if ($isActionLike) {
             $holdMs = Get-ScapeConstant -Path "ui::Feedback::TransientActionHoldMs" -Fallback 1800
             $Script:TransientState.HoldUntil = $now.AddMilliseconds([int]$holdMs)
-            
+
             $processed.RenderConfig.HoldUntil = $Script:TransientState.HoldUntil
             Publish-ScapeEvent -Type "VIEW_MODEL_TRANSIENT_READY" -Severity "TRACE" -Payload @{
                 RenderConfig = $processed.RenderConfig
@@ -255,9 +256,9 @@ function Invoke-ScapeSelectionEvent {
         $task = Get-ScapePayloadField -Payload $payloadDef -Key 'Task'
 
         if (-not [string]::IsNullOrWhiteSpace($target)) {
-            # MVVM/SRP: delegate to ActionManager — single dispatch path
+            # MVVM/SRP: delegate to ActionManager â€” single dispatch path
             Invoke-ScapeActionDispatcher -Target $target -Task $task -PayloadDef $payloadDef -MenuId $menuId -Cursor ([int]$cursorIdx) | Out-Null
-            
+
         }
     }
     elseif ($action -eq 'MUTATE' -and $routeDef) {
@@ -270,7 +271,7 @@ function Invoke-ScapeSelectionEvent {
         if ($mutated) {
             Publish-ScapeEvent -Type "STATE_MUTATED" -Severity "INFO" -Payload @{
                 MenuId = $menuId; SelectionId = $selId; Timestamp = [DateTime]::Now
-                
+
             }
         }
     }
@@ -313,7 +314,7 @@ function Request-ScapeRedraw {
                 $Script:RedrawQueue = @() # Clear queue before dispatch
 
                 $viewportStart = if ($next.RouterState.ContainsKey('ViewportStart')) { $next.RouterState['ViewportStart'] } else { 0 }
-            
+
                 Publish-ScapeEvent -Type "UI_REDRAW_REQUEST" -Severity "INFO" -Payload @{
                     MenuId        = $next.MenuId
                     Type          = $next.Type
@@ -354,7 +355,7 @@ function Initialize-ScapeStateObserver {
                 $reg3 = Register-ScapeEventListener -EventMatch "^(PROGRESS|SYSTEM|SYSTEM_.*|SYS_CORE|HINT|UI_HINT|INFO|WARN|ERROR|FATAL|ROUTER_FATAL|STATE_MUTATED|UI_SELECTION)$" -Action { Invoke-ScapeTransientEvent -IncomingEventData $args[0] }
                 $reg4 = Register-ScapeEventListener -EventMatch "UI_SELECTION" -Action { Invoke-ScapeSelectionEvent -IncomingEventData $args[0] }
                 $reg5 = Register-ScapeEventListener -EventMatch "ACTION_SCREEN_UPDATE" -Action { Invoke-ScapeActionScreenEvent -IncomingEventData $args[0] }
-                
+
                 $reg6 = Register-ScapeEventListener -EventMatch "^(SETTING_MUTATED)$" -Action {
                     param($EventFrame)
                     $p = $EventFrame.Payload
@@ -366,12 +367,12 @@ function Initialize-ScapeStateObserver {
                         $fullKeys = Get-ScapeConstant -Path "ui::Redraw::DestructiveKeys" -Fallback @('ThemePersona', 'ColorMode', 'Capability_TrueColor', 'IconLevel', 'FrameStyle', 'ProgressStyle', 'CurrentLanguage')
                         if ($p.Key -in $fullKeys) { $redrawType = 'FULL' }
                     }
-                    
+
                     $lastState = $Script:LastRouterState
                     $lastTitle = $Script:LastTitleKey
                     $st = Get-ScapeColdState
                     $menuId = if ($lastState) { $lastState.CurrentMenu } elseif ($st) { $st.CurrentMenu } else { $null }
-                    
+
                     if ($menuId) {
                         $actualType = if ($redrawType -eq 'PARTIAL') { 'DATA' } else { $redrawType }
                         Request-ScapeRedraw -MenuId $menuId -Type $actualType -RouterState $lastState -TitleKey $lastTitle
@@ -439,10 +440,13 @@ function Remove-ScapeStateObserver {
             foreach ($handler in $RegisteredHandlers) {
                 $result = Unregister-ScapeEventListener -Handler $handler
                 $cleanup.Add($result)
-                
+
             }
             return [System.Object[]]$cleanup.ToArray()
         }
         return [System.Object[]]@()
     }
 }
+
+Export-ModuleMember -Function 'Invoke-ScapeEventBatchProcessing',
+    'Remove-ScapeStateObserver'

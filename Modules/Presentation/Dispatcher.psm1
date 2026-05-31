@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Dispatcher
     Module: Scape.Presentation.Dispatcher
@@ -61,7 +61,7 @@ function Format-ScapeProgressBar {
         $pct = 0
         if ($tot -gt 0) { $pct = [Math]::Min(100, ($cur / $tot) * 100) }
 
-        # MVVM estrito: ProgressStyle deve vir do ViewModel/Payload (read-only), não de ColdState
+        # MVVM estrito: ProgressStyle deve vir do ViewModel/Payload (read-only), nÃ£o de ColdState
         $styleName = if ($Payload.ContainsKey('ProgressStyle') -and -not [string]::IsNullOrWhiteSpace($Payload['ProgressStyle'])) { [string]$Payload['ProgressStyle'] } else { 'Default' }
         $barConfig = Get-ScapeConstant -Path "ui::Progress::$styleName"
 
@@ -103,7 +103,7 @@ function Format-ScapeTransientMessage {
                 else {
                     $i18n = Get-ScapeConstant -Path "i18n::$k"
                     $msg = if ($i18n -and $i18n.T) { $i18n.T } else { $k }
-                    if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch {} }
+                    if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch { Write-Verbose "Suppressed error:                     if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch {} }";} }
                 }
             }
             else {

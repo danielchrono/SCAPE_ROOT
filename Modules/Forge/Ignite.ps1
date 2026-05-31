@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Ignite.ps1 - Bootstrapper Passivo (Loader)
 #>

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.ISO9660
@@ -29,7 +29,7 @@ function Get-ScapeISO9660Meta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     $pvdOff = (Get-ScapeConstant -Path "storage::FS").ISO9660.PVD_OFFSET
     if ($Buffer.Length -lt ($Offset + $pvdOff + 0x800)) { return $null }
@@ -65,3 +65,4 @@ function Get-ScapeISO9660Meta {
 
     return $result
 }
+Export-ModuleMember -Function 'Initialize-ScapeISO9660Parser'

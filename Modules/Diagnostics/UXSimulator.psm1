@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Diagnostics | Module: Scape.Diagnostics.UXSimulator
     Description: Injects virtual user inputs (arrow keys, select) into the orchestration layer
@@ -14,7 +14,7 @@ function Start-ScapeUXSimulation {
     $testSequence = @(
         'DOWN', 'DOWN', 'UP', 'SELECT', 'DOWN', 'LEFT', 'RIGHT', 'BACK'
     )
-    
+
     $global:UXSimState = @{
         Idx = 0
         Steps = $Steps

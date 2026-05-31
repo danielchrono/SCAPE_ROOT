@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Geometry
     Module: Scape.Presentation.Geometry
@@ -12,8 +12,8 @@ function Initialize-ScapeGeometry {
     [OutputType([void])]
     param()
     process {
-        # Geometry agora é Math-only. Locks/Viewport estatais devem ser
-        # chamados pela orquestração principal (ViewModel), não aqui.
+        # Geometry agora Ã© Math-only. Locks/Viewport estatais devem ser
+        # chamados pela orquestraÃ§Ã£o principal (ViewModel), nÃ£o aqui.
     }
 }
 
@@ -56,7 +56,7 @@ function Get-ScapeMenuLayout {
     }
 }
 
-function Get-ScapeFrameCoordinates {
+function Get-ScapeFrameCoordinate {
     [CmdletBinding()]
     [OutputType([hashtable])]
     param([Parameter(Mandatory = $true)][psobject]$BoxLayout)
@@ -76,7 +76,7 @@ function Get-ScapeFrameCoordinates {
     }
 }
 
-function Get-ScapeGridCoordinates {
+function Get-ScapeGridCoordinate {
     [CmdletBinding()]
     [OutputType([hashtable])]
     param(
@@ -98,7 +98,7 @@ function Get-ScapeGridCoordinates {
             $plainIconLen = Get-ScapeVisualWidth -Text $ActiveIcon
         }
 
-        # Centro do ícone no espaço de 5 colunas
+        # Centro do Ã­cone no espaÃ§o de 5 colunas
         $iconPad = [Math]::Max(0, [Math]::Floor(($iconColWidth - $plainIconLen) / 2))
         $iconX = $iconColStart + $iconPad
 
@@ -149,7 +149,7 @@ function Invoke-ScapeStringClip {
     }
 }
 
-# [RESPONSIVITY] Função helper para clamping de coordenadas
+# [RESPONSIVITY] FunÃ§Ã£o helper para clamping de coordenadas
 function Get-ScapeClampedCoordinate {
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -185,7 +185,7 @@ function Get-ScapeVisualWidth {
         if ([string]::IsNullOrEmpty($Text)) { return 0 }
         $clean = $Text -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
         if ([string]::IsNullOrEmpty($clean)) { return 0 }
-        
+
         $len = $clean.Length
         # Match wide characters in common CJK ranges and others
         $wideCount = [regex]::Matches($clean, '[\u2E80-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]').Count
@@ -227,3 +227,7 @@ function Get-ScapeBannerVariant {
         return 'Standard'
     }
 }
+
+Export-ModuleMember -Function 'Get-ScapeFrameCoordinate',
+    'Get-ScapeClampedCoordinate',
+    'Get-ScapeGridCoordinate'

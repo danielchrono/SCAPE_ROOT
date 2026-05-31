@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.I18N
     Architecture: Strictly Functional | Bucket-Aware Resolution | Encapsulated Decoupling
@@ -111,3 +111,5 @@ function Format-ScapeMenuLine {
 if (-not (Get-Alias -Name "I18N" -ErrorAction SilentlyContinue)) {
     Set-Alias -Name "I18N" -Value "Get-ScapeLogMsg" -Scope Global -Force
 }
+
+Export-ModuleMember -Function 'Format-ScapeMenuLine'

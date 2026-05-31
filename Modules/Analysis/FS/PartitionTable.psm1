@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.PartitionTable
@@ -25,7 +25,7 @@ function Get-ScapeGPTMeta {
     [OutputType([psobject])]
     param([Parameter(Mandatory = $true)][byte[]]$Buffer, [Parameter(Mandatory = $true)][int]$Offset, [string]$VolumeSerial = "")
 
-    
+
     if ($Buffer.Length -lt 8) { return $null }
     $sig = [System.Text.Encoding]::ASCII::GetString($Buffer, $Offset, 8)
     if ($sig -ne (Get-ScapeConstant -Path "storage::FS").PARTITION.GPT_SIG) { return $null }
@@ -74,7 +74,7 @@ function Get-ScapeMBRMeta {
     [OutputType([psobject])]
     param([Parameter(Mandatory = $true)][byte[]]$Buffer, [Parameter(Mandatory = $true)][int]$Offset, [string]$VolumeSerial = "")
 
-    
+
     if ($Buffer.Length -lt ($Offset + 512)) { return $null }
     $sig = [System.BitConverter]::ToUInt16($Buffer, $Offset + 510)
     if ($sig -ne (Get-ScapeConstant -Path "storage::FS").PARTITION.MBR_SIG) { return $null }
@@ -104,3 +104,4 @@ function Get-ScapeMBRMeta {
         DiskSignature = $diskSig; Partitions = $partitions; ParsedAtOffset = $Offset
     }
 }
+Export-ModuleMember -Function 'Initialize-ScapePartitionTableParser'

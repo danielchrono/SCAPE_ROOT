@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Foundation
     Module: Scape.Core.Security
@@ -46,3 +46,4 @@ function Enable-ScapePrivilege {
     }
     return $res
 }
+Export-ModuleMember -Function 'Enable-ScapePrivilege'

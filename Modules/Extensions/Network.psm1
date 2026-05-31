@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.Network
     Architecture: SMB/CIFS Network Discovery and Mounting
@@ -38,7 +38,7 @@ function Find-ScapeNetworkNode {
                     }
                     if ($client.Connected) { return $tIP }
                 }
-                catch {} finally { $client.Close() }
+                catch { Write-Verbose "Suppressed error:                 catch {} finally { $client.Close() }";} finally { $client.Close() }
                 return $null
             }).AddArgument($ip).AddArgument($port).AddArgument($timeout)
         $ps.RunspacePool = $pool
@@ -48,7 +48,7 @@ function Find-ScapeNetworkNode {
 
     foreach ($t in $tasks) {
         $res = $t.PS.EndInvoke($t.Handle)
-        if ($res) { 
+        if ($res) {
             $results += $res
             Publish-ScapeEvent -Type "NET_SCAN_RESULT" -Payload $res
         }
@@ -71,8 +71,8 @@ function New-ScapeNetworkMount {
         [Parameter(Mandatory = $false)][string]$Password
     )
 
-    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" 
-    
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE"
+
     $argsStr = "use $DriveLetter $RemoteVault"
     if (-not [string]::IsNullOrWhiteSpace($Password)) {
         $argsStr += " $Password"
@@ -88,7 +88,7 @@ function New-ScapeNetworkMount {
             }))
     while (-not $proc.HasExited) {
         if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-        
+
     }
 
     if ($proc.ExitCode -eq 0) {
@@ -102,14 +102,14 @@ function Remove-ScapeNetworkMount {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$DriveLetter)
 
-    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" 
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE"
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
                 FileName = $netExe; Arguments = "use $DriveLetter /delete /yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
             }))
     while (-not $proc.HasExited) {
         if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-        
+
     }
 
     if ($proc.ExitCode -eq 0) {
@@ -119,18 +119,18 @@ function Remove-ScapeNetworkMount {
     return $false
 }
 
-function Clear-ScapeNetworkMounts {
+function Clear-ScapeNetworkMount {
     [CmdletBinding()]
     param()
 
-    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE" 
+    $netExe = Get-ScapeConstant -Path "system::TOOLS::NET_USE"
     $proc = [System.Diagnostics.Process]::Start((New-Object System.Diagnostics.ProcessStartInfo @{
                 FileName = $netExe; Arguments = "use * /delete /yes"
                 RedirectStandardOutput = $true; RedirectStandardError = $true; UseShellExecute = $false; CreateNoWindow = $true
             }))
     while (-not $proc.HasExited) {
         if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-        
+
     }
     Publish-ScapeEvent -Type "NET_SMB_UNMOUNT_ALL" -Severity "LOG_INFO" -Payload @{}
     return ($proc.ExitCode -eq 0)
@@ -139,7 +139,7 @@ function Clear-ScapeNetworkMounts {
 function Start-ScapeNetworkScan {
     [CmdletBinding()]
     param()
-    
+
     $radarSweepMsg = Get-ScapeLogMsg -Key "NET_RADAR_SWEEP"
     Publish-ScapeActionProgress -Target "Scape.Extensions.Network" -Task "NetworkScan" -StatusText $radarSweepMsg -StatusFlag "INFO" -RunProgress 10 -StepProgress 10
 
@@ -165,9 +165,9 @@ function Invoke-ScapeNetworkRadarAction {
         [Parameter(Mandatory = $false)][string]$UserName,
         [Parameter(Mandatory = $false)][string]$Password
     )
-    
+
     if ([string]::IsNullOrWhiteSpace($TargetShare)) {
-        $TargetShare = Get-ScapeConstant -Path "network::DEFAULT_SHARE" 
+        $TargetShare = Get-ScapeConstant -Path "network::DEFAULT_SHARE"
     }
 
     $nodes = Start-ScapeNetworkScan
@@ -201,7 +201,7 @@ function Invoke-ScapeNetworkRadarAction {
     }
 
     if (-not $driveLetter) {
-        $noDriveMsg = Invoke-ScapeI18NFormat -Key "NET_NO_FREE_DRIVES" 
+        $noDriveMsg = Invoke-ScapeI18NFormat -Key "NET_NO_FREE_DRIVES"
         Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = $noDriveMsg }
         return
     }
@@ -258,7 +258,7 @@ function Invoke-ScapeNetworkRadarAction {
 function Invoke-ScapeNetworkAction {
     [CmdletBinding()]
     param([string]$Task, [string]$Target)
-    
+
     if (-not (Get-Command Find-ScapeNetworkNode -ErrorAction SilentlyContinue)) {
         throw "Not Implemented"
     }
@@ -267,7 +267,7 @@ function Invoke-ScapeNetworkAction {
         Invoke-ScapeNetworkRadarAction -TargetShare $Target
     }
     elseif ($Task -eq 'UNMOUNT_ALL') {
-        $unmountOk = Clear-ScapeNetworkMounts
+        $unmountOk = Clear-ScapeNetworkMount
         if ($unmountOk) {
             Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MGR_ALL_REMOVED") }
             Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
@@ -277,7 +277,7 @@ function Invoke-ScapeNetworkAction {
             }
         }
         else {
-            $failMsg = Invoke-ScapeI18NFormat -Key "NET_UNMOUNT_FAIL" 
+            $failMsg = Invoke-ScapeI18NFormat -Key "NET_UNMOUNT_FAIL"
             Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = $failMsg }
             Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "ERROR" -Payload @{
                 ScreenId = "NetworkRadar"
@@ -296,4 +296,5 @@ function Invoke-ScapeNetworkAction {
 # ACTION REGISTRY BINDINGS (Pure & Decoupled)
 # ==============================================================================
 
-Export-ModuleMember -Function 'Find-ScapeNetworkNode', 'New-ScapeNetworkMount', 'Remove-ScapeNetworkMount', 'Clear-ScapeNetworkMounts', 'Start-ScapeNetworkScan', 'Invoke-ScapeNetworkRadarAction', 'Invoke-ScapeNetworkAction'
+Export-ModuleMember -Function 'Find-ScapeNetworkNode', 'New-ScapeNetworkMount', 'Remove-ScapeNetworkMount', 'Clear-ScapeNetworkMount', 'Start-ScapeNetworkScan', 'Invoke-ScapeNetworkRadarAction', 'Invoke-ScapeNetworkAction',
+    'Clear-ScapeNetworkMount'

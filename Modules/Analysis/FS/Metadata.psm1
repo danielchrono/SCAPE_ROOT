@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.FS.Metadata
     Description: High-performance filesystem metadata parser, timestamp normalizer, and forensic record mapper.
@@ -10,7 +10,7 @@ $Script:DBConstants = $null
 $Script:Limits = $null
 
 
-# Helper functions com parâmetros tipados para evitar PSReviewUnusedParameter
+# Helper functions com parÃ¢metros tipados para evitar PSReviewUnusedParameter
 function Read-ScapeUInt16LE {
     [CmdletBinding()][OutputType([uint16])]
     param([Parameter(Mandatory=$true)][byte[]]$Buf, [Parameter(Mandatory=$true)][int]$Off)
@@ -298,26 +298,3 @@ function Test-ScapeMetadataIntegrity {
     }
     return $validYear
 }
-
-
-
-
-
-# --- INJECTED I18N KEYS ---
-# META_ACCESSED
-# META_CREATED
-# META_FILENAME
-# META_MFT_CHANGED
-# META_MODIFIED
-# META_OFFSET
-# META_PID
-
-
-# --- INJECTED I18N KEYS ---
-# META_ACCESSED
-# META_CREATED
-# META_FILENAME
-# META_MFT_CHANGED
-# META_MODIFIED
-# META_OFFSET
-# META_PID

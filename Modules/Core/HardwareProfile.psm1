@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core
     Module: Scape.Core.HardwareProfile
@@ -84,7 +84,7 @@ function Select-ScapeHardwareProfile {
     $profiles = $Script:C.HW.PROFILES
     $safeguards = $Script:C.HW.SAFEGUARDS
 
-    # Se não existir estrutura válida, usa fallback duro
+    # Se nÃ£o existir estrutura vÃ¡lida, usa fallback duro
     if (-not $profiles -or $profiles.Count -eq 0) {
         $profiles = @{
             SERVER      = $true
@@ -109,7 +109,7 @@ function Select-ScapeHardwareProfile {
     $score += if ($Detected.CPU_CORES -ge $ct3) { 3 } elseif ($Detected.CPU_CORES -ge $ct2) { 2 } elseif ($Detected.CPU_CORES -ge $ct1) { 1 } else { 0 }
     $score += switch ($Detected.STORAGE_TYPE) { "NVME" { 3 }; "SSD" { 2 }; "HDD" { 1 }; default { 0 } }
 
-    # Seleção inicial por score
+    # SeleÃ§Ã£o inicial por score
     $candidate = "MINIMUM"
     $ss = if ($scores.SCORE_SERVER) { $scores.SCORE_SERVER } else { 7 }
     $sw = if ($scores.SCORE_WORKSTATION) { $scores.SCORE_WORKSTATION } else { 5 }
@@ -120,7 +120,7 @@ function Select-ScapeHardwareProfile {
     elseif ($score -ge $st) { $candidate = "STANDARD" }
 
     # --- 2. Aplicar safeguards (a porra que faltava) ---
-    # Se o safeguard exigir RAM mínima para um perfil e o hardware não atingir, REBAIXA
+    # Se o safeguard exigir RAM mÃ­nima para um perfil e o hardware nÃ£o atingir, REBAIXA
     $ramMinServer = $safeguards["RAM_SERVER_MIN"] -as [int]
     if ($candidate -eq "SERVER" -and $ramMinServer -and $Detected.RAM_GB -lt $ramMinServer) {
         $candidate = "WORKSTATION"
@@ -162,7 +162,7 @@ function Select-ScapeHardwareProfile {
 
 function Get-ScapeActiveProfile {
     if ($null -eq $Script:ActiveProfile) { Initialize-ScapeHardwareProfile | Out-Null }
-    # Aqui sim usa o perfil (já usava, mas mantenho)
+    # Aqui sim usa o perfil (jÃ¡ usava, mas mantenho)
     return $Script:C.HW.PROFILES[$Script:ActiveProfile]
 }
 
@@ -184,7 +184,7 @@ function Test-ScapeResourcePressure {
             "RAM" {
                 $mem = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
                 $usedPct = ($mem.TotalVisibleMemorySize - $mem.FreeVisibleMemorySize) / $mem.TotalVisibleMemorySize
-                # Safeguards sendo USADOS corretamente (já estavam)
+                # Safeguards sendo USADOS corretamente (jÃ¡ estavam)
                 $warningPct = 1 - $Script:C.HW.SAFEGUARDS.RAM_WARNING_PCT
                 $criticalPct = 1 - $Script:C.HW.SAFEGUARDS.RAM_CRITICAL_PCT
                 return @{
@@ -200,3 +200,5 @@ function Test-ScapeResourcePressure {
         return @{ Pressure = 0; Warning = $false; Critical = $false }
     }
 }
+
+Export-ModuleMember -Function 'Get-ScapeStorageTuning'

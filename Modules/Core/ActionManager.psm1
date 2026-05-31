@@ -92,6 +92,7 @@ function Invoke-ScapeActionDispatcher {
         [int]$Cursor = 0
     )
     process {
+        [void]$MenuId; [void]$Cursor
         $handler = Get-ScapeActionHandler -Target $Target
         if ($null -eq $handler) {
             Publish-ScapeEvent -Type "SYSTEM_WARN" -Severity "WARN" -Payload @{
@@ -162,6 +163,8 @@ function Resolve-ScapeActiveTarget {
     [OutputType([string])]
     param()
     process {
+        [void]$MenuId
+        [void]$Cursor
         $state = Get-ScapeColdState
         if ($state -and $state.ContainsKey('ActiveTarget') -and -not [string]::IsNullOrWhiteSpace([string]$state['ActiveTarget'])) {
             return [string]$state['ActiveTarget']
@@ -183,7 +186,7 @@ function Resolve-ScapeActiveTarget {
                     $resolvedTarget = ('{0}:\' -f $volume.DriveLetter)
                 }
             }
-            catch { }
+            catch { Write-Verbose "Suppressed error:             catch { }"; }
         }
 
         if ([string]::IsNullOrWhiteSpace($resolvedTarget) -and $state -and $state.ContainsKey('ROOT')) {
@@ -262,51 +265,68 @@ function Invoke-ScapeProgressWrapper {
 
 Register-ScapeActionHandler -Target 'Scape.Forge.Deployer' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$Target
+    [void]$PayloadDef
     if (Get-Command Invoke-ScapeDeployWorkflow -ErrorAction SilentlyContinue) { Invoke-ScapeDeployWorkflow -Task $Task } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Core.Settings' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$Target
+    [void]$PayloadDef
     if ($Task -eq 'RESET' -and (Get-Command Reset-ScapeSettingToFactory -ErrorAction SilentlyContinue)) { Reset-ScapeSettingToFactory | Out-Null }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync.Robocopy' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Start-ScapeRobocopyConfiguration -Task $Task -Target $Target
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.Parser.Core' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$Target
+    [void]$Task
     Resolve-ScapeActiveTarget | Out-Null
     if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload $PayloadDef } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.Carving.Carver' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$Task
+    [void]$PayloadDef
     Resolve-ScapeActiveTarget | Out-Null
     if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "CARVING" } } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.FS.Abstraction' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
+    [void]$Task
     Resolve-ScapeActiveTarget | Out-Null
     if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "FS_ABSTRACTION" } } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.FS.NTFS' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
+    [void]$Task
     Resolve-ScapeActiveTarget | Out-Null
     if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "NTFS" } } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Analysis.FS.PartitionTable' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
+    [void]$Task
     Resolve-ScapeActiveTarget | Out-Null
     if (Get-Command Invoke-ScapeTargetedParsing -ErrorAction SilentlyContinue) { Invoke-ScapeTargetedParsing -Payload @{ Target = $Target; Task = "PARTITION_TABLE" } } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Infrastructure.Telemetry' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$Target
+    [void]$PayloadDef
     if (Get-Command Invoke-ScapeTelemetryWorkflow -ErrorAction SilentlyContinue) {
         $taskName = if ([string]::IsNullOrWhiteSpace($Task)) { 'TELEMETRY' } else { $Task }
         Invoke-ScapeTelemetryWorkflow -Task $taskName
@@ -321,5 +341,6 @@ Register-ScapeActionHandler -Target 'Scape.Presentation.KeyBindings' -Handler {
 
 Register-ScapeActionHandler -Target 'Scape.Extensions.Network' -Handler {
     param($Task, $PayloadDef, $Target)
+    [void]$PayloadDef
     Invoke-ScapeNetworkAction -Task $Task -Target $Target
 }

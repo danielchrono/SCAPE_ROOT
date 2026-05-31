@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.ZFS
@@ -29,7 +29,7 @@ function Get-ScapeZFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     $uberMagic = [System.BitConverter]::ToUInt32($Buffer, $Offset)
     if ($uberMagic -eq (Get-ScapeConstant -Path "storage::FS").ZFS.UBER_SIG) {
@@ -72,3 +72,4 @@ function Get-ScapeZFSMeta {
 
     return $null
 }
+Export-ModuleMember -Function 'Initialize-ScapeZFSParser'

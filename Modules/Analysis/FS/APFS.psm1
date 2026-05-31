@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.APFS
@@ -29,7 +29,7 @@ function Get-ScapeAPFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     $magicOff = (Get-ScapeConstant -Path "storage::FS").APFS.MAGIC_OFFSET
     if ($Buffer.Length -lt ($Offset + $magicOff + 4)) { return $null }
@@ -67,3 +67,4 @@ function Get-ScapeAPFSMeta {
 
     return $result
 }
+Export-ModuleMember -Function 'Initialize-ScapeAPFSParser'

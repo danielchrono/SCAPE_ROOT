@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.State
     Description: Thread-safe Hybrid State Manager.
@@ -130,3 +130,7 @@ function Get-ScapeManifest {
         return $Script:ColdState["MANIFEST"]
     }
 }
+
+Export-ModuleMember -Function 'Get-ScapeHotState',
+    'Test-ScapeDevMode',
+    'Get-ScapeRoot'

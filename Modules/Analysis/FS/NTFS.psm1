@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.NTFS
@@ -33,7 +33,7 @@ function Get-ScapeNTFSAttributeList {
         [Parameter()][int]$BaseOffset = 0
     )
     process {
-        
+
 
         $attrEnd = 0xFFFFFFFF
         if ((Get-ScapeConstant -Path "storage::FS").ContainsKey("NTFS_ATTR_END")) {
@@ -101,7 +101,7 @@ function Get-ScapeNTFSDataRun {
         [Parameter()][int]$BaseOffset = 0
     )
     process {
-        
+
 
         $attrList = Get-ScapeNTFSAttributeList -Record $Record -BaseOffset $BaseOffset
         $targetType = 0x80
@@ -212,7 +212,7 @@ function Get-ScapeNTFSMeta {
         [Parameter()][string]$VolumeSerial = ""
     )
     process {
-        
+
 
         if (Get-Command "Set-ScapeFSMeta" -ErrorAction SilentlyContinue) {
             $base = Set-ScapeFSMeta -Buffer $Buffer -Offset $Offset -FSType "FS_NTFS" -VolumeSerial $VolumeSerial
@@ -229,3 +229,6 @@ function Get-ScapeNTFSMeta {
         return $null
     }
 }
+Export-ModuleMember -Function 'Initialize-ScapeNTFSParser',
+    'Unprotect-ScapeNTFSEFS',
+    'Resolve-ScapeNTFSHardLink'

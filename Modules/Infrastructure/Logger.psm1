@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Logger
     Description: Thread-safe operational logging with rotation, severity filtering, and zero hardcode.
@@ -25,14 +25,15 @@ function Resolve-LogLevel {
     return $minLevelName
 }
 
-function Initialize-LogDirectories {
+function Initialize-LogDirectory {
     param([hashtable]$LoggerConfig, [hashtable]$DirsConfig)
+    [void]$LoggerConfig
     $logDir = $null
-    try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch {}
+    try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch { Write-Verbose "Suppressed error:     try { $logDir = (Get-ScapeColdState)["WORKSPACE_LOGS"] } catch {}";}
 
     if ([string]::IsNullOrWhiteSpace($logDir)) {
         $root = $null
-        try { $root = (Get-ScapeColdState)["ROOT"] } catch {}
+        try { $root = (Get-ScapeColdState)["ROOT"] } catch { Write-Verbose "Suppressed error:         try { $root = (Get-ScapeColdState)["ROOT"] } catch {}";}
         if ([string]::IsNullOrWhiteSpace($root)) { return $null }
         $logFolder = $DirsConfig["LOGS"]
         if ([string]::IsNullOrWhiteSpace($logFolder)) { $logFolder = "Logs" }
@@ -78,7 +79,7 @@ function Initialize-ScapeLogger {
     if ($null -eq $Script:MinSeverityValue) { $Script:MinSeverityValue = 1 }
 
     try {
-        $logDir = Initialize-LogDirectories -LoggerConfig $Script:Config.Logger -DirsConfig $Script:Config.Dirs
+        $logDir = Initialize-LogDirectory -LoggerConfig $Script:Config.Logger -DirsConfig $Script:Config.Dirs
         if ($null -eq $logDir) { return $false }
 
         $pattern = $Script:Config.Logger["LOG_FILE_PATTERN"]
@@ -125,7 +126,7 @@ function Initialize-ScapeLogger {
                         if ($null -eq $timeout) { $timeout = Get-ScapeConstant -Path "system::Limits::CRITICAL_SECTION_TIMEOUT_MS" -Fallback 5000 }
                         $deadline = [DateTime]::UtcNow.AddMilliseconds($timeout)
                         $timeToWait = [int]($deadline - [DateTime]::UtcNow).TotalMilliseconds
-                        
+
                         $acquired = $false
                         while (-not $acquired -and $timeToWait -gt 0) {
                             $acquired = $sem.Wait(0)
@@ -178,7 +179,7 @@ function Initialize-ScapeLogger {
                         $null = $sem.Release()
                     }
                 }
-                catch {}
+                catch { Write-Verbose "Suppressed error:                 catch {}";}
             }.GetNewClosure()
 
             Register-ScapeEventListener -EventMatch "*" -Action $logAction
@@ -315,7 +316,7 @@ function _RotateLogIfNeeded {
             Message = $(if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "LOG_ROTATED" -Args @($archived, $Script:CurrentLogFile, $Script:RotationCounter) } else { "LOG_ROTATED" })
         }
     }
-    catch { }
+    catch { Write-Verbose "Suppressed error:     catch { }"; }
 }
 
 function Close-ScapeLogStream {
@@ -343,4 +344,7 @@ function Get-ScapeActiveLogFile {
 try {
     Register-EngineEvent -SourceIdentifier PowerShell.OnExit -Action { Close-ScapeLogStream } -SupportEvent -ErrorAction SilentlyContinue
 }
-catch { }
+catch { Write-Verbose "Suppressed error: catch { }"; }
+
+Export-ModuleMember -Function 'Initialize-LogDirectory',
+    '_RotateLogIfNeeded'

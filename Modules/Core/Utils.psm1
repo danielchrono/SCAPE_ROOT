@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.Utils
     Pure logic helpers: mathematics, data transformation, safe extraction, and I/O Wrapper.
@@ -115,7 +115,7 @@ function ConvertTo-ScapeHexString {
 
 function Convert-ScapeHexToByte {
     [CmdletBinding()]
-    [OutputType([System.Object[]])] # ✅ PSRule detecta como Object[]
+    [OutputType([System.Object[]])] # âœ… PSRule detecta como Object[]
     param([Parameter(Mandatory = $true)][string]$Hex)
     process {
         if ([string]::IsNullOrWhiteSpace($Hex)) { return @() }
@@ -276,3 +276,12 @@ function Test-ScapeNullOrWhiteSpace {
         return [string]::IsNullOrWhiteSpace($Text)
     }
 }
+Export-ModuleMember -Function 'ConvertTo-ScapeHex',
+    'Test-ScapeNullOrWhiteSpace',
+    'Convert-ScapeSeverityToInt',
+    'Get-ScapeUtcTimestamp',
+    'Format-ScapeTemplate',
+    'Test-ScapePath',
+    'Invoke-ScapeMathClamp',
+    'Test-ScapeAlignment',
+    'ConvertTo-ScapeHexString'

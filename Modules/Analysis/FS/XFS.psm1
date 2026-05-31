@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.XFS
@@ -29,7 +29,7 @@ function Get-ScapeXFSMeta {
         [string]$VolumeSerial = ""
     )
 
-    
+
 
     if ($Buffer.Length -lt 512) { return $null }
 
@@ -74,3 +74,4 @@ function Get-ScapeXFSMeta {
 
     return $result
 }
+Export-ModuleMember -Function 'Initialize-ScapeXFSParser'

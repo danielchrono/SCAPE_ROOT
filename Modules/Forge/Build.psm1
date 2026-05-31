@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Build.ps1 - SCAPE Monolith Forge (v1.0 - PATH RESOLVER & DICTIONARY SYNC)
     Architecture: Deterministic Tree | Subfolder Parsing | Safe Boot Sequence | TreeView-Ready
@@ -126,7 +126,7 @@ function Resolve-ForgeModuleFile {
     return $null
 }
 
-function Get-ModulePayloads($ModulesDir, $ProjectRoot, $Topology) {
+function Get-ModulePayload($ModulesDir, $ProjectRoot, $Topology) {
     $list = @()
     $domains = @('Root', 'Core', 'Acquisition', 'Analysis', 'Infrastructure', 'Presentation', 'Extensions', 'Forge', 'Orphans')
 
@@ -157,7 +157,7 @@ function Get-ModulePayloads($ModulesDir, $ProjectRoot, $Topology) {
     return $list
 }
 
-function Get-DataAssets($DataDir) {
+function Get-DataAsset($DataDir) {
     $assets = @()
     if ($DataDir -and (Test-Path $DataDir)) {
         Get-ChildItem -Path $DataDir -Recurse -File -Include '*.psd1', '*.json' -ErrorAction SilentlyContinue | ForEach-Object {
@@ -211,8 +211,8 @@ function Show-ManifestTree {
         for ($d = 0; $d -lt $total; $d++) {
             $domain = $visibleDomains[$d]
             $isLast = ($d -eq $total - 1)
-            $prefix = if ($isLast) { "└── " } else { "├── " }
-            $indent = if ($isLast) { "    " } else { "│   " }
+            $prefix = if ($isLast) { "â””â”€â”€ " } else { "â”œâ”€â”€ " }
+            $indent = if ($isLast) { "    " } else { "â”‚   " }
 
             Write-Host $prefix -NoNewline -ForegroundColor $lineColor
             Write-Host $domain -ForegroundColor $lineColor
@@ -223,12 +223,12 @@ function Show-ManifestTree {
             for ($m = 0; $m -lt $modCount; $m++) {
                 $mod = $mods[$m]
                 $isLastM = ($m -eq $modCount - 1)
-                $corner = if ($isLastM) { "└── " } else { "├── " }
+                $corner = if ($isLastM) { "â””â”€â”€ " } else { "â”œâ”€â”€ " }
 
                 $moduleName = if ($mod -is [hashtable]) { $mod['Name'] } else { $mod.Name }
                 $found = Resolve-ForgeModuleFile -ProjectRoot $ProjPath -ModuleName $moduleName
 
-                $status = if ($found) { "✓" } else { "✗" }
+                $status = if ($found) { "âœ“" } else { "âœ—" }
                 $clr = if ($found) { "Green" } else { "Red" }
 
                 Write-Host "$indent$corner" -NoNewline -ForegroundColor $lineColor
@@ -265,8 +265,8 @@ function Show-ManifestTree {
             $grp = $sortedGroups[$c]
             $layer = $grp.Name
             $isLastC = ($c -eq $catCount - 1)
-            $prefix = if ($isLastC) { "└── " } else { "├── " }
-            $indent = if ($isLastC) { "    " } else { "│   " }
+            $prefix = if ($isLastC) { "â””â”€â”€ " } else { "â”œâ”€â”€ " }
+            $indent = if ($isLastC) { "    " } else { "â”‚   " }
 
             Write-Host $prefix -NoNewline -ForegroundColor $lineColor
             Write-Host "$layer Layer" -ForegroundColor $lineColor
@@ -277,7 +277,7 @@ function Show-ManifestTree {
             for ($a = 0; $a -lt $assetCount; $a++) {
                 $asset = $catAssets[$a]
                 $isLastA = ($a -eq $assetCount - 1)
-                $corner = if ($isLastA) { "└── " } else { "├── " }
+                $corner = if ($isLastA) { "â””â”€â”€ " } else { "â”œâ”€â”€ " }
 
                 $relPath = $asset.Value.File
                 $clean = $relPath -replace '^[Dd]ata\\', ''
@@ -285,8 +285,8 @@ function Show-ManifestTree {
                 $found = if ($searchPath -and -not [string]::IsNullOrWhiteSpace($searchPath) -and (Test-Path $searchPath -PathType Leaf)) { $true } else { $false }
 
                 $load = if ($null -ne $asset.Value.LoadOrder) { " [L:$($asset.Value.LoadOrder)]" } else { "" }
-                $lazyTag = if ($asset.Value.IsLazy -eq $true) { " ⏱" } else { "" }
-                $status = if ($found) { "✓" } else { "✗" }
+                $lazyTag = if ($asset.Value.IsLazy -eq $true) { " â±" } else { "" }
+                $status = if ($found) { "âœ“" } else { "âœ—" }
                 $clr = if ($found) { "Green" } else { "Red" }
 
                 Write-Host "$indent$corner" -NoNewline -ForegroundColor $lineColor
@@ -443,7 +443,7 @@ try {
         }
     }
 
-    # CARGA FORÇADA DE ASSETS CRÍTICOS (para ícones/ui/theme funcionarem no RAM-only monolith)
+    # CARGA FORÃ‡ADA DE ASSETS CRÃTICOS (para Ã­cones/ui/theme funcionarem no RAM-only monolith)
     if (Get-Command Invoke-ScapeLoadAsset -ErrorAction SilentlyContinue) {
         $assetsToForce = @('ui', 'theme', 'en-US', 'infrastructure')
         foreach ($key in $registry.Segments.Keys) {
@@ -465,7 +465,7 @@ try {
     if (Get-Command Initialize-ScapeResolver -ErrorAction SilentlyContinue) { Initialize-ScapeResolver | Out-Null }
 
     Resolve-ScapeManifestLayer -LayerKey "Presentation" | Out-Null
-    Invoke-ScapeWakeAssets -Domain "Presentation" | Out-Null
+    Invoke-ScapeWakeAsset -Domain "Presentation" | Out-Null
     $defaultLang = Get-ScapeConstant -Path "system::Defaults::LANG" -Fallback "en-US"
     Publish-ScapeEvent -Type "LANG_SWITCH" -Severity "INFO" -Payload @{ Language = $defaultLang }
 
@@ -487,7 +487,7 @@ try {
 # =============================================================================
 [Console]::CursorVisible = $true
 [Console]::Clear()
-Write-Host "[*] $(Get-Msg 'DEPLOYER_START')" -ForegroundColor (Get-Clr 'Base.Cyan')
+[Console]::WriteLine("[*] $(Get-Msg 'DEPLOYER_START')" -ForegroundColor (Get-Clr 'Base.Cyan')
 
 $dataDir = Join-ScapePath $ProjectRoot 'Data'
 $modulesDir = Join-ScapePath $ProjectRoot 'Modules'
@@ -510,21 +510,23 @@ $registry = if ($rawReg -is [array]) { $rawReg[0] } else { $rawReg }
 Show-ManifestTree -Manifest $topology -BasePath $modulesDir -ProjPath $ProjectRoot -ManifestType "Topology"
 Show-ManifestTree -Manifest $registry -BasePath $dataDir -ProjPath $ProjectRoot -ManifestType "Registry"
 
-$modulePayloads = Get-ModulePayloads -ModulesDir $modulesDir -ProjectRoot $ProjectRoot -Topology $topology
+$modulePayloads = Get-ModulePayload -ModulesDir $modulesDir -ProjectRoot $ProjectRoot -Topology $topology
 
 $igniteFound = $modulePayloads | Where-Object { $_.Name -match 'Ignite' }
 if (-not $igniteFound) {
     $igniteMissing = Get-Msg 'IGNITE_DEPLOYER_MISSING'
-    Write-Host "`n[!] $igniteMissing" -ForegroundColor Red
+    [Console]::WriteLine("`n[!] $igniteMissing" -ForegroundColor Red
     throw (Get-Msg 'BOOT_IMPORT_FATAL' -f $igniteMissing)
 }
 
-$dataAssets = Get-DataAssets -DataDir $dataDir
+$dataAssets = Get-DataAsset -DataDir $dataDir
 
 Write-Monolith -OutFile $OutputPath -ModulePayloads $modulePayloads -DataAssets $dataAssets
 
-Write-Host "`n[+] $(Get-Msg 'DEPLOYER_SUCCESS') -> $OutputPath" -ForegroundColor (Get-Clr 'Base.Green')
-Write-Host "[>] Monolith compilation complete." -ForegroundColor (Get-Clr 'Base.Amber')
+[Console]::WriteLine("`n[+] $(Get-Msg 'DEPLOYER_SUCCESS') -> $OutputPath" -ForegroundColor (Get-Clr 'Base.Green')
+[Console]::WriteLine("[>] Monolith compilation complete." -ForegroundColor (Get-Clr 'Base.Amber')
 
 $deadline = [DateTime]::UtcNow.AddMilliseconds(400)
 while ([DateTime]::UtcNow -lt $deadline) { if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null } }
+Export-ModuleMember -Function 'Get-ModulePayload',
+    'Get-DataAsset'
