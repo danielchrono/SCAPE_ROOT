@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation\Geometry
     Module: Scape.Presentation.Geometry
@@ -132,7 +132,7 @@ function Invoke-ScapeStringClip {
         [switch]$CenterClip
     )
     process {
-        $plain = $Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
+        $plain = $Text -replace '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]', ''
         $len = $plain.Length
 
         if ($len -le $MaxWidth) { return $Text }
@@ -173,7 +173,7 @@ function Get-ScapePlainTextLength {
     param([Parameter(Mandatory = $false)][AllowEmptyString()][string]$Text = '')
     process {
         if ([string]::IsNullOrWhiteSpace($Text)) { return 0 }
-        return ($Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), '').Length
+        return ($Text -replace '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]', '').Length
     }
 }
 
@@ -183,7 +183,7 @@ function Get-ScapeVisualWidth {
     param([Parameter(Mandatory = $true)][string]$Text)
     process {
         if ([string]::IsNullOrEmpty($Text)) { return 0 }
-        $clean = $Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
+        $clean = $Text -replace '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]', ''
         if ([string]::IsNullOrEmpty($clean)) { return 0 }
 
         $len = $clean.Length
@@ -216,12 +216,16 @@ function Get-ScapeBannerVariant {
     param(
         [Parameter(Mandatory = $true)][int]$ConsoleHeight,
         [Parameter(Mandatory = $true)][int]$ItemCount,
-        [Parameter(Mandatory = $true)][int]$HeaderHeight
+        [Parameter(Mandatory = $true)][int]$HeaderHeight,
+        [Parameter(Mandatory = $false)][string]$TitleKey = ''
     )
     process {
+        #if (-not [string]::IsNullOrWhiteSpace($TitleKey) -and ($TitleKey -match 'TITLE_MAIN|TITLE_FORGE|TITLE_DEPLOY|MAINMENU|DEPLOYMENU|FORGEMENU')) {
+        #    return 'Standard'
+        #}
         $layout = Get-ScapeConstant -Path "ui::Layout"
         $threshold = if ($layout -and $null -ne $layout.BannerBreakpoint) { $layout.BannerBreakpoint } else { (Get-ScapeConstant -Path "system::ANALYSIS::BANNER_BREAKPOINT") }
-        if ($ItemCount -ge 5 -or ($ItemCount + $HeaderHeight + 10) -ge $ConsoleHeight -or $ConsoleHeight -le $threshold) {
+        if ($ItemCount -ge 12 -or ($ItemCount + $HeaderHeight + 10) -ge $ConsoleHeight -or $ConsoleHeight -le $threshold) {
             return 'Compact'
         }
         return 'Standard'

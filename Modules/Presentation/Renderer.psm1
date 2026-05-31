@@ -1,4 +1,4 @@
-﻿
+
 $Script:DisplayList = New-Object System.Text.StringBuilder
 
 function Clear-ScapeDisplayList {
@@ -37,7 +37,7 @@ function Out-ScapeDisplayList {
 [CmdletBinding()]
 
 # ANSI strip pattern definido uma vez, reusado em todo o módulo (DRY)
-$Script:AnsiStrip = [regex](Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex")
+$Script:AnsiStrip = [regex]'(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]'
 
 $Script:IconResolveCache = @{}
 $Script:MenuLineCache = @{}
@@ -216,10 +216,10 @@ function Write-ScapeMenuLayout {
         $HeaderHeight
     )
 
-    $clearSeq = Get-ScapeConstant -Path "ui::ANSI::Screen::ClearFull"
-    if ($clearSeq) { Add-ScapeDisplayList -Text $clearSeq } else { Add-ScapeDisplayList -Text (Get-ScapeConstant -Path "ui::ANSI::Screen::ClearFull") }
+    $clearSeq = [char]27 + "[2J" + [char]27 + "[3J"
+    Add-ScapeDisplayList -Text $clearSeq
 
-    $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $Dims.Height -ItemCount $ItemCount -HeaderHeight $HeaderHeight
+    $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $Dims.Height -ItemCount $ItemCount -HeaderHeight $HeaderHeight -TitleKey $TitleKey
 
     $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $Dims.Width
     $y = 1
@@ -240,7 +240,8 @@ function Write-ScapeMenuLayout {
 
     Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text ($frame.TL + ($frame.HL * $roofWidth) + $frame.TR) -Flag "MENU")
 
-    Add-ScapeDisplayListAt -X $frameCoords.TitleX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text "$cleanTitle" -Flag 'BANNER')
+    $clippedTitle = Invoke-ScapeStringClip -Text $cleanTitle -MaxWidth ([Math]::Max(1, $roofWidth - 4))
+    Add-ScapeDisplayListAt -X $frameCoords.TitleX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text "$clippedTitle" -Flag 'BANNER')
 
     $vlStr = Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU"
     $emptySpace = " " * $roofWidth
@@ -347,7 +348,7 @@ function Write-ScapeMenuRow {
             $formattedDynStr = if ($formattedDynText) { $formattedDynText } else { "" }
 
             $cleanStrFull = "${strSel}$(" " * $padIcon)${strIcon}$(" " * $padTextSpace)${clippedText}$(" " * $padText)${formattedDynStr}"
-            $cleanStrPlain = $cleanStrFull -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
+            $cleanStrPlain = $cleanStrFull -replace '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]', ''
             $visW = Get-ScapeVisualWidth $cleanStrPlain
 
             $usableClearWidth = [Math]::Max(1, $frameCoords.RightWallX - $coords.SelectorX - 1)
@@ -377,8 +378,7 @@ function Write-ScapeMenuRow {
                 $fullLine = "${fmtSel}$(" " * $padIcon)${fmtIcon}$(" " * $padTextSpace)${fmtText}$(" " * $padText)${fmtDyn}$(" " * $padEnd)"
             }
 
-            $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
-            if (-not $resetSeq) { $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset" }
+            $resetSeq = [char]27 + "[0m"
             Add-ScapeDisplayListAt -X $coords.SelectorX -Y $coords.Y -Text "${resetSeq}$fullLine"
 
             if ($isCurrent -and $hintStr) {
@@ -433,7 +433,7 @@ function Write-ScapeMenuBuffer {
 
         }
         else {
-            $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight
+            $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $itemCount -HeaderHeight $layout.HeaderHeight -TitleKey $TitleKey
             $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $safeDims.Width
             $y = 1 + $banner.Count
             $box = Get-ScapeMenuLayout -ItemCount $visibleItems -ConsoleWidth $safeDims.Width -ConsoleHeight $safeDims.Height -HeaderHeight $y
@@ -516,7 +516,7 @@ function Write-ScapeTreeView {
     $totalItems = @($items).Count
 
     $safeDimsHeight = [Math]::Max(10, $dims.Height - 1)
-    $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $totalItems -HeaderHeight 1
+    $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $safeDimsHeight -ItemCount $totalItems -HeaderHeight 1 -TitleKey $TitleKey
     $banner = Format-ScapeArtBlock -VariantKey $bannerMode -ConsoleWidth $dims.Width
     $y = 1
     foreach ($line in $banner) { Add-ScapeDisplayListAt -X 0 -Y $y -Text $line; $y++ }
