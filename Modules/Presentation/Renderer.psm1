@@ -196,9 +196,8 @@ function Write-ScapeScrollIndicator {
         $arrow = if ($Direction -eq 'up') { '▲' } else { '▼' }
         $dimPrefix = Get-ScapeConstant -Path "ui::ANSI::SGR::Dim"
         $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
-        Set-ScapeCursorPosition -Left $X -Top $Y
         $formatted = Format-ScapeANSIMessage -Text $arrow -Flag $Flag
-        Add-ScapeDisplayList -Text "${dimPrefix}${formatted}${resetSeq}"
+        Add-ScapeDisplayListAt -X $X -Y $Y -Text "${dimPrefix}${formatted}${resetSeq}"
     }
 }
 
@@ -248,8 +247,7 @@ function Write-ScapeMenuLayout {
     $midLine = "${vlStr}${emptySpace}${vlStr}"
 
     for ($h = 1; $h -le $box.Height; $h++) {
-        Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top ($frameCoords.TitleY + $h)
-        Add-ScapeDisplayList -Text $midLine
+        Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y ($frameCoords.TitleY + $h) -Text $midLine
     }
 
     Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y $frameCoords.BottomY -Text (Format-ScapeANSIMessage -Text ($frame.BL + ($frame.HL * $roofWidth) + $frame.BR) -Flag "MENU")
@@ -274,16 +272,14 @@ function Write-ScapeScrollIndicatorsView {
         Write-ScapeScrollIndicator -Direction 'up' -X $FrameCoords.RightWallX -Y ($FrameCoords.TitleY + 1) -Flag 'HINT'
     }
     else {
-        Set-ScapeCursorPosition -Left $FrameCoords.RightWallX -Top ($FrameCoords.TitleY + 1)
-        Add-ScapeDisplayList -Text (Format-ScapeANSIMessage -Text $wallChar -Flag "MENU")
+        Add-ScapeDisplayListAt -X $FrameCoords.RightWallX -Y ($FrameCoords.TitleY + 1) -Text (Format-ScapeANSIMessage -Text $wallChar -Flag "MENU")
     }
 
     if ($ViewportEnd -lt $ItemCount) {
         Write-ScapeScrollIndicator -Direction 'down' -X $FrameCoords.RightWallX -Y ($FrameCoords.BottomY - 1) -Flag 'HINT'
     }
     else {
-        Set-ScapeCursorPosition -Left $FrameCoords.RightWallX -Top ($FrameCoords.BottomY - 1)
-        Add-ScapeDisplayList -Text (Format-ScapeANSIMessage -Text $wallChar -Flag "MENU")
+        Add-ScapeDisplayListAt -X $FrameCoords.RightWallX -Y ($FrameCoords.BottomY - 1) -Text (Format-ScapeANSIMessage -Text $wallChar -Flag "MENU")
     }
 }
 
@@ -545,10 +541,8 @@ function Write-ScapeTreeView {
     Add-ScapeDisplayListAt -X $frameCoords.TitleX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text "$clippedTitle" -Flag 'BANNER')
 
     for ($h = 1; $h -le $box.Height; $h++) {
-        Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top ($frameCoords.TitleY + $h)
-        Add-ScapeDisplayList -Text (Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU")
-        Set-ScapeCursorPosition -Left $frameCoords.RightWallX -Top ($frameCoords.TitleY + $h)
-        Add-ScapeDisplayList -Text (Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU")
+        Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y ($frameCoords.TitleY + $h) -Text (Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU")
+        Add-ScapeDisplayListAt -X $frameCoords.RightWallX -Y ($frameCoords.TitleY + $h) -Text (Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU")
     }
     Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y $frameCoords.BottomY -Text (Format-ScapeANSIMessage -Text ($frame.BL + ($frame.HL * $roofWidth) + $frame.BR) -Flag "MENU")
 
@@ -618,8 +612,7 @@ function Write-ScapeActionScreen {
     $midLine = "${vlStr}${emptySpace}${vlStr}"
 
     for ($h = 1; $h -le $box.Height; $h++) {
-        Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top ($frameCoords.TitleY + $h)
-        Add-ScapeDisplayList -Text $midLine
+        Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y ($frameCoords.TitleY + $h) -Text $midLine
     }
     Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y $frameCoords.BottomY -Text (Format-ScapeANSIMessage -Text ($frame.BL + ($frame.HL * $roofWidth) + $frame.BR) -Flag "MENU")
 
@@ -632,12 +625,10 @@ function Write-ScapeActionScreen {
 
         $padding = Get-ScapeJustifiedPadding -LeftText $left -RightText $right -TotalWidth ($box.Width - 4)
 
-        Set-ScapeCursorPosition -Left $frameCoords.ContentX -Top $yOffset
-
         $leftFmt = Format-ScapeANSIMessage -Text $left -Flag $row.Flag
         $rightFmt = Format-ScapeANSIMessage -Text $right -Flag $row.RightFlag
 
-        Add-ScapeDisplayList -Text "${leftFmt}${padding}${rightFmt}"
+        Add-ScapeDisplayListAt -X $frameCoords.ContentX -Y $yOffset -Text "${leftFmt}${padding}${rightFmt}"
         $yOffset++
     }
 
@@ -655,10 +646,9 @@ function Write-ScapeActionScreen {
         $barWidth = $box.Width - 4
 
         if ($hasRun) {
-            Set-ScapeCursorPosition -Left $frameCoords.ContentX -Top $yOffset
             $pctStr = " [$runProgress%]"
             $padTxt = Get-ScapeJustifiedPadding -LeftText (Invoke-ScapeI18NFormat -Key "LBL_OVERALL_PROGRESS" -Fallback "OVERALL RUN PROGRESS") -RightText $pctStr -TotalWidth $barWidth
-            Add-ScapeDisplayList -Text (Format-ScapeANSIMessage -Text ((Invoke-ScapeI18NFormat -Key "LBL_OVERALL_PROGRESS" -Fallback "OVERALL RUN PROGRESS") + $padTxt + $pctStr) -Flag "HINT")
+            Add-ScapeDisplayListAt -X $frameCoords.ContentX -Y $yOffset -Text (Format-ScapeANSIMessage -Text ((Invoke-ScapeI18NFormat -Key "LBL_OVERALL_PROGRESS" -Fallback "OVERALL RUN PROGRESS") + $padTxt + $pctStr) -Flag "HINT")
             $yOffset++
 
             $filledChars = [Math]::Floor(($runProgress / 100.0) * $barWidth)
@@ -670,10 +660,9 @@ function Write-ScapeActionScreen {
         }
 
         if ($hasStep) {
-            Set-ScapeCursorPosition -Left $frameCoords.ContentX -Top $yOffset
             $pctStr = " [$stepProgress%]"
             $padTxt = Get-ScapeJustifiedPadding -LeftText (Invoke-ScapeI18NFormat -Key "LBL_CURRENT_PROGRESS" -Fallback "CURRENT TASK PROGRESS") -RightText $pctStr -TotalWidth $barWidth
-            Add-ScapeDisplayList -Text (Format-ScapeANSIMessage -Text ((Invoke-ScapeI18NFormat -Key "LBL_CURRENT_PROGRESS" -Fallback "CURRENT TASK PROGRESS") + $padTxt + $pctStr) -Flag "HINT")
+            Add-ScapeDisplayListAt -X $frameCoords.ContentX -Y $yOffset -Text (Format-ScapeANSIMessage -Text ((Invoke-ScapeI18NFormat -Key "LBL_CURRENT_PROGRESS" -Fallback "CURRENT TASK PROGRESS") + $padTxt + $pctStr) -Flag "HINT")
             $yOffset++
 
             $filledChars = [Math]::Floor(($stepProgress / 100.0) * $barWidth)
