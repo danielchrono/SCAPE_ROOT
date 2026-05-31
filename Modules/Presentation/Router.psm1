@@ -160,29 +160,8 @@ function Start-ScapeRouter {
         Clear-ScapeInputBuffer -ErrorAction SilentlyContinue
 
         try {
-            # Start Async Input Listener
-            $inputRs = [runspacefactory]::CreateRunspace()
-            $inputRs.Open()
-            $inputPs = [powershell]::Create()
-            $inputPs.Runspace = $inputRs
-            $inputPs.AddScript({
-                    while ($true) {
-                        if (Test-ScapeKeyAvailable) {
-                            $key = Read-ScapeRawKey
-                            New-Event -SourceIdentifier "KEY_PRESSED" -MessageData $key | Out-Null
-                        }
-                        [System.Threading.Thread]::Sleep((Get-ScapeConstant -Path "ui::Feedback::RouterSleepMs" -Fallback 20))
-                    }
-                }) | Out-Null
-            $inputAsync = $inputPs.BeginInvoke()
-            [void]$inputAsync
-
             while ($State.IsRunning) {
                 Invoke-ScapeIdlePump | Out-Null
-                $evt = Wait-Event -Timeout 0.05
-                if ($evt) {
-                    Remove-Event -SourceIdentifier $evt.SourceIdentifier
-                }
 
                 $ns = $State.Clone()
 
@@ -190,7 +169,10 @@ function Start-ScapeRouter {
                     $menuData = Get-ScapeMenuData -MenuId $ns.CurrentMenu
                     if ($menuData) {
                         $ns.RawOptions = @($menuData.Items)
-                        $ns.TitleKey = if (-not [string]::IsNullOrWhiteSpace($menuData.TitleKey)) { $menuData.TitleKey } else { "MENU_$($ns.CurrentMenu.ToUpper())_TITLE" }
+                        $ns.TitleKey = if (-not [string]::IsNullOrWhiteSpace($menuData.TitleKey)) { $menuData.TitleKey } else { "" }
+                    }
+                    if ([string]::IsNullOrWhiteSpace($ns.TitleKey)) {
+                        throw "ROUTER_FATAL: Target menu '$($ns.CurrentMenu)' failed to load or is missing a valid TitleKey in Navigation Manifest."
                     }
                 }
 
