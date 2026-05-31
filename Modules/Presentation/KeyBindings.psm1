@@ -41,7 +41,7 @@ function Register-ScapeKeyBinding {
     param(
         [Parameter(Mandatory = $true)][string]$KeySequence,
         [Parameter(Mandatory = $true)][string]$ActionName,
-        [string]$DftProfile = "Default",
+        [string]$ProfileName = "Default",
         [scriptblock]$Callback,
         [switch]$Chord
     )
@@ -56,16 +56,16 @@ function Register-ScapeKeyBinding {
             Action       = $ActionName
             Callback     = $Callback
             IsChord      = $Chord.IsPresent
-            Profile      = $DftProfile
+            Profile      = $ProfileName
             RegisteredAt = [DateTime]::Now
         }
 
         $Script:KeyBindingRegistry[$key] = $binding
 
-        if (-not $Script:KeyBindingProfiles.ContainsKey($Profile)) {
-            $Script:KeyBindingProfiles[$Profile] = @{}
+        if (-not $Script:KeyBindingProfiles.ContainsKey($ProfileName)) {
+            $Script:KeyBindingProfiles[$ProfileName] = @{}
         }
-        $Script:KeyBindingProfiles[$Profile][$key] = $binding
+        $Script:KeyBindingProfiles[$ProfileName][$key] = $binding
 
         return $true
     }
@@ -76,7 +76,7 @@ function Unregister-ScapeKeyBinding {
     [OutputType([bool])]
     param(
         [Parameter(Mandatory = $true)][string]$KeySequence,
-        [string]$DftProfile = "Default"
+        [string]$ProfileName = "Default"
     )
     process {
         if ($null -eq $Script:KeyBindingRegistry) { return $false }
@@ -85,8 +85,8 @@ function Unregister-ScapeKeyBinding {
             $Script:KeyBindingRegistry.Remove($KeySequence) | Out-Null
         }
 
-        if ($Script:KeyBindingProfiles.ContainsKey($DftProfile)) {
-            $Script:KeyBindingProfiles[$DftProfile].Remove($KeySequence) | Out-Null
+        if ($Script:KeyBindingProfiles.ContainsKey($ProfileName)) {
+            $Script:KeyBindingProfiles[$ProfileName].Remove($KeySequence) | Out-Null
         }
 
         return $true
@@ -94,36 +94,32 @@ function Unregister-ScapeKeyBinding {
 }
 
 function Get-ScapeKeyBinding {
-    [CmdletBinding()]
-    [OutputType([hashtable])]
+    [CmdletBinding(DefaultParameterSetName = 'ByProfile')]
+    [OutputType([object])]
     param(
-        [Parameter(Mandatory = $true)][string]$KeySequence,
-        [switch]$Chord
+        [Parameter(Mandatory = $true, ParameterSetName = 'ByKey')][string]$KeySequence,
+        [Parameter(ParameterSetName = 'ByKey')][switch]$Chord,
+        
+        [Parameter(ParameterSetName = 'ByProfile')][string]$ProfileName = "Default"
     )
     process {
         if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
-        $key = $KeySequence
-        if ($Chord) { $key = "CHORD:$KeySequence" }
+        if ($PSCmdlet.ParameterSetName -eq 'ByKey') {
+            $key = $KeySequence
+            if ($Chord) { $key = "CHORD:$KeySequence" }
 
-        if ($Script:KeyBindingRegistry.ContainsKey($key)) {
-            return $Script:KeyBindingRegistry[$key]
+            if ($Script:KeyBindingRegistry.ContainsKey($key)) {
+                return $Script:KeyBindingRegistry[$key]
+            }
+            return $null
         }
-        return $null
-    }
-}
-
-function Get-ScapeKeyBinding {
-    [CmdletBinding()]
-    [OutputType([array])]
-    param([string]$DftProfile = "Default")
-    process {
-        if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
-
-        if ($null -ne $DftProfile -and $Script:KeyBindingProfiles.ContainsKey($DftProfile)) {
-            return @($Script:KeyBindingProfiles[$DftProfile].Values)
+        else {
+            if ($null -ne $ProfileName -and $Script:KeyBindingProfiles.ContainsKey($ProfileName)) {
+                return @($Script:KeyBindingProfiles[$ProfileName].Values)
+            }
+            return @($Script:KeyBindingRegistry.Values)
         }
-        return @($Script:KeyBindingRegistry.Values)
     }
 }
 
@@ -142,20 +138,20 @@ function Set-ScapeKeyBindingProfile {
         if ($null -ne $Preset) {
             switch ($Preset) {
                 'Vim' {
-                    Register-ScapeKeyBinding -KeySequence 'j' -ActionName 'DOWN' -Profile $ProfileName
-                    Register-ScapeKeyBinding -KeySequence 'k' -ActionName 'UP' -Profile $ProfileName
-                    Register-ScapeKeyBinding -KeySequence 'h' -ActionName 'LEFT' -Profile $ProfileName
-                    Register-ScapeKeyBinding -KeySequence 'l' -ActionName 'RIGHT' -Profile $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'j' -ActionName 'DOWN' -ProfileName $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'k' -ActionName 'UP' -ProfileName $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'h' -ActionName 'LEFT' -ProfileName $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'l' -ActionName 'RIGHT' -ProfileName $ProfileName
                 }
                 'Emacs' {
-                    Register-ScapeKeyBinding -KeySequence 'Ctrl+N' -ActionName 'DOWN' -Profile $ProfileName
-                    Register-ScapeKeyBinding -KeySequence 'Ctrl+P' -ActionName 'UP' -Profile $ProfileName
-                    Register-ScapeKeyBinding -KeySequence 'Ctrl+B' -ActionName 'LEFT' -Profile $ProfileName
-                    Register-ScapeKeyBinding -KeySequence 'Ctrl+F' -ActionName 'RIGHT' -Profile $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'Ctrl+N' -ActionName 'DOWN' -ProfileName $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'Ctrl+P' -ActionName 'UP' -ProfileName $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'Ctrl+B' -ActionName 'LEFT' -ProfileName $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'Ctrl+F' -ActionName 'RIGHT' -ProfileName $ProfileName
                 }
                 'Windows' {
-                    Register-ScapeKeyBinding -KeySequence 'UpArrow' -ActionName 'UP' -Profile $ProfileName
-                    Register-ScapeKeyBinding -KeySequence 'DownArrow' -ActionName 'DOWN' -Profile $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'UpArrow' -ActionName 'UP' -ProfileName $ProfileName
+                    Register-ScapeKeyBinding -KeySequence 'DownArrow' -ActionName 'DOWN' -ProfileName $ProfileName
                 }
             }
         }
@@ -201,12 +197,12 @@ function Resolve-ScapeInputToAction {
     [OutputType([string])]
     param(
         [Parameter(Mandatory = $true)][string]$KeyInput,
-        [string]$DftProfile
+        [string]$ProfileName
     )
     process {
         if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
 
-        $prof = if ([string]::IsNullOrWhiteSpace($DftProfile)) { $Script:ActiveProfile } else { $DftProfile }
+        $prof = if ([string]::IsNullOrWhiteSpace($ProfileName)) { $Script:ActiveProfile } else { $ProfileName }
         [void]$prof
 
         $binding = Get-ScapeKeyBinding -KeySequence $KeyInput
@@ -227,7 +223,7 @@ function Set-ScapeKeyBinding {
     param(
         [Parameter(Mandatory = $true)][string]$ActionName,
         [Parameter(Mandatory = $true)][string]$NewKeySequence,
-        [string]$DftProfile = "Default"
+        [string]$ProfileName = "Default"
     )
     process {
         if ($null -eq $Script:KeyBindingRegistry) { Initialize-ScapeKeyBinding }
@@ -235,10 +231,10 @@ function Set-ScapeKeyBinding {
         $existing = $Script:KeyBindingRegistry.Values | Where-Object { $_.Action -eq $ActionName }
 
         foreach ($binding in $existing) {
-            Unregister-ScapeKeyBinding -KeySequence $binding.Sequence -Profile $DftProfile | Out-Null
+            Unregister-ScapeKeyBinding -KeySequence $binding.Sequence -ProfileName $ProfileName | Out-Null
         }
 
-        return Register-ScapeKeyBinding -KeySequence $NewKeySequence -ActionName $ActionName -Profile $DftProfile
+        return Register-ScapeKeyBinding -KeySequence $NewKeySequence -ActionName $ActionName -ProfileName $ProfileName
     }
 }
 
@@ -310,7 +306,7 @@ function Import-ScapeKeyBinding {
                 Set-ScapeKeyBindingProfile -ProfileName $profileName | Out-Null
 
                 foreach ($binding in $prof.Value) {
-                    Register-ScapeKeyBinding -KeySequence $binding.Sequence -ActionName $binding.Action -Profile $profileName -Chord:$binding.IsChord | Out-Null
+                    Register-ScapeKeyBinding -KeySequence $binding.Sequence -ActionName $binding.Action -ProfileName $profileName -Chord:$binding.IsChord | Out-Null
                 }
             }
 
@@ -399,13 +395,8 @@ function Invoke-ScapeKeyBindingAction {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeKeyBinding',
-'Import-ScapeKeyBindingss',
-'Export-ScapeKeyBindingss',
-'Get-ScapeKeyBindingss',
-'Initialize-ScapeKeyBindingss',
 'Register-ScapeKeyBinding',
 'Unregister-ScapeKeyBinding',
-'Get-ScapeKeyBinding',
 'Get-ScapeKeyBinding',
 'Set-ScapeKeyBindingProfile',
 'Invoke-ScapeChordDetection',
