@@ -37,7 +37,7 @@ function Out-ScapeDisplayList {
 [CmdletBinding()]
 
 # ANSI strip pattern definido uma vez, reusado em todo o módulo (DRY)
-$Script:AnsiStrip = [regex]'(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]'
+$Script:AnsiStrip = [regex](Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex")
 
 $Script:IconResolveCache = @{}
 $Script:MenuLineCache = @{}
@@ -216,8 +216,8 @@ function Write-ScapeMenuLayout {
         $HeaderHeight
     )
 
-    $clearSeq = [char]27 + "[2J" + [char]27 + "[3J"
-    Add-ScapeDisplayList -Text $clearSeq
+    $clearSeq = Get-ScapeConstant -Path "ui::ANSI::Screen::ClearFull"
+    if ($clearSeq) { Add-ScapeDisplayList -Text $clearSeq } else { Add-ScapeDisplayList -Text (Get-ScapeConstant -Path "ui::ANSI::Screen::ClearFull") }
 
     $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $Dims.Height -ItemCount $ItemCount -HeaderHeight $HeaderHeight -TitleKey $TitleKey
 
@@ -348,7 +348,7 @@ function Write-ScapeMenuRow {
             $formattedDynStr = if ($formattedDynText) { $formattedDynText } else { "" }
 
             $cleanStrFull = "${strSel}$(" " * $padIcon)${strIcon}$(" " * $padTextSpace)${clippedText}$(" " * $padText)${formattedDynStr}"
-            $cleanStrPlain = $cleanStrFull -replace '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]', ''
+            $cleanStrPlain = $cleanStrFull -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
             $visW = Get-ScapeVisualWidth $cleanStrPlain
 
             $usableClearWidth = [Math]::Max(1, $frameCoords.RightWallX - $coords.SelectorX - 1)
@@ -378,7 +378,8 @@ function Write-ScapeMenuRow {
                 $fullLine = "${fmtSel}$(" " * $padIcon)${fmtIcon}$(" " * $padTextSpace)${fmtText}$(" " * $padText)${fmtDyn}$(" " * $padEnd)"
             }
 
-            $resetSeq = [char]27 + "[0m"
+            $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
+            if (-not $resetSeq) { $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset" }
             Add-ScapeDisplayListAt -X $coords.SelectorX -Y $coords.Y -Text "${resetSeq}$fullLine"
 
             if ($isCurrent -and $hintStr) {
@@ -538,8 +539,9 @@ function Write-ScapeTreeView {
     $frame = Get-ScapeConstant -Path "ui::Frames::$effectiveFrameStyle"
     $roofWidth = [Math]::Max(1, $box.Width - 2)
 
+    $clippedTitle = Invoke-ScapeStringClip -Text $cleanTitle -MaxWidth ([Math]::Max(1, $roofWidth - 4))
     Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text ($frame.TL + ($frame.HL * $roofWidth) + $frame.TR) -Flag "MENU")
-    Add-ScapeDisplayListAt -X $frameCoords.TitleX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text "$cleanTitle" -Flag 'BANNER')
+    Add-ScapeDisplayListAt -X $frameCoords.TitleX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text "$clippedTitle" -Flag 'BANNER')
 
     for ($h = 1; $h -le $box.Height; $h++) {
         Set-ScapeCursorPosition -Left $frameCoords.LeftWallX -Top ($frameCoords.TitleY + $h)
@@ -605,8 +607,9 @@ function Write-ScapeActionScreen {
     $frame = Get-ScapeConstant -Path "ui::Frames::$effectiveFrameStyle"
     $roofWidth = [Math]::Max(1, $box.Width - 2)
 
+    $clippedTitle = Invoke-ScapeStringClip -Text $cleanTitle -MaxWidth ([Math]::Max(1, $roofWidth - 4))
     Add-ScapeDisplayListAt -X $frameCoords.LeftWallX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text ($frame.TL + ($frame.HL * $roofWidth) + $frame.TR) -Flag "MENU")
-    Add-ScapeDisplayListAt -X $frameCoords.TitleX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text "$cleanTitle" -Flag 'BANNER')
+    Add-ScapeDisplayListAt -X $frameCoords.TitleX -Y $frameCoords.TitleY -Text (Format-ScapeANSIMessage -Text "$clippedTitle" -Flag 'BANNER')
 
     $vlStr = Format-ScapeANSIMessage -Text $frame.VL -Flag "MENU"
     $emptySpace = " " * $roofWidth

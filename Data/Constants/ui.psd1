@@ -11,7 +11,7 @@
         # 1. ANSI / VT100 REFERENCE COMPLETO (COMPATÍVEL COM PS 5.1)
         # ===========================================================================
         ANSI                 = @{
-                AnsiStripRegex    = "(?:\x1B)\[[0-9;]*[a-zA-Z]"
+                AnsiStripRegex    = '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]'
                 SGR               = @{
                         Reset = "$([char]27)[0m"; Bold = "$([char]27)[1m"; Dim = "$([char]27)[2m"
                         Italic = "$([char]27)[3m"; Underline = "$([char]27)[4m"; SlowBlink = "$([char]27)[5m"

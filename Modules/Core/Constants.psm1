@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core
     Module: Scape.Core.Constants
@@ -61,6 +61,9 @@ function Get-ScapeConstant {
 
             if ($null -eq $next) { return $Fallback }
             $current = $next
+        }
+        if ($current -is [string] -and $current -match '\$\(\[char\]27\)') {
+            return $current.Replace('$([char]27)', [char]27)
         }
         return $current
     }

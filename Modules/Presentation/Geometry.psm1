@@ -132,7 +132,7 @@ function Invoke-ScapeStringClip {
         [switch]$CenterClip
     )
     process {
-        $plain = $Text -replace '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]', ''
+        $plain = $Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
         $len = $plain.Length
 
         if ($len -le $MaxWidth) { return $Text }
@@ -173,7 +173,7 @@ function Get-ScapePlainTextLength {
     param([Parameter(Mandatory = $false)][AllowEmptyString()][string]$Text = '')
     process {
         if ([string]::IsNullOrWhiteSpace($Text)) { return 0 }
-        return ($Text -replace '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]', '').Length
+        return ($Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), '').Length
     }
 }
 
@@ -183,7 +183,7 @@ function Get-ScapeVisualWidth {
     param([Parameter(Mandatory = $true)][string]$Text)
     process {
         if ([string]::IsNullOrEmpty($Text)) { return 0 }
-        $clean = $Text -replace '(?:\x1B|\\e|\\u001b)\[[0-9;]*[a-zA-Z]', ''
+        $clean = $Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
         if ([string]::IsNullOrEmpty($clean)) { return 0 }
 
         $len = $clean.Length
@@ -220,9 +220,9 @@ function Get-ScapeBannerVariant {
         [Parameter(Mandatory = $false)][string]$TitleKey = ''
     )
     process {
-        #if (-not [string]::IsNullOrWhiteSpace($TitleKey) -and ($TitleKey -match 'TITLE_MAIN|TITLE_FORGE|TITLE_DEPLOY|MAINMENU|DEPLOYMENU|FORGEMENU')) {
-        #    return 'Standard'
-        #}
+        if (-not [string]::IsNullOrWhiteSpace($TitleKey) -and ($TitleKey -match 'MAIN|FORGE|DEPLOY')) {
+            return 'Standard'
+        }
         $layout = Get-ScapeConstant -Path "ui::Layout"
         $threshold = if ($layout -and $null -ne $layout.BannerBreakpoint) { $layout.BannerBreakpoint } else { (Get-ScapeConstant -Path "system::ANALYSIS::BANNER_BREAKPOINT") }
         if ($ItemCount -ge 12 -or ($ItemCount + $HeaderHeight + 10) -ge $ConsoleHeight -or $ConsoleHeight -le $threshold) {
