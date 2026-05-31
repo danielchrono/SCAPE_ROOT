@@ -133,7 +133,7 @@ function Invoke-ScapeRouterReducer {
 }
 
 function Start-ScapeRouter {
-    [CmdletBinding(SupportsShouldProcess=$true)]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     param([string]$InitialMenu = 'MainMenu')
     process {
         $ViewportState = @{}
@@ -228,3 +228,7 @@ function Start-ScapeRouter {
         }
     }
 }
+
+Export-ModuleMember -Function 'Start-ScapeRouter',
+'Get-ScapeMenuData',
+'Invoke-ScapeRouterReducer'

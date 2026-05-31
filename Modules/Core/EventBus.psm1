@@ -184,4 +184,9 @@ function Invoke-ScapeIdlePump {
     }
 }
 Export-ModuleMember -Function 'Publish-ScapeError',
-'Receive-ScapeEvent'
+'Receive-ScapeEvent',
+'Publish-ScapeFault',
+'Invoke-ScapeIdlePump',
+'Register-ScapeEventListener',
+'Get-ScapeEventQueue',
+'Publish-ScapeEvent'

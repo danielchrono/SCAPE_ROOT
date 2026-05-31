@@ -284,4 +284,5 @@ Export-ModuleMember -Function 'ConvertTo-ScapeHex',
 'Test-ScapePath',
 'Invoke-ScapeMathClamp',
 'Test-ScapeAlignment',
-'ConvertTo-ScapeHexString'
+'ConvertTo-ScapeHexString',
+'Join-ScapePath'
