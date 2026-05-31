@@ -264,18 +264,3 @@ Export-ModuleMember -Function 'Get-ScapeInputIntent',
 'Invoke-ScapeStateMutation',
 'Get-ScapeHydratedOptions',
 'Send-ScapeVirtualInput'
-
-# --- INJECTED I18N KEYS ---
-# DASH_HEADER_NODE
-# DASH_LINE1
-# DASH_LINE2
-# DASH_LINE3
-# DASH_TASK
-
-
-# --- INJECTED I18N KEYS ---
-# DASH_HEADER_NODE
-# DASH_LINE1
-# DASH_LINE2
-# DASH_LINE3
-# DASH_TASK

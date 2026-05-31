@@ -17,8 +17,6 @@ function Initialize-ScapeGeometry {
     }
 }
 
-
-
 function Get-ScapeMenuLayout {
     [CmdletBinding()]
     [OutputType([psobject])]
@@ -52,7 +50,7 @@ function Get-ScapeMenuLayout {
             X = [int]$x; Y = [int]$y
             Width = [int]$boxW; Height = [int]$boxH
             UsableWidth = $usable
-            MarginLeft  = $layout.Margin
+            MarginLeft = $layout.Margin
             MarginRight = $layout.Margin
         }
     }

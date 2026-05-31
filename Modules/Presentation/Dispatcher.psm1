@@ -99,7 +99,8 @@ function Format-ScapeTransientMessage {
                 $args = if ($pay['Tokens']) { $pay['Tokens'] } else { @() }
                 if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) {
                     $msg = Invoke-ScapeI18NFormat -Key $k -Args $args
-                } else {
+                }
+                else {
                     $i18n = Get-ScapeConstant -Path "i18n::$k"
                     $msg = if ($i18n -and $i18n.T) { $i18n.T } else { $k }
                     if ($args.Count -gt 0) { try { $msg = $msg -f $args } catch {} }
@@ -110,10 +111,12 @@ function Format-ScapeTransientMessage {
                 if ($tgt) {
                     if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) {
                         $msg = Invoke-ScapeI18NFormat -Key "DISPATCHER_TARGET_LABEL" -Args @($tgt)
-                    } else {
+                    }
+                    else {
                         $msg = "Target: $tgt"
                     }
-                } else {
+                }
+                else {
                     $msg = $typ
                 }
             }
@@ -227,7 +230,7 @@ function Convert-ScapeTreeToRender {
 }
 
 Export-ModuleMember -Function 'Test-ScapeUiEventCategory',
-                              'Format-ScapeProgressBar',
-                              'Format-ScapeTransientMessage',
-                              'Convert-ScapeEventDataToRender',
-                              'Convert-ScapeTreeToRender'
+'Format-ScapeProgressBar',
+'Format-ScapeTransientMessage',
+'Convert-ScapeEventDataToRender',
+'Convert-ScapeTreeToRender'

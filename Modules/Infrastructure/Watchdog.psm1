@@ -35,7 +35,8 @@ function Initialize-ScapeWatchdog {
         # Carregar I18N com suporte a tokens fora do runspace restrito
         $msgDeadlock = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) {
             Invoke-ScapeI18NFormat -Key "ROUTER_FATAL" -Args @("DEADLOCK")
-        } else { "SYSTEM DEADLOCK: Core unresponsive" }
+        }
+        else { "SYSTEM DEADLOCK: Core unresponsive" }
 
         # --- 3. INFRAESTRUTURA DE RUNSPACE (ISOLAMENTO) ---
         $Script:WatchdogRunspace = [RunspaceFactory]::CreateRunspace()
@@ -110,6 +111,3 @@ function Update-ScapeHeartbeat {
         }
     }
 }
-
-
-

@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Audit
-    Description: Immutable forensic ledger for extracted artifacts â€“ chain-of-custody with hash chaining.
-    Zero hardcode â€“ configs via infrastructure::Audit and system::LIMITS.
+    Description: Immutable forensic ledger for extracted artifacts chain-of-custody with hash chaining.
+    Zero hardcode configs via infrastructure::Audit and system::LIMITS.
     Thread-safe with backpressure, PowerShell 5.1 compatible.
 #>
 [CmdletBinding()] param()
@@ -238,16 +238,16 @@ function Export-ScapeAuditLedger {
 
             if ($Format -eq "CSV") {
                 $mappedRecords = $report.Records | Select-Object `
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_ID'); E={$_.SequenceId}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_NAME'); E={$_.EventType}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_SIZE'); E={if ($_.Details -match '"SizeBytes":(\d+)') { $matches[1] } else { 0 }}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_TYPE'); E={$_.Operator}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_STATUS'); E={$_.Severity}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_CATEGORY'); E={""}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_HASH'); E={$_.PreviousHash}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_SCORE'); E={$_.Integrity}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_OFFSET'); E={""}},
-                    @{N=(Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_LENGTH'); E={""}}
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_ID'); E = { $_.SequenceId } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_NAME'); E = { $_.EventType } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_SIZE'); E = { if ($_.Details -match '"SizeBytes":(\d+)') { $matches[1] } else { 0 } } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_TYPE'); E = { $_.Operator } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_STATUS'); E = { $_.Severity } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_CATEGORY'); E = { "" } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_HASH'); E = { $_.PreviousHash } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_SCORE'); E = { $_.Integrity } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_OFFSET'); E = { "" } },
+                @{N = (Invoke-ScapeI18NFormat -Key 'TABLE_HEADER_LENGTH'); E = { "" } }
                 $csv = $mappedRecords | ConvertTo-Csv -NoTypeInformation
                 [System.IO.File]::WriteAllLines($OutputPath, $csv)
             }
@@ -349,31 +349,14 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
         $result = Export-ScapeAuditLedger -OutputPath $exportPath -Format "JSON"
         if ($result.Success) {
             Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORT_SUCCESS" ) -StatusFlag "Success" -RunProgress 100 -StepProgress 100
-        } else {
+        }
+        else {
             Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_EXPORT_FAILED" ) -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
             throw "Audit export failed"
         }
-    } else {
+    }
+    else {
         Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "AUDIT_MODULE_NOT_LOADED" ) -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
         throw "Audit module not available."
     }
 }
-
-
-
-# --- INJECTED I18N KEYS ---
-# AUDIT_HASH_COMPUTED
-# AUDIT_INTEGRITY_MISMATCH
-# AUDIT_INTEGRITY_VERIFIED
-# AUDIT_MANIFEST_DEPLOY
-# AUDIT_MANIFEST_FAIL
-# AUDIT_REPORT_FAIL
-
-
-# --- INJECTED I18N KEYS ---
-# AUDIT_HASH_COMPUTED
-# AUDIT_INTEGRITY_MISMATCH
-# AUDIT_INTEGRITY_VERIFIED
-# AUDIT_MANIFEST_DEPLOY
-# AUDIT_MANIFEST_FAIL
-# AUDIT_REPORT_FAIL

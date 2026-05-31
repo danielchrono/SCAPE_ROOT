@@ -42,7 +42,8 @@ function Invoke-ScapeCompileExe {
             }
             [System.IO.File]::WriteAllBytes($outExe, $newBytes)
         }
-    } catch {
+    }
+    catch {
         if (Get-Command Publish-ScapeEvent -ErrorAction SilentlyContinue) {
             Publish-ScapeEvent -Type "LOG_WARN" -Severity "WARN" -Payload "Falha na ofuscação do executável. O binário foi gerado, mas sem ofuscação."
         }
@@ -225,18 +226,3 @@ function Invoke-ScapeCompileMsi {
 
     return $msiOut
 }
-
-# --- INJECTED I18N KEYS ---
-# COMPILER_CHECK_PS2EXE
-# COMPILER_INSTALL_WIX
-# COMPILER_MSI_DOWNGRADE
-# COMPILER_WIX_FALLBACK
-# COMPILER_WIX_NOT_FOUND
-
-
-# --- INJECTED I18N KEYS ---
-# COMPILER_CHECK_PS2EXE
-# COMPILER_INSTALL_WIX
-# COMPILER_MSI_DOWNGRADE
-# COMPILER_WIX_FALLBACK
-# COMPILER_WIX_NOT_FOUND

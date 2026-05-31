@@ -96,7 +96,8 @@ function Invoke-ScapeTelemetryWorkflow {
                 $disks = Get-CimInstance Win32_DiskDrive -ErrorAction Stop
                 $vols = Get-Volume | Where-Object DriveLetter -ErrorAction Stop
                 Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload @{ Disks = $disks; Volumes = $vols }
-            } catch {
+            }
+            catch {
                 Publish-ScapeEvent -Type "INVENTORY_FATAL" -Severity "ERROR" -Payload (Get-ScapeI18NNode -Key "INVENTORY_WMI_FAIL").Hint
             }
         }
@@ -118,7 +119,8 @@ function Invoke-ScapeTelemetryWorkflow {
                     Admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
                 }
                 Publish-ScapeEvent -Type "SYSTEM_INFO" -Severity "INFO" -Payload $topo
-            } catch {
+            }
+            catch {
                 Publish-ScapeEvent -Type "INVENTORY_FATAL" -Severity "ERROR" -Payload (Get-ScapeI18NNode -Key "INVENTORY_WMI_FAIL").Hint
             }
         }
@@ -136,10 +138,10 @@ function Invoke-ScapeTelemetryWorkflow {
             $actionNeeded = ($temp -ge $critT) -or ($queue -ge $critQ)
 
             $metrics = @{
-                Thermal = @{ Value = $temp; Critical = ($temp -ge $critT); Warning = ($temp -ge $warnT) }
-                IO      = @{ Value = $queue; Critical = ($queue -ge $critQ); Warning = ($queue -ge $warnQ) }
-                Ram     = @{ UsedPct = $ram }
-                CPU     = @{ UsedPct = $cpu }
+                Thermal      = @{ Value = $temp; Critical = ($temp -ge $critT); Warning = ($temp -ge $warnT) }
+                IO           = @{ Value = $queue; Critical = ($queue -ge $critQ); Warning = ($queue -ge $warnQ) }
+                Ram          = @{ UsedPct = $ram }
+                CPU          = @{ UsedPct = $cpu }
                 ActionNeeded = $actionNeeded
             }
             
@@ -161,22 +163,10 @@ function Invoke-ScapeTelemetryWorkflow {
             
             if ($actionNeeded) {
                 Publish-ScapeEvent -Type "TELEMETRY_CRITICAL" -Severity "FATAL" -Payload $metrics
-            } else {
+            }
+            else {
                 Publish-ScapeEvent -Type "TELEMETRY_UPDATE" -Severity "INFO" -Payload $metrics
             }
         }
     }
 }
-
-# --- INJECTED I18N KEYS ---
-# PERF_HIGH_IO_WARNING
-# PERF_LOW_MEM_WARNING
-# PERF_RAM_STRATEGY
-# PERF_THREAD_AUTO
-
-
-# --- INJECTED I18N KEYS ---
-# PERF_HIGH_IO_WARNING
-# PERF_LOW_MEM_WARNING
-# PERF_RAM_STRATEGY
-# PERF_THREAD_AUTO

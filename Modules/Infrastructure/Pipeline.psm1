@@ -92,35 +92,9 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Pipeline' -Handler {
     if (Get-Command Initialize-ScapePipeline -ErrorAction SilentlyContinue) {
         Initialize-ScapePipeline | Out-Null
         Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "PIPELINE_ACTIVE") -StatusFlag "Success" -RunProgress 100 -StepProgress 100
-    } else {
+    }
+    else {
         Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText (Invoke-ScapeI18NFormat -Key "PIPELINE_NO_MODULE") -StatusFlag "Failure" -RunProgress 100 -StepProgress 0
         throw "Pipeline module not available."
     }
 }
-
-
-
-# --- INJECTED I18N KEYS ---
-# PIPE_ARCHAEOLOGY_COMPLETE
-# PIPE_ARCHAEOLOGY_START
-# PIPE_CARVING_PROGRESS
-# PIPE_EXTRACTION_PHASE
-# PIPE_EXTRACT_COUNTER
-# PIPE_FALLBACK_COUNTDOWN
-# PIPE_FALLBACK_ENGAGED
-# PIPE_FALLBACK_IMMINENT
-# PIPE_FALLBACK_WARNING
-# PIPE_STREAMING_DATA
-
-
-# --- INJECTED I18N KEYS ---
-# PIPE_ARCHAEOLOGY_COMPLETE
-# PIPE_ARCHAEOLOGY_START
-# PIPE_CARVING_PROGRESS
-# PIPE_EXTRACTION_PHASE
-# PIPE_EXTRACT_COUNTER
-# PIPE_FALLBACK_COUNTDOWN
-# PIPE_FALLBACK_ENGAGED
-# PIPE_FALLBACK_IMMINENT
-# PIPE_FALLBACK_WARNING
-# PIPE_STREAMING_DATA

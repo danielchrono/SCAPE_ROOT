@@ -194,10 +194,8 @@ function Write-ScapeScrollIndicator {
 
 
         $arrow = if ($Direction -eq 'up') { '▲' } else { '▼' }
-        $dimPrefix = Get-ScapeConstant -Path "ui::ANSI::Text::Dim"
+        $dimPrefix = Get-ScapeConstant -Path "ui::ANSI::SGR::Dim"
         $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
-        if (-not $dimPrefix) { $dimPrefix = "`e[2m" }
-        if (-not $resetSeq) { $resetSeq = "`e[0m" }
         Set-ScapeCursorPosition -Left $X -Top $Y
         $formatted = Format-ScapeANSIMessage -Text $arrow -Flag $Flag
         Add-ScapeDisplayList -Text "${dimPrefix}${formatted}${resetSeq}"
@@ -219,7 +217,7 @@ function Write-ScapeMenuLayout {
     )
 
     $clearSeq = Get-ScapeConstant -Path "ui::ANSI::Screen::ClearFull"
-    if ($clearSeq) { Add-ScapeDisplayList -Text $clearSeq } else { Add-ScapeDisplayList -Text "`e[H`e[2J" }
+    if ($clearSeq) { Add-ScapeDisplayList -Text $clearSeq } else { Add-ScapeDisplayList -Text (Get-ScapeConstant -Path "ui::ANSI::Screen::ClearFull") }
 
     $bannerMode = Get-ScapeBannerVariant -ConsoleHeight $Dims.Height -ItemCount $ItemCount -HeaderHeight $HeaderHeight
 
@@ -360,13 +358,13 @@ function Write-ScapeMenuRows {
                 if ($Script:ColorMode -eq "TrueColor") {
                     $rgb = Resolve-ScapeThemeColor -Flag $flag
                     $bgAnsi = Convert-ScapeRGBToAnsi -RGB $rgb -IsBackground
-                    $fgAnsi = (Get-ScapeConstant -Path "ui::ANSI::Colors::FgBlack")
+                    $fgAnsi = (Get-ScapeConstant -Path "ui::ANSI::FG::Black")
                     $fullLine = "${bgAnsi}${fgAnsi}${cleanLineWithEndPadding}${ESC}[0m"
                 }
                 else {
                     $fgAnsi16 = Get-ScapeAnsi16SequenceForFlag -Flag $flag
                     $bgAnsi16 = $fgAnsi16 -replace '\[3', '[4' -replace '\[9', '[10'
-                    $blackText = (Get-ScapeConstant -Path "ui::ANSI::Colors::FgBlack")
+                    $blackText = (Get-ScapeConstant -Path "ui::ANSI::FG::Black")
                     $fullLine = "${bgAnsi16}${blackText}${cleanLineWithEndPadding}${ESC}[0m"
                 }
             }
@@ -379,7 +377,7 @@ function Write-ScapeMenuRows {
             }
 
             $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset"
-            if (-not $resetSeq) { $resetSeq = "`e[0m" }
+            if (-not $resetSeq) { $resetSeq = Get-ScapeConstant -Path "ui::ANSI::SGR::Reset" }
             Add-ScapeDisplayListAt -X $coords.SelectorX -Y $coords.Y -Text "${resetSeq}$fullLine"
 
             if ($isCurrent -and $hintStr) {

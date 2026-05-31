@@ -46,10 +46,8 @@ function Invoke-ScapeRobocopy {
     $proc = [System.Diagnostics.Process]::Start($psi)
     $out = $proc.StandardOutput.ReadToEnd()
     if (-not $proc.HasExited) { Register-ObjectEvent -InputObject $proc -EventName Exited -Action { Publish-ScapeEvent -Type 'SYNC_DONE' } | Out-Null }
-        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+    if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
         
-    }
-
     $limit = Get-ScapeConstant -Path "system::LIMITS::SUCCESS_EXIT_CODE_MAX" -Fallback 8
     $success = ($proc.ExitCode -lt $limit)
 
@@ -99,7 +97,7 @@ function Start-ScapeRobocopyConfiguration {
     $rcCycles = Get-ScapeConstant -Path "ui::CycleLists" -Fallback @{}
 
     $rcConfig = @{
-        Flags = @{
+        Flags      = @{
             RC_E = $rcOptionsData.RC_E; RC_ZB = $rcOptionsData.RC_ZB; RC_M = $rcOptionsData.RC_M; RC_B = $rcOptionsData.RC_B
             RC_COPYALL = $rcOptionsData.RC_COPYALL; RC_DCOPY_T = $rcOptionsData.RC_DCOPY_T; RC_NP = $rcOptionsData.RC_NP
             RC_FFT = $rcOptionsData.RC_FFT; RC_XO = $rcOptionsData.RC_XO; RC_XN = $rcOptionsData.RC_XN
@@ -107,8 +105,8 @@ function Start-ScapeRobocopyConfiguration {
         }
         Parameters = @{
             RC_MT = if ($rcCycles.ContainsKey('RC_MT')) { $rcCycles['RC_MT'][0] } else { 1 }
-            RC_R = if ($rcCycles.ContainsKey('RC_R')) { $rcCycles['RC_R'][0] } else { 0 }
-            RC_W = if ($rcCycles.ContainsKey('RC_W')) { $rcCycles['RC_W'][0] } else { 0 }
+            RC_R  = if ($rcCycles.ContainsKey('RC_R')) { $rcCycles['RC_R'][0] } else { 0 }
+            RC_W  = if ($rcCycles.ContainsKey('RC_W')) { $rcCycles['RC_W'][0] } else { 0 }
         }
     }
 
@@ -118,8 +116,8 @@ function Start-ScapeRobocopyConfiguration {
 
     Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
         ScreenId = "RobocopyConfigScreen"
-        Status = "CONFIG_READY"
-        Config = $rcConfig
+        Status   = "CONFIG_READY"
+        Config   = $rcConfig
     }
 
     $readyText = Invoke-ScapeI18NFormat -Key "ROBOCOPY_READY" 
@@ -130,17 +128,18 @@ Export-ModuleMember -Function 'Start-ScapeRobocopyConfiguration'
 
 Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync' -Handler {
     param($Task, $PayloadDef, $Target)
-    $txtResolve = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ACTION_RESOLVING_VAULT"  } else { "RESOLVING CLOUD VAULT ENDPOINT..." }
+    $txtResolve = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ACTION_RESOLVING_VAULT" } else { "RESOLVING CLOUD VAULT ENDPOINT..." }
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtResolve -StatusFlag "WARN" -RunProgress 10 -StepProgress 20
     
 
     if (Get-Command Invoke-ScapeCloudSyncPreparation -ErrorAction SilentlyContinue) { 
         Invoke-ScapeCloudSyncPreparation | Out-Null 
-    } else { 
+    }
+    else { 
         # Simulated action for demonstration
     }
     
-    $txtAuth = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ACTION_AUTH_KEYS"  } else { "AUTHENTICATING SHA256 KEYS..." }
+    $txtAuth = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "ACTION_AUTH_KEYS" } else { "AUTHENTICATING SHA256 KEYS..." }
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtAuth -StatusFlag "WARN" -RunProgress 40 -StepProgress 60
     
 
@@ -151,14 +150,3 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync' -Handler {
     $txtDone = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "NET_SYNC_SUCCESS" -Args @("0") } else { "SYNC DONE" }
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtDone -StatusFlag "Success" -RunProgress 100 -StepProgress 100
 }
-
-
-
-# --- INJECTED I18N KEYS ---
-# SYNC_RESUME
-# SYNC_SUSPEND
-
-
-# --- INJECTED I18N KEYS ---
-# SYNC_RESUME
-# SYNC_SUSPEND

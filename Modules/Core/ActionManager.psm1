@@ -42,15 +42,15 @@ function Publish-ScapeActionProgress {
     )
     process {
         $statusKeyMap = @{
-            "DISCOVERED_PARSED" = "STATUS_DISCOVERED"
-            "DISCOVERED_CARVED" = "STATUS_DISCOVERED_RAW"
-            "SUCCESSFULLY_EXTRACTED" = "STATUS_EXTRACTED"
+            "DISCOVERED_PARSED"            = "STATUS_DISCOVERED"
+            "DISCOVERED_CARVED"            = "STATUS_DISCOVERED_RAW"
+            "SUCCESSFULLY_EXTRACTED"       = "STATUS_EXTRACTED"
             "EXTRACTED_PARTIAL_CORRUPTION" = "STATUS_PARTIAL_CORRUPT"
-            "ORPHANED_BLOCK" = "STATUS_ORPHAN"
-            "EXTRACTION_FAILED" = "STATUS_FAILED"
-            "TARGET_READY" = "STATUS_READY"
-            "ACTIVE_PROCESSING" = "STATUS_PROCESSING"
-            "INTEGRITY_VERIFIED" = "STATUS_VERIFIED"
+            "ORPHANED_BLOCK"               = "STATUS_ORPHAN"
+            "EXTRACTION_FAILED"            = "STATUS_FAILED"
+            "TARGET_READY"                 = "STATUS_READY"
+            "ACTIVE_PROCESSING"            = "STATUS_PROCESSING"
+            "INTEGRITY_VERIFIED"           = "STATUS_VERIFIED"
         }
         if ($statusKeyMap.ContainsKey($StatusText)) {
             $StatusText = Invoke-ScapeI18NFormat -Key $statusKeyMap[$StatusText]
@@ -62,15 +62,15 @@ function Publish-ScapeActionProgress {
         $taskDisp = if (-not [string]::IsNullOrWhiteSpace($Task)) { $Task } else { $taskFallback }
 
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
-            ScreenId = "ActionScreen"
-            IsActive = $true
-            TitleKey = "MENU_MAIN_TARGET"
-            Rows = @(
+            ScreenId     = "ActionScreen"
+            IsActive     = $true
+            TitleKey     = "MENU_MAIN_TARGET"
+            Rows         = @(
                 @{ LeftText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_TARGET_MODULE"); RightText = $targetDisp; Flag = "HINT"; RightFlag = "Info" }
                 @{ LeftText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_ACTIVE_TASK"); RightText = $taskDisp; Flag = "HINT"; RightFlag = "Info" }
                 @{ LeftText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_STATUS"); RightText = $StatusText; Flag = "HINT"; RightFlag = $StatusFlag }
             )
-            RunProgress = $RunProgress
+            RunProgress  = $RunProgress
             StepProgress = $StepProgress
         }
 
@@ -102,7 +102,7 @@ function Invoke-ScapeActionDispatcher {
         }
 
         # Check if the target is instantaneous (silent execution without Action Screen)
-        $silentTargets = Get-ScapeConstant -Path "system::ActionManager::SilentTargets" -Fallback @('Scape.Presentation.Theme','Scape.Core.Settings','Scape.Presentation.FilePicker')
+        $silentTargets = Get-ScapeConstant -Path "system::ActionManager::SilentTargets" -Fallback @('Scape.Presentation.Theme', 'Scape.Core.Settings', 'Scape.Presentation.FilePicker')
         $isSilent = ($silentTargets -contains $Target)
 
         # Lifecycle Start
@@ -126,9 +126,10 @@ function Invoke-ScapeActionDispatcher {
                 if ($hasCustomRows) {
                     Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                         ScreenId = "ActionScreen"
-                        Row = @{ LeftText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_STATUS"); RightText = $completedText; Flag = "HINT"; RightFlag = "Success" }
+                        Row      = @{ LeftText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_STATUS"); RightText = $completedText; Flag = "HINT"; RightFlag = "Success" }
                     }
-                } else {
+                }
+                else {
                     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $completedText -StatusFlag "Success"
                 }
             }
@@ -144,7 +145,7 @@ function Invoke-ScapeActionDispatcher {
         if (-not $isSilent) {
             Publish-ScapeEvent -Type "ACTION_SCREEN_WAIT" -Severity "INFO" -Payload @{
                 Target = $Target
-                Task = $Task
+                Task   = $Task
             }
         }
 
@@ -309,7 +310,8 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Telemetry' -Handler {
     if (Get-Command Invoke-ScapeTelemetryWorkflow -ErrorAction SilentlyContinue) {
         $taskName = if ([string]::IsNullOrWhiteSpace($Task)) { 'TELEMETRY' } else { $Task }
         Invoke-ScapeTelemetryWorkflow -Task $taskName
-    } else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
+    }
+    else { throw (Invoke-ScapeI18NFormat -Key "ERR_NOT_IMPLEMENTED") }
 }
 
 Register-ScapeActionHandler -Target 'Scape.Presentation.KeyBindings' -Handler {
@@ -321,25 +323,3 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.Network' -Handler {
     param($Task, $PayloadDef, $Target)
     Invoke-ScapeNetworkAction -Task $Task -Target $Target
 }
-
-
-
-
-
-
-
-
-
-
-# --- INJECTED I18N KEYS ---
-# WAIT_ENTER_ACCEPT_RISK
-# WAIT_ENTER_CONTINUE
-# WAIT_ENTER_ESC_PROMPT
-# WAIT_ENTER_RETURN
-
-
-# --- INJECTED I18N KEYS ---
-# WAIT_ENTER_ACCEPT_RISK
-# WAIT_ENTER_CONTINUE
-# WAIT_ENTER_ESC_PROMPT
-# WAIT_ENTER_RETURN

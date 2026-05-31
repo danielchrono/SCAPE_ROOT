@@ -104,7 +104,8 @@ function Get-ScapeRoot {
         $root = $Script:ColdState["ROOT"]
         if ($null -ne $root) {
             return [string]$root
-        } else {
+        }
+        else {
             return [string]::Empty
         }
     }
@@ -129,42 +130,3 @@ function Get-ScapeManifest {
         return $Script:ColdState["MANIFEST"]
     }
 }
-
-
-
-
-
-# --- INJECTED I18N KEYS ---
-# BOOT_ENV_PARTIAL
-# BOOT_ESC_ABORT
-# BOOT_FATAL_INTEROP
-# BOOT_INIT_MODULES
-# BOOT_MODULE_FAIL
-# BOOT_MODULE_LOADED
-# BOOT_PRIV_ELEVATED
-# BOOT_PRIV_FAIL
-# BOOT_READY
-# BOOT_SAMBA_AUTO
-# BOOT_SAMBA_FAIL
-# BOOT_VERIFY_ENV
-# BOOT_WELCOME
-# STATUS_BUSY
-# STATUS_SUCCESS
-
-
-# --- INJECTED I18N KEYS ---
-# BOOT_ENV_PARTIAL
-# BOOT_ESC_ABORT
-# BOOT_FATAL_INTEROP
-# BOOT_INIT_MODULES
-# BOOT_MODULE_FAIL
-# BOOT_MODULE_LOADED
-# BOOT_PRIV_ELEVATED
-# BOOT_PRIV_FAIL
-# BOOT_READY
-# BOOT_SAMBA_AUTO
-# BOOT_SAMBA_FAIL
-# BOOT_VERIFY_ENV
-# BOOT_WELCOME
-# STATUS_BUSY
-# STATUS_SUCCESS

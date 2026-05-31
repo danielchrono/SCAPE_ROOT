@@ -31,9 +31,9 @@ function Invoke-ScapeTargetedParsing {
 
             # 2. Inicia barra de progresso transiente
             Publish-ScapeEvent -Type "PROGRESS" -Severity "INFO" -Payload @{
-                Stage = "MFT Traversal"
-                Current = 0
-                Total = 100
+                Stage       = "MFT Traversal"
+                Current     = 0
+                Total       = 100
                 ShowPercent = $true
             }
 

@@ -37,8 +37,8 @@ function Test-ScapeViewportChanged {
         if ($widthChanged -or $heightChanged) {
             return @{
                 HasResized = $true
-                NewWidth = $current.Width
-                NewHeight = $current.Height
+                NewWidth   = $current.Width
+                NewHeight  = $current.Height
             }
         }
         return @{ HasResized = $false }

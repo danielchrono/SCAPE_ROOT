@@ -5,7 +5,13 @@
 #>
 #Requires -Version 5.1
 
+$Script:C = $null
 
+function Initialize-ScapeFATParser {
+    [CmdletBinding()]
+    param()
+    $Script:C = @{
+        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{

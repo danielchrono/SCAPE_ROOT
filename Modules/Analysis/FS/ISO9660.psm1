@@ -6,7 +6,15 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline Ready
 #>
 
+$Script:C = $null
 
+function Initialize-ScapeISO9660Parser {
+    [CmdletBinding()]
+    [OutputType([void])]
+    param()
+
+    $Script:C = @{
+        FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
         DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
     }
     Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{ Action = "LogLine"; Key = "ISO9660_PARSER_READY"; Severity = "LOG_INFO" }

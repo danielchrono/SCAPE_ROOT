@@ -336,6 +336,4 @@ function Initialize-ScapeResolver {
             }
         }
     }
-
-    # Redraw syncing removed to decouple Core Resolver from Presentation layer loops
 }

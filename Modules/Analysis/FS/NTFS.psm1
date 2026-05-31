@@ -6,7 +6,15 @@
     Architecture: FP Strict | Zero Hardcode | Constant-Driven | Event-Pipeline Ready
 #>
 
+$Script:C = $null
 
+function Initialize-ScapeNTFSParser {
+    [CmdletBinding()]
+    [OutputType([void])]
+    param()
+    process {
+        $Script:C = @{
+            FS = Get-ScapeConstant -Path "storage::FS" -Fallback @{}
             DB = Get-ScapeConstant -Path "network::DB" -Fallback @{}
         }
         Publish-ScapeEvent -Type "SYSTEM_READY" -Payload @{

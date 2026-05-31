@@ -102,7 +102,8 @@ function Sync-ScapeThemeHydration {
                 if ($rawHue -is [double] -or $rawHue -is [float] -or $rawHue -is [int] -or $rawHue -is [decimal]) {
                     $baseHue = [double]$rawHue
                     $hasHue = $true
-                } elseif ($rawHue -is [string]) {
+                }
+                elseif ($rawHue -is [string]) {
                     $hasHue = [double]::TryParse($rawHue, [ref]$baseHue)
                 }
 
@@ -110,7 +111,8 @@ function Sync-ScapeThemeHydration {
                     $baseHue = ([Random]::new()).NextDouble() * 360
                     if (Get-Command Set-ScapeSettingMutation -ErrorAction SilentlyContinue) {
                         Set-ScapeSettingMutation -Key "RandomBaseHue" -Value $baseHue | Out-Null
-                    } else {
+                    }
+                    else {
                         Update-ScapeColdState -NewProperties @{ RandomBaseHue = $baseHue } | Out-Null
                     }
                 }
@@ -118,7 +120,8 @@ function Sync-ScapeThemeHydration {
                 if (Get-Command Invoke-ScapeProceduralTheme -ErrorAction SilentlyContinue) {
                     Invoke-ScapeProceduralTheme -BaseHue $baseHue
                 }
-            } elseif (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
+            }
+            elseif (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
                 $personaData = Set-ScapePersona -Name $persona -Silent
                 if ($null -ne $personaData -and $personaData.Count -gt 0) {
                     Update-ScapeColdState -NewProperties $personaData | Out-Null
@@ -130,9 +133,11 @@ function Sync-ScapeThemeHydration {
         $colorMode = Get-ScapeProperty -Object $state -PropertyName "ColorMode"
         if ($colorMode -is [string]) {
             $useTrueColor = $colorMode -ieq "TrueColor"
-        } elseif ($colorMode -is [bool]) {
+        }
+        elseif ($colorMode -is [bool]) {
             $useTrueColor = [bool]$colorMode
-        } else {
+        }
+        else {
             $useTrueColor = (Get-ScapeProperty -Object $state -PropertyName "Capability_TrueColor" -Fallback $true) -eq $true
         }
 
@@ -197,7 +202,8 @@ function Set-ScapeSettingMutation {
                     if (Get-Command Invoke-ScapeProceduralTheme -ErrorAction SilentlyContinue) {
                         Invoke-ScapeProceduralTheme -BaseHue $baseHue
                     }
-                } elseif (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
+                }
+                elseif (Get-Command Set-ScapePersona -ErrorAction SilentlyContinue) {
                     $personaData = Set-ScapePersona -Name $effectiveValue
                     if ($null -ne $personaData -and $personaData.Count -gt 0) {
                         Update-ScapeColdState -NewProperties $personaData | Out-Null
@@ -367,31 +373,21 @@ function Optimize-ScapeSettingsState {
         if ($rawHue -is [double] -or $rawHue -is [float] -or $rawHue -is [int] -or $rawHue -is [decimal]) {
             $parsedHue = [double]$rawHue
             $isNumeric = $true
-        } elseif ($rawHue -is [string]) {
+        }
+        elseif ($rawHue -is [string]) {
             $isNumeric = [double]::TryParse($rawHue, [ref]$parsedHue)
         }
 
         if ($isNumeric -and -not [double]::IsNaN($parsedHue) -and -not [double]::IsInfinity($parsedHue)) {
             $normalized["RandomBaseHue"] = ((($parsedHue % 360) + 360) % 360)
-        } else {
+        }
+        else {
             $normalized["RandomBaseHue"] = $null
         }
-    } else {
+    }
+    else {
         $normalized["RandomBaseHue"] = $null
     }
 
     return $normalized
 }
-
-
-
-
-
-# --- INJECTED I18N KEYS ---
-# SETTINGS_ENGINE_ONLINE
-# SETTINGS_RESET_DEFAULTS
-
-
-# --- INJECTED I18N KEYS ---
-# SETTINGS_ENGINE_ONLINE
-# SETTINGS_RESET_DEFAULTS

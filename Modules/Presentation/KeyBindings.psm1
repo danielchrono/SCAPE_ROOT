@@ -52,11 +52,11 @@ function Register-ScapeKeyBinding {
         if ($Chord) { $key = "CHORD:$KeySequence" }
 
         $binding = @{
-            Sequence = $KeySequence
-            Action = $ActionName
-            Callback = $Callback
-            IsChord = $Chord.IsPresent
-            Profile = $Profile
+            Sequence     = $KeySequence
+            Action       = $ActionName
+            Callback     = $Callback
+            IsChord      = $Chord.IsPresent
+            Profile      = $Profile
             RegisteredAt = [DateTime]::Now
         }
 
@@ -184,7 +184,8 @@ function Invoke-ScapeChordDetection {
                 $key = (Read-ScapeRawKey)
                 $keyName = if ($key.Key -eq [ConsoleKey]::Enter) { 'Enter' } else { $key.KeyChar }
                 $Script:ChordBuffer += $keyName
-            } else {
+            }
+            else {
                 [System.Threading.Thread]::Sleep(10)
             }
         }
@@ -249,7 +250,8 @@ function Export-ScapeKeyBindings {
 
         $configPath = if ([string]::IsNullOrWhiteSpace($Path)) {
             Join-Path -Path (Get-ScapeConstant -Path "project::home") -ChildPath ".scape/keybindings.json"
-        } else {
+        }
+        else {
             $Path
         }
 
@@ -257,7 +259,7 @@ function Export-ScapeKeyBindings {
         if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
 
         $exportData = @{
-            Profiles = @{}
+            Profiles      = @{}
             ActiveProfile = $Script:ActiveProfile
         }
 
@@ -266,8 +268,8 @@ function Export-ScapeKeyBindings {
             foreach ($binding in $Script:KeyBindingProfiles[$prof].Values) {
                 $exportData.Profiles[$prof] += @{
                     Sequence = $binding.Sequence
-                    Action = $binding.Action
-                    IsChord = $binding.IsChord
+                    Action   = $binding.Action
+                    IsChord  = $binding.IsChord
                 }
             }
         }
@@ -291,7 +293,8 @@ function Import-ScapeKeyBindings {
     process {
         $configPath = if ([string]::IsNullOrWhiteSpace($Path)) {
             Join-Path -Path (Get-ScapeConstant -Path "project::home" -Fallback $env:USERPROFILE) -ChildPath ".scape/keybindings.json"
-        } else {
+        }
+        else {
             $Path
         }
 
@@ -346,7 +349,7 @@ function Invoke-ScapeKeyBindingAction {
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "KeyBindingsScreen"
             TitleKey = "KEYBINDINGS_CONFIG"
-            Rows = @(
+            Rows     = @(
                 @{ LeftText = (Invoke-ScapeI18NFormat -Key "KEYBINDINGS_MODE"); RightText = (Invoke-ScapeI18NFormat -Key "KEYBINDINGS_INTERACTIVE"); Flag = "Info"; RightFlag = "Info" }
                 @{ LeftText = (Invoke-ScapeI18NFormat -Key "KEYBINDINGS_STATUS"); RightText = (Invoke-ScapeI18NFormat -Key "KEYBINDINGS_PRESS_KEY"); Flag = "Hint"; RightFlag = "Hint" }
             )
@@ -364,40 +367,45 @@ function Invoke-ScapeKeyBindingAction {
         $readyText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_READY"
         Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $readyText -StatusFlag "Success"
 
-    } elseif ($Task -eq 'LOAD_PROFILE') {
+    }
+    elseif ($Task -eq 'LOAD_PROFILE') {
         $TargetProfile = $PayloadDef['Profile']
         if ($null -ne $TargetProfile) {
             Set-ScapeKeyBindingProfile -ProfileName $TargetProfile | Out-Null
             $profLoaded = (Invoke-ScapeI18NFormat -Key "KEYBINDINGS_PROF_LOADED") -f "[$TargetProfile]"
             Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $profLoaded -StatusFlag "Success"
-        } else {
+        }
+        else {
             $noProf = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_NO_PROFILE"
             Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $noProf -StatusFlag "Failure"
         }
-    } elseif ($Task -eq 'SAVE_BINDINGS') {
+    }
+    elseif ($Task -eq 'SAVE_BINDINGS') {
         $result = Export-ScapeKeyBindings
         if ($result) {
             $savedText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_SAVED"
             Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $savedText -StatusFlag "Success"
-        } else {
+        }
+        else {
             $failedText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_FAILED"
             Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $failedText -StatusFlag "Failure"
         }
-    } else {
+    }
+    else {
         $sysReadyText = Invoke-ScapeI18NFormat -Key "KEYBINDINGS_SYS_READY"
         Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $sysReadyText -StatusFlag "Success"
     }
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeKeyBindings',
-                              'Register-ScapeKeyBinding',
-                              'Unregister-ScapeKeyBinding',
-                              'Get-ScapeKeyBinding',
-                              'Get-ScapeKeyBindings',
-                              'Set-ScapeKeyBindingProfile',
-                              'Invoke-ScapeChordDetection',
-                              'Resolve-ScapeInputToAction',
-                              'Set-ScapeKeyBinding',
-                              'Export-ScapeKeyBindings',
-                              'Import-ScapeKeyBindings',
-                              'Invoke-ScapeKeyBindingAction'
+'Register-ScapeKeyBinding',
+'Unregister-ScapeKeyBinding',
+'Get-ScapeKeyBinding',
+'Get-ScapeKeyBindings',
+'Set-ScapeKeyBindingProfile',
+'Invoke-ScapeChordDetection',
+'Resolve-ScapeInputToAction',
+'Set-ScapeKeyBinding',
+'Export-ScapeKeyBindings',
+'Import-ScapeKeyBindings',
+'Invoke-ScapeKeyBindingAction'

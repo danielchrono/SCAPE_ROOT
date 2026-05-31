@@ -28,18 +28,19 @@ function Find-ScapeNetworkNode {
     foreach ($i in $ipRange) {
         $ip = "$SubnetRoot.$i"
         $ps = [powershell]::Create($iss).AddScript({
-            param($tIP, $tPort, $tTime)
-            $client = [System.Net.Sockets.TcpClient]::new()
-            try {
-                $asyncTask = $client.ConnectAsync($tIP, $tPort)
-                $deadline = [DateTime]::UtcNow.AddMilliseconds($tTime)
-                while (-not $asyncTask.IsCompleted -and [DateTime]::UtcNow -lt $deadline) {
-                    [System.Threading.Thread]::Sleep(1)
+                param($tIP, $tPort, $tTime)
+                $client = [System.Net.Sockets.TcpClient]::new()
+                try {
+                    $asyncTask = $client.ConnectAsync($tIP, $tPort)
+                    $deadline = [DateTime]::UtcNow.AddMilliseconds($tTime)
+                    while (-not $asyncTask.IsCompleted -and [DateTime]::UtcNow -lt $deadline) {
+                        [System.Threading.Thread]::Sleep(1)
+                    }
+                    if ($client.Connected) { return $tIP }
                 }
-                if ($client.Connected) { return $tIP }
-            } catch {} finally { $client.Close() }
-            return $null
-        }).AddArgument($ip).AddArgument($port).AddArgument($timeout)
+                catch {} finally { $client.Close() }
+                return $null
+            }).AddArgument($ip).AddArgument($port).AddArgument($timeout)
         $ps.RunspacePool = $pool
         $handle = $ps.BeginInvoke()
         $null = $tasks.Add(@{ PS = $ps; Handle = $handle })
@@ -176,7 +177,7 @@ function Invoke-ScapeNetworkRadarAction {
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "NetworkRadar"
             TitleKey = "NET_MGR_TITLE"
-            Status = "NO_SERVERS"
+            Status   = "NO_SERVERS"
         }
         return
     }
@@ -184,8 +185,8 @@ function Invoke-ScapeNetworkRadarAction {
     Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
         ScreenId = "NetworkRadar"
         TitleKey = "NET_MGR_TITLE"
-        Status = "SERVERS_FOUND"
-        Nodes = $nodes
+        Status   = "SERVERS_FOUND"
+        Nodes    = $nodes
     }
 
     $targetNode = $nodes[0]
@@ -215,11 +216,12 @@ function Invoke-ScapeNetworkRadarAction {
         Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
             ScreenId = "NetworkRadar"
             TitleKey = "NET_MGR_TITLE"
-            Status = "MOUNT_SUCCESS"
-            Target = $remotePath
-            Drive = $driveLetter
+            Status   = "MOUNT_SUCCESS"
+            Target   = $remotePath
+            Drive    = $driveLetter
         }
-    } else {
+    }
+    else {
         if (Get-Command Mount-ScapeNetworkShareWithCredential -ErrorAction SilentlyContinue) {
             Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_SMB_AUTH_REQUIRED") }
             $mountOk = Mount-ScapeNetworkShareWithCredential -RemoteVault $remotePath -DriveLetter $driveLetter
@@ -228,24 +230,26 @@ function Invoke-ScapeNetworkRadarAction {
                 Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                     ScreenId = "NetworkRadar"
                     TitleKey = "NET_MGR_TITLE"
-                    Status = "MOUNT_SUCCESS"
-                    Target = $remotePath
-                    Drive = $driveLetter
+                    Status   = "MOUNT_SUCCESS"
+                    Target   = $remotePath
+                    Drive    = $driveLetter
                 }
-            } else {
+            }
+            else {
                 Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_CANCELLED") }
                 Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                     ScreenId = "NetworkRadar"
                     TitleKey = "NET_MGR_TITLE"
-                    Status = "AUTH_FAILED"
+                    Status   = "AUTH_FAILED"
                 }
             }
-        } else {
+        }
+        else {
             Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MAP_CANCELLED") }
             Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                 ScreenId = "NetworkRadar"
                 TitleKey = "NET_MGR_TITLE"
-                Status = "MOUNT_FAILED"
+                Status   = "MOUNT_FAILED"
             }
         }
     }
@@ -261,25 +265,28 @@ function Invoke-ScapeNetworkAction {
 
     if ($Task -eq 'SCAN') {
         Invoke-ScapeNetworkRadarAction -TargetShare $Target
-    } elseif ($Task -eq 'UNMOUNT_ALL') {
+    }
+    elseif ($Task -eq 'UNMOUNT_ALL') {
         $unmountOk = Clear-ScapeNetworkMounts
         if ($unmountOk) {
             Publish-ScapeEvent -Type "SYSTEM" -Severity "INFO" -Payload @{ Message = (Get-ScapeLogMsg -Key "NET_MGR_ALL_REMOVED") }
             Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "INFO" -Payload @{
                 ScreenId = "NetworkRadar"
                 TitleKey = "NET_MGR_TITLE"
-                Status = "UNMOUNT_ALL_SUCCESS"
+                Status   = "UNMOUNT_ALL_SUCCESS"
             }
-        } else {
+        }
+        else {
             $failMsg = Invoke-ScapeI18NFormat -Key "NET_UNMOUNT_FAIL" 
             Publish-ScapeEvent -Type "SYSTEM" -Severity "ERROR" -Payload @{ Message = $failMsg }
             Publish-ScapeEvent -Type "ACTION_SCREEN_UPDATE" -Severity "ERROR" -Payload @{
                 ScreenId = "NetworkRadar"
                 TitleKey = "NET_MGR_TITLE"
-                Status = "UNMOUNT_ALL_FAILED"
+                Status   = "UNMOUNT_ALL_FAILED"
             }
         }
-    } else {
+    }
+    else {
         Find-ScapeNetworkNode | Out-Null
     }
 }
@@ -290,84 +297,3 @@ function Invoke-ScapeNetworkAction {
 # ==============================================================================
 
 Export-ModuleMember -Function 'Find-ScapeNetworkNode', 'New-ScapeNetworkMount', 'Remove-ScapeNetworkMount', 'Clear-ScapeNetworkMounts', 'Start-ScapeNetworkScan', 'Invoke-ScapeNetworkRadarAction', 'Invoke-ScapeNetworkAction'
-
-
-
-# --- INJECTED I18N KEYS ---
-# NET_LATENCY_WARN
-# NET_MAP_ABORT
-# NET_MAP_AUTH
-# NET_MAP_AUTH_PROMPT
-# NET_MAP_DENIED
-# NET_MAP_OK
-# NET_MGR_AUTO_MOUNT
-# NET_MGR_BACK
-# NET_MGR_MOUNT_SUCCESS
-# NET_MGR_UNMOUNT
-# NET_MGR_UNMOUNT_ALL
-# NET_MGR_UNMOUNT_DISP
-# NET_MGR_UNMOUNT_REGEX
-# NET_NATIVE_ISOLATION_OK
-# NET_NATIVE_JOURNAL_START
-# NET_PACKET_DROP
-# NET_RADAR_ADDRESS
-# NET_RADAR_FOUND
-# NET_RADAR_FOUND_COUNT
-# NET_RADAR_GATEWAY_OK
-# NET_RADAR_IGNORED
-# NET_RADAR_LOCATED
-# NET_RADAR_NONE_COUNT
-# NET_RADAR_PROMPT
-# NET_RADAR_SCAN_DETAIL
-# NET_RADAR_SWEEPING
-# NET_RADAR_TESTING
-# NET_RADAR_VALID
-# NET_SMB_TIMEOUT
-# NET_SYNC_FAIL
-# SAMBA_MGR_NONE
-# SAMBA_MGR_REMOVED
-# SAMBA_MGR_REMOVE_ALL
-# SAMBA_MGR_TITLE
-# SAMBA_SELECT_IP
-# SAMBA_UNMOUNT_ALL
-# SAMBA_UNMOUNT_SINGLE
-
-
-# --- INJECTED I18N KEYS ---
-# NET_LATENCY_WARN
-# NET_MAP_ABORT
-# NET_MAP_AUTH
-# NET_MAP_AUTH_PROMPT
-# NET_MAP_DENIED
-# NET_MAP_OK
-# NET_MGR_AUTO_MOUNT
-# NET_MGR_BACK
-# NET_MGR_MOUNT_SUCCESS
-# NET_MGR_UNMOUNT
-# NET_MGR_UNMOUNT_ALL
-# NET_MGR_UNMOUNT_DISP
-# NET_MGR_UNMOUNT_REGEX
-# NET_NATIVE_ISOLATION_OK
-# NET_NATIVE_JOURNAL_START
-# NET_PACKET_DROP
-# NET_RADAR_ADDRESS
-# NET_RADAR_FOUND
-# NET_RADAR_FOUND_COUNT
-# NET_RADAR_GATEWAY_OK
-# NET_RADAR_IGNORED
-# NET_RADAR_LOCATED
-# NET_RADAR_NONE_COUNT
-# NET_RADAR_PROMPT
-# NET_RADAR_SCAN_DETAIL
-# NET_RADAR_SWEEPING
-# NET_RADAR_TESTING
-# NET_RADAR_VALID
-# NET_SMB_TIMEOUT
-# NET_SYNC_FAIL
-# SAMBA_MGR_NONE
-# SAMBA_MGR_REMOVED
-# SAMBA_MGR_REMOVE_ALL
-# SAMBA_MGR_TITLE
-# SAMBA_SELECT_IP
-# SAMBA_UNMOUNT_ALL
-# SAMBA_UNMOUNT_SINGLE

@@ -102,12 +102,12 @@ function Invoke-ScapeBatchAnalysis {
                 $progressStyle = $null
                 try { $progressStyle = (Get-ScapeColdState)['ProgressStyle'] } catch {}
                 Publish-ScapeEvent -Type "PROGRESS" -Payload @{
-                    Action         = "ProgressBar"
-                    TaskID         = 1
-                    Current        = $i
-                    Total          = $SectorBatch.Count
-                    Label          = "Analyzing sectors..."
-                    ProgressStyle  = $(if ($null -ne $progressStyle -and -not [string]::IsNullOrWhiteSpace($progressStyle)) { [string]$progressStyle } else { 'Default' })
+                    Action        = "ProgressBar"
+                    TaskID        = 1
+                    Current       = $i
+                    Total         = $SectorBatch.Count
+                    Label         = "Analyzing sectors..."
+                    ProgressStyle = $(if ($null -ne $progressStyle -and -not [string]::IsNullOrWhiteSpace($progressStyle)) { [string]$progressStyle } else { 'Default' })
                 }
                 if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
                 # ── TreeView Hook: Atualiza progresso em lote ──
@@ -129,32 +129,3 @@ function Invoke-ScapeBatchAnalysis {
         return [System.Object[]]$results.ToArray()
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-# --- INJECTED I18N KEYS ---
-# LAB_BLOCK_SKIP
-# LAB_HEADER_MISMATCH
-# LAB_MAGIC_FIXED
-# LAB_START
-# LAB_SUCCESS
-# LAB_SURGERY_CRITICAL
-
-
-# --- INJECTED I18N KEYS ---
-# LAB_BLOCK_SKIP
-# LAB_HEADER_MISMATCH
-# LAB_MAGIC_FIXED
-# LAB_START
-# LAB_SUCCESS
-# LAB_SURGERY_CRITICAL

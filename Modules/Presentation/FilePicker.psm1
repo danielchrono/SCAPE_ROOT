@@ -26,12 +26,12 @@ function Invoke-ScapeDirectoryPicker {
         $ps = [powershell]::Create()
         $ps.Runspace = $rs
         $ps.AddScript({
-            param($Title)
-            $shell = New-Object -ComObject Shell.Application
-            $folder = $shell.BrowseForFolder(0, $Title, 0x0240, 0)
-            if ($null -ne $folder) { return $folder.Self.Path }
-            return $null
-        }).AddArgument($dialogTitle) | Out-Null
+                param($Title)
+                $shell = New-Object -ComObject Shell.Application
+                $folder = $shell.BrowseForFolder(0, $Title, 0x0240, 0)
+                if ($null -ne $folder) { return $folder.Self.Path }
+                return $null
+            }).AddArgument($dialogTitle) | Out-Null
 
         # Register purely reactive callback
         Register-ObjectEvent -InputObject $ps -EventName InvocationStateChanged -Action {
@@ -55,7 +55,8 @@ function Invoke-ScapeDirectoryPicker {
                     SelectionId = "FOLDER"
                     Timestamp   = [DateTime]::Now
                 }
-            } elseif ($sender.InvocationStateInfo.State -eq 'Failed') {
+            }
+            elseif ($sender.InvocationStateInfo.State -eq 'Failed') {
                 Publish-ScapeEvent -Type "UI_SELECT_DIR_ERROR" -Severity "FATAL" -Payload @{ Message = "COM_FAIL" }
                 $sender.Dispose()
                 $sender.Runspace.Close()

@@ -7,7 +7,7 @@
 
 function _GetRawI18NEntry {
     [CmdletBinding()] [OutputType([object])]
-    param([Parameter(Mandatory=$true)][string]$Key)
+    param([Parameter(Mandatory = $true)][string]$Key)
 
     try {
         $state = Get-ScapeColdState
@@ -15,7 +15,8 @@ function _GetRawI18NEntry {
 
         $lang = if ($state.ContainsKey("CurrentLanguage")) {
             $state["CurrentLanguage"]
-        } else { "en-US" }
+        }
+        else { "en-US" }
 
         $i18nBucket = $state.Assets["I18N"]
         if (-not $i18nBucket.ContainsKey($lang)) {
@@ -36,13 +37,16 @@ function _GetRawI18NEntry {
             if ($langDict.Contains($Key)) { return $langDict[$Key] }
             $foundKey = $langDict.Keys | Where-Object { $_ -eq $Key } | Select-Object -First 1
             if ($foundKey) { return $langDict[$foundKey] }
-        } elseif ($langDict.PSObject.Properties[$Key]) {
+        }
+        elseif ($langDict.PSObject.Properties[$Key]) {
             return $langDict.$($Key)
-        } else {
+        }
+        else {
             $prop = $langDict.PSObject.Properties | Where-Object { $_.Name -eq $Key } | Select-Object -First 1
             if ($prop) { return $prop.Value }
         }
-    } catch {
+    }
+    catch {
         throw "I18N_ERROR: Failed to resolve key '$Key' -> $($_.Exception.Message)"
     }
     throw "I18N_MISSING_KEY: Translation key '$Key' not found in dictionary."
@@ -50,7 +54,7 @@ function _GetRawI18NEntry {
 
 function Get-ScapeI18NNode {
     [CmdletBinding()] [OutputType([psobject])]
-    param([Parameter(Mandatory=$true)][string]$Key)
+    param([Parameter(Mandatory = $true)][string]$Key)
 
     $entry = _GetRawI18NEntry -Key $Key
     $Node = [PSCustomObject]@{ Text = $Key; Hint = ""; Flag = "UI" }
@@ -76,8 +80,8 @@ function Get-ScapeI18NNode {
 function Get-ScapeLogMsg {
     [CmdletBinding()] [OutputType([string])]
     param(
-        [Parameter(Mandatory=$true)][string]$Key,
-        [Parameter(Mandatory=$false)][array]$MsgArgs = @()
+        [Parameter(Mandatory = $true)][string]$Key,
+        [Parameter(Mandatory = $false)][array]$MsgArgs = @()
     )
 
     $Node = Get-ScapeI18NNode -Key $Key
@@ -92,8 +96,8 @@ function Get-ScapeLogMsg {
 function Format-ScapeMenuLine {
     [CmdletBinding()] [OutputType([string])]
     param(
-        [Parameter(Mandatory=$true)][string]$Key,
-        [Parameter(Mandatory=$false)][array]$MsgArgs = @()
+        [Parameter(Mandatory = $true)][string]$Key,
+        [Parameter(Mandatory = $false)][array]$MsgArgs = @()
     )
     $text = Get-ScapeLogMsg -Key $Key -MsgArgs $MsgArgs
     $node = Get-ScapeI18NNode -Key $Key
@@ -107,6 +111,3 @@ function Format-ScapeMenuLine {
 if (-not (Get-Alias -Name "I18N" -ErrorAction SilentlyContinue)) {
     Set-Alias -Name "I18N" -Value "Get-ScapeLogMsg" -Scope Global -Force
 }
-
-
-
