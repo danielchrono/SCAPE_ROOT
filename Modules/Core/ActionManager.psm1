@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Core\ActionManager
     Module: Scape.Core.ActionManager
@@ -137,7 +137,7 @@ function Invoke-ScapeActionDispatcher {
         }
         catch {
             if (-not $isSilent) {
-                $failedText = (Invoke-ScapeI18NFormat -Key "CORE_ACTION_FAILED") + ": $($_.Exception.Message)"
+                $failedText = Invoke-ScapeI18NFormat -Key "CORE_ACTION_FAILED" -Args @($_.Exception.Message) -Fallback "Action failed: $($_.Exception.Message)"
                 Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $failedText -StatusFlag "Failure"
             }
         }

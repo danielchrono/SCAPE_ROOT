@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Build.ps1 - SCAPE Monolith Forge (v1.0 - PATH RESOLVER & DICTIONARY SYNC)
     Architecture: Deterministic Tree | Subfolder Parsing | Safe Boot Sequence | TreeView-Ready
@@ -331,7 +331,7 @@ function Write-Monolith($OutFile, $ModulePayloads, $DataAssets) {
     [void]$sb.AppendLine("# SCAPE DEPLOY MONOLITH - $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')")
     [void]$sb.AppendLine('param([string]$InitialMenu = ''ForgeMenu'')')
     [void]$sb.AppendLine('$ErrorActionPreference = "Stop"')
-    [void]$sb.AppendLine('[System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8')
+    [void]$sb.AppendLine('[System.Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)')
     [void]$sb.AppendLine('$Global:SCAPE_MEM = @{}')
     [void]$sb.AppendLine('')
 

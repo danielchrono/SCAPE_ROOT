@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.Abstraction
@@ -364,12 +364,12 @@ function Invoke-ScapeBatchFSAnalysis {
     }
 
     $throttle = [System.Threading.SemaphoreSlim]::new($maxParallel)
-    $tasks = New-Object System.Collections.Generic.List[System.Threading.Tasks.Task]
+    $tasks = New-Object System.Collections.Generic.List[System.Management.Automation.Job]
 
     for ($i = 0; $i -lt $SectorBatch.Count; $i++) {
         while (-not $throttle.Wait(0)) {
             if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-            else { `$throttle.Wait(10) | Out-Null }
+            else { [System.Threading.Thread]::Sleep(10) }
         }
 
         # Isolando escopo local para o Linter e para o ThreadJob injetar com `$using:`
@@ -402,7 +402,10 @@ function Invoke-ScapeBatchFSAnalysis {
     }
 
     $deadline = [DateTime]::UtcNow.AddSeconds(300)
-    while ( ($tasks.State -match 'Running|NotStarted') -and [DateTime]::UtcNow -lt $deadline) { if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null } }
+    while ( ($tasks | Where-Object { $_.State -eq 'Running' -or $_.State -eq 'NotStarted' }) -and [DateTime]::UtcNow -lt $deadline) {
+        if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
+        [System.Threading.Thread]::Sleep(10)
+    }
     $tasks | Remove-Job -Force
     $null = $throttle.Dispose()
 

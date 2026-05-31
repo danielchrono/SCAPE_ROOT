@@ -37,7 +37,7 @@ $workspaceTemp = Join-Path $workspaceRoot $workspaceTempName
 $workspaceDeploy = Join-Path $workspaceRoot $workspaceDeployName
 @($workspaceRoot, $workspaceLogs, $workspaceTemp, $workspaceDeploy) | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { New-Item -ItemType Directory -Path $_ -Force | Out-Null } }
 if (Get-Module PSReadLine -ErrorAction SilentlyContinue) { Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue }
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 # Enable VT100 and graphic mode from parent session or dynamically
 if ([string]::IsNullOrWhiteSpace($env:SCAPE_GRAPHIC_MODE)) { $env:SCAPE_GRAPHIC_MODE = "1" }
 

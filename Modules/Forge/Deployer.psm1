@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Forge | Module: Scape.Forge.Deployer
 .DESCRIPTION
@@ -116,7 +116,7 @@ function Set-MainScript {
     [void]$sb.AppendLine('@($workspaceRoot, $workspaceLogs, $workspaceTemp, $workspaceDeploy) | ForEach-Object { if (-not (Test-Path -LiteralPath $_)) { New-Item -ItemType Directory -Path $_ -Force | Out-Null } }')
 
     [void]$sb.AppendLine('if (Get-Module PSReadLine -ErrorAction SilentlyContinue) { Remove-Module PSReadLine -Force -ErrorAction SilentlyContinue }')
-    [void]$sb.AppendLine('[Console]::OutputEncoding = [System.Text.Encoding]::UTF8')
+    [void]$sb.AppendLine('[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)')
     [void]$sb.AppendLine('# Enable VT100 and graphic mode from parent session or dynamically')
     [void]$sb.AppendLine('if ([string]::IsNullOrWhiteSpace($env:SCAPE_GRAPHIC_MODE)) { $env:SCAPE_GRAPHIC_MODE = "1" }')
     [void]$sb.AppendLine('')

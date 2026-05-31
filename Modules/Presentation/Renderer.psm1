@@ -64,7 +64,7 @@ function Initialize-ScapeRenderer {
     param()
     process {
         try {
-            [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+            [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
             [Console]::CursorVisible = $false
         }
         catch { Write-Verbose "Suppressed error:         catch {}"; }
@@ -424,7 +424,8 @@ function Write-ScapeMenuBuffer {
         $layout = Get-ScapeConstant -Path "ui::Layout"
         $itemCount = @($Options).Count
 
-        $safeDimsHeight = [Math]::Max(10, $dims.Height - 1)
+        $minHeight = if ($layout -and $layout.MinHeight) { $layout.MinHeight } else { 20 }
+        $safeDimsHeight = [Math]::Max($minHeight, $dims.Height - 1)
         $safeDims = @{ Width = $dims.Width; Height = $safeDimsHeight }
 
         $visibleItems = $ViewportEnd - $ViewportStart
@@ -562,7 +563,8 @@ function Write-ScapeTreeView {
     foreach ($item in $visibleSlice) {
         if ($yOffset -ge $frameCoords.BottomY -or $yOffset -ge $dims.Height) { break }
 
-        $indent = "  " * ($item.Depth)
+        $indentStep = Get-ScapeConstant -Path "ui::Menu::IndentStep" -Fallback 2
+        $indent = " " * ($item.Depth * $indentStep)
         $rawLine = "$indent$($item.Text)"
         $clippedLine = Invoke-ScapeStringClip -Text $rawLine -MaxWidth ($box.Width - 4)
         $padding = Get-ScapeJustifiedPadding -LeftText $clippedLine -RightText "" -TotalWidth ($box.Width - 4)
@@ -796,7 +798,8 @@ function Format-ScapeThemifiedMenuBuffer {
             $text = if ($opt.PSObject.Properties['Text']) { $opt.Text } else { $opt.TitleKey }
             $dynText = if ($opt.PSObject.Properties['DynamicText']) { $opt.DynamicText } else { "" }
 
-            $selector = if ($isSelected) { "▶ " } else { "  " }
+            $subInd = Get-ScapeConstant -Path "ui::Menu::SubmenuIndicator" -Fallback "▶"
+            $selector = if ($isSelected) { "$subInd " } else { "  " }
             $line = "$selector$icon $text"
 
             if ($dynText) { $line += " $dynText" }

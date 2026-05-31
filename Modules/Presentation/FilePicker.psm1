@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Domain: Presentation | Module: Scape.Presentation.FilePicker
     Architecture: Hybrid COM/TUI Input Dialog
@@ -43,7 +43,7 @@ function Invoke-ScapeDirectoryPicker {
                 $sender.Runspace.Dispose()
 
                 if ([string]::IsNullOrWhiteSpace($selectedPath)) {
-                    $cancelMsg = "Cancelado pelo usuario." # Fallback I18N
+                    $cancelMsg = Invoke-ScapeI18NFormat -Key "FILEPICKER_CANCEL" -Fallback "Cancelado pelo usuario."
                     Publish-ScapeEvent -Type "NET_MAP_CANCELLED" -Severity "WARN" -Payload @{ Message = $cancelMsg }
                     return
                 }
