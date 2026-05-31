@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.Resolver
     .DESCRIPTION
@@ -161,7 +161,7 @@ function Resolve-ScapeManifestLayer {
         }
     }
 
-    # debug/diagnÃ³stico: sempre listar keys quando falhar
+    # debug/diagnóstico: sempre listar keys quando falhar
     if (-not $manifest.ContainsKey($LayerKey)) {
         $keys = @()
         try { $keys = @($manifest.Keys) } catch { Write-Verbose "Suppressed error:         try { $keys = @($manifest.Keys) } catch {}"; }
@@ -327,7 +327,7 @@ function Initialize-ScapeResolver {
         else { $null }
 
         if ($action -eq 'TRIGGER' -and $null -ne $actionPayload) {
-            # ResoluÃ§Ã£o flexÃ­vel dependendo se Ã© hashtable ou psobject
+            # Resolução flexível dependendo se é hashtable ou psobject
             $target = if ($actionPayload -is [hashtable]) { $actionPayload['Target'] } elseif ($null -ne $actionPayload.PSObject) { $actionPayload.Target } else { $null }
 
             if ($target) {
@@ -337,9 +337,11 @@ function Initialize-ScapeResolver {
         }
     }
 }
+
 Export-ModuleMember -Function 'Assert-ScapeCapability',
-    'Invoke-ScapeResolveModule',
-    'Resolve-ScapeManifestLayer',
-    'Invoke-ScapeWakeAsset',
-    'Resolve-ScapeAsset',
-    'Initialize-ScapeResolver'
+'Resolve-ScapeModuleDiskPath',
+'Invoke-ScapeResolveModule',
+'Resolve-ScapeManifestLayer',
+'Invoke-ScapeWakeAsset',
+'Resolve-ScapeAsset',
+'Initialize-ScapeResolver'

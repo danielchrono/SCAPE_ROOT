@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.PartitionTable
@@ -104,4 +104,7 @@ function Get-ScapeMBRMeta {
         DiskSignature = $diskSig; Partitions = $partitions; ParsedAtOffset = $Offset
     }
 }
-Export-ModuleMember -Function 'Initialize-ScapePartitionTableParser'
+
+Export-ModuleMember -Function 'Initialize-ScapePartitionTableParser',
+    'Get-ScapeGPTMeta',
+    'Get-ScapeMBRMeta'

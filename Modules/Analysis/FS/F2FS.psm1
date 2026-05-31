@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.F2FS
@@ -66,4 +66,6 @@ function Get-ScapeF2FSMeta {
 
     return $result
 }
-Export-ModuleMember -Function 'Initialize-ScapeF2FSParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeF2FSParser',
+    'Get-ScapeF2FSMeta'

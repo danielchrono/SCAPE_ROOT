@@ -1,4 +1,4 @@
-<#.SYNOPSIS
+﻿<#.SYNOPSIS
     Domain: Acquisition
     Module: Scape.Acquisition.Selection
     Description: Discovers and maps physical drives and logical volumes using WMI/CIM.
@@ -7,7 +7,7 @@
 function Get-ScapePhysicalTarget {
     <#
     .DESCRIPTION
-        Retorna todos os discos fÃ­sicos atrelados ao host para varredura forense profunda.
+        Retorna todos os discos físicos atrelados ao host para varredura forense profunda.
     #>
     try {
         $drives = Get-CimInstance -ClassName Win32_DiskDrive -ErrorAction Stop
@@ -20,7 +20,7 @@ function Get-ScapePhysicalTarget {
                     Size         = [long]$d.Size
                     Partitions   = $d.Partitions
                     SerialNumber = $d.SerialNumber
-                    IsSystem     = ($d.Index -eq 0) # HeurÃ­stica simples, aprimorar depois
+                    IsSystem     = ($d.Index -eq 0) # Heurí­stica simples, aprimorar depois
                 })
         }
         return $results
@@ -39,3 +39,5 @@ Register-ScapeActionHandler -Target 'Scape.Acquisition.Selection' -Handler {
     }
     else { throw "Not Implemented" }
 }
+
+Export-ModuleMember -Function 'Get-ScapePhysicalTarget'

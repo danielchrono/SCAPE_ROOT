@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Logger
     Description: Thread-safe operational logging with rotation, severity filtering, and zero hardcode.
@@ -350,5 +350,7 @@ Export-ModuleMember -Function 'Resolve-LogLevel',
 'Initialize-LogDirectory',
 'Initialize-ScapeLogger',
 'Write-ScapeLogRecord',
+'Resolve-ScapeCallerInfo',
+'Invoke-ScapeLogRotation',
 'Close-ScapeLogStream',
 'Get-ScapeActiveLogFile'

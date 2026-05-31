@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.FS.FAT
     Description: FAT32/exFAT directory parser, cluster chain walker, and deleted entry recovery.
@@ -97,7 +97,7 @@ function Restore-ScapeDeletedFATEntry {
 
     for ($i = $StartOffset; $i -lt ($Buffer.Length - $dirSize) -and $count -lt $MaxEntries; $i += $dirSize) {
         if ($Buffer[$i] -eq (Get-ScapeConstant -Path "storage::FS").FAT.DEL_SIG) {
-            # CORREÃ‡ÃƒO: Get-ScapeFATDirectoryEntry
+            # CORREÇÃO: Get-ScapeFATDirectoryEntry
             $entry = Get-ScapeFATDirectoryEntry -Buffer $Buffer -Offset $i
             if ($entry -and -not [string]::IsNullOrWhiteSpace($entry.FileName)) {
                 $recovered.Add($entry); $count++
@@ -140,7 +140,7 @@ function Get-ScapeFATMeta {
     )
 
 
-    # CORREÃ‡ÃƒO: Get-ScapeFATDirectoryEntry
+    # CORREÇÃO: Get-ScapeFATDirectoryEntry
     $entry = Get-ScapeFATDirectoryEntry -Buffer $Buffer -Offset $Offset
     if ($entry) {
         $entry | Add-Member -NotePropertyName "VolumeSerial" -NotePropertyValue $VolumeSerial -Force
@@ -149,7 +149,7 @@ function Get-ScapeFATMeta {
         return $entry
     }
 
-    # CORREÃ‡ÃƒO: Get-ScapeExFATStreamExtension
+    # CORREÇÃO: Get-ScapeExFATStreamExtension
     $exfat = Get-ScapeExFATStreamExtension -Buffer $Buffer -Offset $Offset
     if ($exfat) {
         $exfat | Add-Member -NotePropertyName "VolumeSerial" -NotePropertyValue $VolumeSerial -Force
@@ -159,6 +159,10 @@ function Get-ScapeFATMeta {
     }
     return $null
 }
+
 Export-ModuleMember -Function 'Initialize-ScapeFATParser',
+'Get-ScapeFATDirectoryEntry',
+'Trace-ScapeFATChain',
 'Restore-ScapeDeletedFATEntry',
-'Trace-ScapeFATChain'
+'Get-ScapeExFATStreamExtension',
+'Get-ScapeFATMeta'

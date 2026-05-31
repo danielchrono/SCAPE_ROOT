@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     deploy.ps1 - SCAPE bootstrap entrypoint
 #>
@@ -206,7 +206,7 @@ catch {
             }
             if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
         }
-        Write-Host (Resolve-ScapeMsg -Key "DEPLOYER_LAUNCH_SCAPE") -ForegroundColor Cyan
+        Write-ScapeConsoleMsg -Text (Resolve-ScapeMsg -Key "DEPLOYER_LAUNCH_SCAPE") -Color Cyan
         Start-Sleep -Seconds 1
         # DO NOT CLOSE LOGGER - let child session continue with same log file via SCAPE_LOG_PARENT_FILE env var
         exit 0

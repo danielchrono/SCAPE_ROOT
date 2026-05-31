@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Build.ps1 - SCAPE Monolith Forge (v1.0 - PATH RESOLVER & DICTIONARY SYNC)
     Architecture: Deterministic Tree | Subfolder Parsing | Safe Boot Sequence | TreeView-Ready
@@ -86,6 +86,16 @@ function Get-Clr($Key) {
         }
     }
     return $mapped
+}
+
+function Write-ScapeConsoleMsg {
+    param($Text, $Color, [switch]$NoNewline)
+    if ($Color) {
+        $old = [Console]::ForegroundColor
+        try { [Console]::ForegroundColor = $Color } catch {}
+    }
+    if ($NoNewline) { [Console]::Write($Text) } else { [Console]::WriteLine($Text) }
+    if ($Color) { [Console]::ForegroundColor = $old }
 }
 
 # =============================================================================
@@ -214,8 +224,8 @@ function Show-ManifestTree {
             $prefix = if ($isLast) { "└── " } else { "├── " }
             $indent = if ($isLast) { "    " } else { "│   " }
 
-            Write-Host $prefix -NoNewline -ForegroundColor $lineColor
-            Write-Host $domain -ForegroundColor $lineColor
+            Write-ScapeConsoleMsg -Text $prefix -NoNewline -Color $lineColor
+            Write-ScapeConsoleMsg -Text $domain -Color $lineColor
 
             $mods = @($Manifest[$domain] | Where-Object { $null -ne $_ }) | Sort-Object LoadOrder
             $modCount = $mods.Count
@@ -231,8 +241,8 @@ function Show-ManifestTree {
                 $status = if ($found) { "✓" } else { "✗" }
                 $clr = if ($found) { "Green" } else { "Red" }
 
-                Write-Host "$indent$corner" -NoNewline -ForegroundColor $lineColor
-                Write-Host "$status $($mod.Name) [$($mod.LoadOrder)]" -ForegroundColor $clr
+                Write-ScapeConsoleMsg -Text "$indent$corner" -NoNewline -Color $lineColor
+                Write-ScapeConsoleMsg -Text "$status $($mod.Name) [$($mod.LoadOrder)]" -Color $clr
 
                 if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
                     Publish-ScapeTreeUpdate -TreeId "Build_Topology" -TitleKey 'DEPLOYER_MOD_DISCOVERY' -Nodes @(
@@ -243,7 +253,7 @@ function Show-ManifestTree {
                 if (-not $found -and $mod.IsVital) {
                     $errIndent = " " * ($indent.Length + $corner.Length)
                     $errMsgRaw = $(Get-Msg $failKey) -f $($mod.Name), "NotFound"
-                    Write-Host "$errIndent [$errMsgRaw]" -ForegroundColor (Get-Clr 'Base.Red')
+                    Write-ScapeConsoleMsg -Text "$errIndent [$errMsgRaw]" -Color (Get-Clr 'Base.Red')
                 }
             }
         }
@@ -268,8 +278,8 @@ function Show-ManifestTree {
             $prefix = if ($isLastC) { "└── " } else { "├── " }
             $indent = if ($isLastC) { "    " } else { "│   " }
 
-            Write-Host $prefix -NoNewline -ForegroundColor $lineColor
-            Write-Host "$layer Layer" -ForegroundColor $lineColor
+            Write-ScapeConsoleMsg -Text $prefix -NoNewline -Color $lineColor
+            Write-ScapeConsoleMsg -Text "$layer Layer" -Color $lineColor
 
             $catAssets = @($grp.Group | Sort-Object { if ($null -eq $_.Value.LoadOrder) { 9999 } else { $_.Value.LoadOrder } })
             $assetCount = $catAssets.Count
@@ -289,8 +299,8 @@ function Show-ManifestTree {
                 $status = if ($found) { "✓" } else { "✗" }
                 $clr = if ($found) { "Green" } else { "Red" }
 
-                Write-Host "$indent$corner" -NoNewline -ForegroundColor $lineColor
-                Write-Host "$status $relPath$load$lazyTag" -ForegroundColor $clr
+                Write-ScapeConsoleMsg -Text "$indent$corner" -NoNewline -Color $lineColor
+                Write-ScapeConsoleMsg -Text "$status $relPath$load$lazyTag" -Color $clr
 
                 if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
                     Publish-ScapeTreeUpdate -TreeId "Build_Registry" -TitleKey 'DEPLOYER_ASSETS_DISCOVERY' -Nodes @(
@@ -301,7 +311,7 @@ function Show-ManifestTree {
                 if (-not $found) {
                     $errIndent = " " * ($indent.Length + $corner.Length)
                     $errMsgRaw = $(Get-Msg 'DEPLOYER_EXTRACT_FAIL') -f $relPath, "NotFound"
-                    Write-Host "$errIndent [$errMsgRaw]" -ForegroundColor (Get-Clr 'Base.Red')
+                    Write-ScapeConsoleMsg -Text "$errIndent [$errMsgRaw]" -Color (Get-Clr 'Base.Red')
                 }
             }
         }
@@ -313,7 +323,7 @@ function Show-ManifestTree {
         )
     }
 
-    Write-Host ""
+    Write-ScapeConsoleMsg -Text ""
 }
 
 function Write-Monolith($OutFile, $ModulePayloads, $DataAssets) {
@@ -472,7 +482,7 @@ try {
     Start-ScapeRouter -InitialMenu $InitialMenu
 } catch {
     $bootMsg = Get-Msg 'BOOT_FATAL_MATRIX'
-    Write-Host ($bootMsg -f $_.Exception.Message) -ForegroundColor Red
+    Write-ScapeConsoleMsg -Text ($bootMsg -f $_.Exception.Message) -Color Red
     Read-Host (Get-Msg 'BOOT_PRESS_ENTER_EXIT')
 }
 '@)
@@ -487,7 +497,7 @@ try {
 # =============================================================================
 [Console]::CursorVisible = $true
 [Console]::Clear()
-Write-Host "[*] $(Get-Msg 'DEPLOYER_START')" -ForegroundColor (Get-Clr 'Base.Cyan')
+Write-ScapeConsoleMsg -Text "[*] $(Get-Msg 'DEPLOYER_START')" -Color (Get-Clr 'Base.Cyan')
 
 $dataDir = Join-ScapePath $ProjectRoot 'Data'
 $modulesDir = Join-ScapePath $ProjectRoot 'Modules'
@@ -524,10 +534,19 @@ $dataAssets = Get-DataAsset -DataDir $dataDir
 Write-Monolith -OutFile $OutputPath -ModulePayloads $modulePayloads -DataAssets $dataAssets
 
 Write-Host "`n[+] $(Get-Msg 'DEPLOYER_SUCCESS') -> $OutputPath" -ForegroundColor (Get-Clr 'Base.Green')
-Write-Host "[>] Monolith compilation complete." -ForegroundColor (Get-Clr 'Base.Amber')
+Write-ScapeConsoleMsg -Text "[>] Monolith compilation complete." -Color (Get-Clr 'Base.Amber')
 
 $deadline = [DateTime]::UtcNow.AddMilliseconds(400)
 while ([DateTime]::UtcNow -lt $deadline) { if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null } }
 
-Export-ModuleMember -Function 'Get-ModulePayload',
-'Get-DataAsset'
+Export-ModuleMember -Function 'Resolve-ForgeMonolithPath',
+'Get-Msg',
+'Get-Clr',
+'Write-ScapeConsoleMsg',
+'Get-FileContent',
+'Resolve-ForgeModuleRelativePath',
+'Resolve-ForgeModuleFile',
+'Get-ModulePayload',
+'Get-DataAsset',
+'Show-ManifestTree',
+'Write-Monolith'

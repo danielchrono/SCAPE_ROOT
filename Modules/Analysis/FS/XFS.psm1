@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.XFS
@@ -74,4 +74,6 @@ function Get-ScapeXFSMeta {
 
     return $result
 }
-Export-ModuleMember -Function 'Initialize-ScapeXFSParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeXFSParser',
+    'Get-ScapeXFSMeta'

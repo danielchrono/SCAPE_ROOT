@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.HFS
@@ -74,4 +74,6 @@ function Get-ScapeHFSMeta {
 
     return $result
 }
-Export-ModuleMember -Function 'Initialize-ScapeHFSParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeHFSParser',
+    'Get-ScapeHFSMeta'

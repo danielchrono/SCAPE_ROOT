@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.DiskImage
@@ -130,4 +130,10 @@ function Get-ScapeDMGMeta {
         DataForkOffset = $dataForkOffset; ParsedAtOffset = $Offset
     }
 }
-Export-ModuleMember -Function 'Initialize-ScapeDiskImageParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeDiskImageParser',
+    'Get-ScapeVMDKMeta',
+    'Get-ScapeVHDMeta',
+    'Get-ScapeVHDXMeta',
+    'Get-ScapeQCOW2Meta',
+    'Get-ScapeDMGMeta'

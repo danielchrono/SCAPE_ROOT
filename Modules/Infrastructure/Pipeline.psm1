@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Pipeline
     Description: High-throughput, backpressure-aware memory data pipeline.
@@ -100,4 +100,7 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Pipeline' -Handler {
     }
 }
 
-Export-ModuleMember -Function 'Get-ScapePipelineStat'
+Export-ModuleMember -Function 'Initialize-ScapePipeline',
+    'Add-ScapePipelineArtifact',
+    'Add-ScapePipelineRecord',
+    'Get-ScapePipelineStat'

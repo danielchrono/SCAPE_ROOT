@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.ISO9660
@@ -65,4 +65,6 @@ function Get-ScapeISO9660Meta {
 
     return $result
 }
-Export-ModuleMember -Function 'Initialize-ScapeISO9660Parser'
+
+Export-ModuleMember -Function 'Initialize-ScapeISO9660Parser',
+    'Get-ScapeISO9660Meta'

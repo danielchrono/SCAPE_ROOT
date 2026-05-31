@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.FS.EXT
     Description: EXT2/3/4 inode parser, indirect block resolver, and deleted inode recovery.
@@ -91,7 +91,6 @@ function Restore-ScapeEXTDeletedInode {
     $count = 0
 
     for ($i = $StartOffset; $i -lt ($Buffer.Length - $inodeSize) -and $count -lt $MaxInodes; $i += $inodeSize) {
-        # CORREÃ‡ÃƒO: Get-ScapeEXTInode, nÃ£o Set-
         $inode = Get-ScapeEXTInode -Buffer $Buffer -Offset $i
         if ($inode -and $inode.IsDeleted) {
             $recovered.Add($inode); $count++
@@ -125,7 +124,7 @@ function Get-ScapeEXTMeta {
     )
 
 
-    # CORREÃ‡ÃƒO: Get-ScapeEXTInode
+    # CORREÇÃO: Get-ScapeEXTInode
     $inode = Get-ScapeEXTInode -Buffer $Buffer -Offset $Offset
     if ($inode) {
         $inode | Add-Member -NotePropertyName "VolumeSerial" -NotePropertyValue $VolumeSerial -Force
@@ -137,6 +136,10 @@ function Get-ScapeEXTMeta {
     }
     return $null
 }
+
 Export-ModuleMember -Function 'Initialize-ScapeEXTParser',
+'Get-ScapeEXTInode',
+'Resolve-ScapeEXTIndirectBlock',
+'Restore-ScapeEXTDeletedInode',
 'Get-ScapeEXTJournal',
-'Restore-ScapeEXTDeletedInode'
+'Get-ScapeEXTMeta'

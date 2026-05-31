@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis | Module: Scape.Analysis.Parser.Core
     Architecture: Deterministic Metadata Orchestrator (Plan A)
@@ -53,3 +53,5 @@ function Invoke-ScapeTargetedParsing {
         }
     }
 }
+
+Export-ModuleMember -Function 'Invoke-ScapeTargetedParsing'

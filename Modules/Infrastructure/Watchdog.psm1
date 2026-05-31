@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Watchdog
     Description: Out-of-band execution integrity monitor (Runspace).
@@ -12,11 +12,11 @@ function Initialize-ScapeWatchdog {
     [CmdletBinding()]
     param()
 
-    # --- 1. CLÃUSULA DE GUARDA (SINGLETON) ---
+    # --- 1. CLÁUSULA DE GUARDA (SINGLETON) ---
     if ($Script:WatchdogRunspace) { return $true }
 
     try {
-        # --- 2. CONFIGURAÃ‡ÃƒO E PARÃ‚METROS (SAFE 5.1) ---
+        # --- 2. CONFIGURAÇÃO E PARÂMETROS (SAFE 5.1) ---
 
         # Fallback para Intervalo
         $intervalMs = Get-ScapeConstant -Path "system::Behavior::WATCHDOG_INTERVAL_MS" -Fallback 2000
@@ -26,7 +26,7 @@ function Initialize-ScapeWatchdog {
 
         $timeoutSec = Get-ScapeConstant -Path "system::Behavior::WATCHDOG_TIMEOUT_SEC" -Fallback 15
 
-        # Fallback para EventQueue (Tratamento explÃ­cito)
+        # Fallback para EventQueue (Tratamento explí­cito)
         $eventQueue = $null
         if (Get-Command Get-ScapeEventQueue -ErrorAction SilentlyContinue) {
             $eventQueue = Get-ScapeEventQueue
@@ -44,13 +44,13 @@ function Initialize-ScapeWatchdog {
         $Script:WatchdogRunspace.ThreadOptions = "ReuseThread"
         $Script:WatchdogRunspace.Open()
 
-        # InjeÃ§Ã£o de dependÃªncias no estado do Runspace
+        # Injeção de dependências no estado do Runspace
         $proxy = $Script:WatchdogRunspace.SessionStateProxy
         $proxy.SetVariable("ScapeHeartbeat", $Script:ScapeHeartbeat)
         $proxy.SetVariable("EventQueue", $eventQueue)
         $proxy.SetVariable("DeadlockMsgBase", $msgDeadlock)
 
-        # --- 4. SCRIPTBLOCK DO SENTINELA (LÃ“GICA AUTÃ”NOMA) ---
+        # --- 4. SCRIPTBLOCK DO SENTINELA (LÓGICA AUTÔNOMA) ---
         $sentinelBlock = {
             param($interval, $timeout, $queue)
 
@@ -69,21 +69,21 @@ function Initialize-ScapeWatchdog {
                         Payload   = @{ Context = "WATCHDOG"; Message = $errorMsg }
                     }
 
-                    # Disparo de emergÃªncia
+                    # Disparo de emergência
                     if ($queue) { $queue.Enqueue($crashFrame) }
                     break # Watchdog morre com o sistema
                 }
             }
         }
 
-        # --- 5. INVOCAÃ‡ÃƒO ASSÃNCRONA ---
+        # --- 5. INVOCAÇÃO ASSÍNCRONA ---
         $Script:WatchdogPowerShell = [powershell]::Create()
         $Script:WatchdogPowerShell.Runspace = $Script:WatchdogRunspace
 
         $null = $Script:WatchdogPowerShell.AddScript($sentinelBlock).AddArgument($intervalMs).AddArgument($timeoutSec).AddArgument($eventQueue)
         $null = $Script:WatchdogPowerShell.BeginInvoke()
 
-        # --- 6. NOTIFICAÃ‡ÃƒO DE ATIVAÃ‡ÃƒO ---
+        # --- 6. NOTIFICAÇÃO DE ATIVAÇÃO ---
         Publish-ScapeEvent -Type "SYS_CORE" -Severity "LOG_INFO" -Payload @{
             Action  = "LogLine"
             Key     = "CORE_KERNEL_SHIELD_ACTIVE"
@@ -93,7 +93,7 @@ function Initialize-ScapeWatchdog {
         return $true
     }
     catch {
-        # Em caso de falha crÃ­tica no Watchdog, o sistema nÃ£o deve subir sem proteÃ§Ã£o
+        # Em caso de falha crÃ­tica no Watchdog, o sistema não deve subir sem proteção
         if (Get-Command Publish-ScapeFault -ErrorAction SilentlyContinue) {
             Publish-ScapeFault -ErrorRecord $_ -Context "Watchdog_Init"
         }

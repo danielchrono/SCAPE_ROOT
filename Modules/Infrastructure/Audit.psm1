@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Audit
     Description: Immutable forensic ledger for extracted artifacts chain-of-custody with hash chaining.
@@ -24,13 +24,13 @@ function Initialize-ScapeAudit {
     if (-not $PSCmdlet.ShouldProcess("Audit Module", "Initialize Forensic Ledger")) { return $false }
 
     try {
-        # --- 2. CONFIGURAÃƒâ€¡ÃƒÆ’O DECLARATIVA ---
+        # --- 2. CONFIGURAÇÃO DECLARATIVA ---
         $Script:C = @{
             Audit  = Get-ScapeConstant -Path "infrastructure::Audit" -Fallback @{}
             Limits = Get-ScapeConstant -Path "system::LIMITS" -Fallback @{}
         }
 
-        # --- 3. LÃƒâ€œGICA DE GÃƒÅ NESIS ---
+        # --- 3. LÓGICA DE GÊNESIS ---
         $genesis = $Script:C.Audit["GENESIS_BLOCK"]
         if ($null -eq $genesis) { $genesis = "SCAPE_AUDIT_GENESIS_v1.0" }
 
@@ -104,7 +104,7 @@ function Initialize-ScapeAudit {
             Register-ScapeEventListener -EventMatch "*" -Action $script:AuditAction
         }
 
-        # --- 7. FINALIZAÃƒâ€¡ÃƒÆ’O ---
+        # --- 7. FINALIZAÇÃO ---
         $Script:Initialized = $true
 
         Publish-ScapeEvent -Type "AUDIT_INITIALIZED" -Severity "LOG_INFO" -Payload @{
@@ -363,4 +363,6 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Audit' -Handler {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeAudit',
-'Register-ScapeExtraction'
+'Register-ScapeExtraction',
+'New-ScapeAuditRecord',
+'Export-ScapeAuditLedger'

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Theme
     Module: Scape.Presentation.Theme
@@ -18,15 +18,15 @@ function Initialize-ScapeTheme {
     [CmdletBinding()]
     param()
 
-    # 1. Carregamento Seguro (PrevenÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o contra "Cannot index into a null array")
+    # 1. Carregamento Seguro (Prevenção contra "Cannot index into a null array")
     $Script:ThemeCache = Get-ScapeConstant -Path "theme" -Fallback @{}
 
-    # 2. DetecÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de Terminal
+    # 2. Detecção de Terminal
     if ($env:WT_SESSION -or $env:TERM_PROGRAM -eq "vscode" -or $env:ConEmuPID -or $env:COLORTERM -eq "truecolor") {
         $Script:ColorMode = "TrueColor"
     }
 
-    # 3. PopulaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o do LiveFlagMap (Segura e Resiliente)
+    # 3. População do LiveFlagMap (Segura e Resiliente)
     $Script:LiveFlagMap = @{}
     if ($Script:ThemeCache.Contains("FlagMap")) {
         $baseMap = $Script:ThemeCache["FlagMap"]
@@ -40,20 +40,20 @@ function Initialize-ScapeTheme {
     $Script:ActivePaletteName = "Default"
     $Script:ActivePaletteMap = @{}
 
-    # 4. AplicaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de Persona e Modo de Cor do Estado (Se houver)
+    # 4. Aplicação de Persona e Modo de Cor do Estado (Se houver)
     # MVVM estrito: Theme apenas inicializa constantes/dados puros.
-    # A leitura de ColdState e aplicaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o (Set-ScapePersona/ColorMode) devem ser
-    # coordenadas pela camada superior, nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o na inicializaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o pura da Theme.
+    # A leitura de ColdState e aplicação (Set-ScapePersona/ColorMode) devem ser
+    # coordenadas pela camada superior, não na inicialização pura da Theme.
 }
 
-# --- GESTÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O DE ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂCONES (Resolvendo o $icons perdido) ---
+# --- GESTÃO DE ÍCONES (Resolvendo o $icons perdido) ---
 
 function Get-ScapeIcon {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)][string]$IconName)
     process {
-        # Resolve o nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel atual (0=Graphic, 1=Unicode, 2=ASCII)
-        # O Fallback aqui ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© o seu detector automÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tico se o ColdState falhar
+        # Resolve o nível atual (0=Graphic, 1=Unicode, 2=ASCII)
+        # O Fallback aqui é o seu detector automático se o ColdState falhar
         $level = Get-ScapeConstant -Path "IconLevel" -Fallback (Get-ScapeDefaultIconLevel)
 
         $iconArr = Get-ScapeConstant -Path "ui::Icons::$IconName"
@@ -64,7 +64,7 @@ function Get-ScapeIcon {
     }
 }
 
-# --- MATEMÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂTICA DE COR E CONVERSÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O ---
+# --- MATEMÁTICA DE COR E CONVERSÃO ---
 
 function Get-ScapeClamp {
     param([double]$Value, [double]$Min, [double]$Max)
@@ -111,7 +111,7 @@ function Convert-ScapeAnsiToReset {
     return $reset
 }
 
-# --- MANIPULAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢O DINÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡MICA ---
+# --- MANIPULAÇÃO DINÂMICA ---
 
 function Invoke-ScapeLightfy {
     param([int[]]$RGB, [double]$Factor = 0.2)
@@ -334,7 +334,7 @@ function Format-ScapeANSIMessage {
 }
 
 # =============================================================================
-# CENTRALIZADOR DE ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚ÂCONES (Data-Driven | Zero Hardcode | Usa Cache do Theme)
+# CENTRALIZADOR DE ÍCONES (Data-Driven | Zero Hardcode | Usa Cache do Theme)
 # =============================================================================
 function Get-ScapeResolvedIcon {
     [CmdletBinding()]
@@ -346,11 +346,11 @@ function Get-ScapeResolvedIcon {
     process {
         [void]$IncludeBackground
         [void]$IncludeBackground
-        # 1. Resolve nome semÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ntico via ui::SemanticMap (fonte da verdade)
+        # 1. Resolve nome semântico via ui::SemanticMap (fonte da verdade)
         $semanticMap = Get-ScapeConstant -Path "ui::SemanticMap"
         $iconName = if ($semanticMap -and $semanticMap.ContainsKey($RouteId)) { $semanticMap[$RouteId] } else { $RouteId }
 
-        # 2. Busca array de ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­cones na ui.psd1
+        # 2. Busca array de ícones na ui.psd1
         $iconArr = Get-ScapeConstant -Path "ui::Icons::$iconName"
         if ($null -eq $iconArr -or $iconArr -isnot [array] -or $iconArr.Count -eq 0) { return "" }
 
@@ -361,7 +361,6 @@ function Get-ScapeResolvedIcon {
         return [string]$iconArr[$level]
     }
 }
-
 
 function Format-ScapeANSIHighlight {
     param([string]$Text, [string]$Flag)
@@ -382,8 +381,23 @@ function Format-ScapeANSIHighlight {
     }
 }
 
-Export-ModuleMember -Function *,
-'Format-ScapeANSIHighlight',
-'Invoke-ScapeDaltonismMatrix',
+Export-ModuleMember -Function 'Initialize-ScapeTheme',
+'Get-ScapeIcon',
+'Get-ScapeClamp',
+'Get-ScapeLuminance',
+'Convert-ScapeHSLToRGB',
+'Convert-ScapeRGBToAnsi',
 'Convert-ScapeAnsiToReset',
-'Get-ScapeIcon'
+'Invoke-ScapeLightfy',
+'Invoke-ScapeDarkfy',
+'Get-ScapeSafeColor',
+'Invoke-ScapeProceduralTheme',
+'Invoke-ScapeDaltonismMatrix',
+'Set-ScapePersona',
+'Set-ScapeColorMode',
+'Resolve-ScapeRawRGB',
+'Resolve-ScapeThemeColor',
+'Get-ScapeAnsi16SequenceForFlag',
+'Format-ScapeANSIMessage',
+'Get-ScapeResolvedIcon',
+'Format-ScapeANSIHighlight'

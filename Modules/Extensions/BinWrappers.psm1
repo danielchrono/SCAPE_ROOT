@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.BinWrappers
     Architecture: Immutable execution of native forensic utilities with pure parsers.
@@ -68,4 +68,9 @@ function ConvertFrom-ScapeChkdskOutput { param([string]$Raw) return @{ BadSector
 function ConvertFrom-ScapeFsutilOutput { param([string]$Raw) return @{ Entries = ([regex]::Matches($Raw, "(?im)^\d+\s+")).Count; Status = "OK" } }
 function ConvertFrom-ScapeStordiagOutput { param([string]$Raw) return @{ ReportPath = if ($Raw -match "(?im)Report\s+saved\s+to:\s+(.+)$") { $matches[1].Trim() } else { $null }; Status = "OK" } }
 
-Export-ModuleMember -Function 'Invoke-ScapeBinWrapper'
+Export-ModuleMember -Function 'Invoke-ScapeBinWrapper',
+    'ConvertFrom-ScapeDiskpartOutput',
+    'ConvertFrom-ScapeWinFROutput',
+    'ConvertFrom-ScapeChkdskOutput',
+    'ConvertFrom-ScapeFsutilOutput',
+    'ConvertFrom-ScapeStordiagOutput'

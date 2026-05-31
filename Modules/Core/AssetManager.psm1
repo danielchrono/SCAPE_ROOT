@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.AssetManager
     Architecture: Zero-Recursion-Limit | Comment-Safe | Deterministic | Indexer-Safe
@@ -66,7 +66,7 @@ function Get-ScapeAsset {
     $state = Get-ScapeColdState
     if ($null -eq $state -or -not $state.ContainsKey("Assets")) { return $null }
 
-    # Busca Case-Insensitive manual para evitar quebras em transiÃ§Ãµes de RAM
+    # Busca Case-Insensitive manual para evitar quebras em transições de RAM
     $catKey = $state["Assets"].Keys | Where-Object { $_ -ieq $Category } | Select-Object -First 1
     if (-not $catKey) { return $null }
 
@@ -154,3 +154,8 @@ function Invoke-ScapeLazyLoadAsset {
 
     return (& $resolveByRegistry $AssetId $Category)
 }
+
+Export-ModuleMember -Function 'Invoke-ScapeLoadAsset',
+    'Get-ScapeAsset',
+    'Remove-ScapeAsset',
+    'Invoke-ScapeLazyLoadAsset'

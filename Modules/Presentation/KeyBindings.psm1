@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\KeyBindings
     Module: Scape.Presentation.KeyBindings

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\ViewModel
     Module: Scape.Presentation.ViewModel
@@ -112,7 +112,7 @@ function Update-ScapeMenuViewModel {
             $i18nNode = try { Get-ScapeI18NNode -Key $titleKey } catch { $null }
             $finalText = if ($i18nNode -and (-not [string]::IsNullOrWhiteSpace($i18nNode.Text))) { $i18nNode.Text } else { $titleKey }
             if ($null -ne $fmtArgs) {
-                try { $finalText = $finalText -f $fmtArgs } catch { Write-Verbose "Suppressed error:                 try { $finalText = $finalText -f $fmtArgs } catch {}";}
+                try { $finalText = $finalText -f $fmtArgs } catch { Write-Verbose "Suppressed error:                 try { $finalText = $finalText -f $fmtArgs } catch {}"; }
             }
 
             $iconLevel = if ($st -and $st.ContainsKey('IconLevel')) { [int]$st['IconLevel'] } else { 0 }
@@ -134,7 +134,7 @@ function Update-ScapeMenuViewModel {
                 }
                 else {
                     if ($finalText -match '\{0\}') {
-                        try { $finalText = $finalText -f $rawDyn } catch { Write-Verbose "Suppressed error:                         try { $finalText = $finalText -f $rawDyn } catch {}";}
+                        try { $finalText = $finalText -f $rawDyn } catch { Write-Verbose "Suppressed error:                         try { $finalText = $finalText -f $rawDyn } catch {}"; }
                     }
                     $formattedDynText = " [$rawDyn]"
                 }
@@ -268,7 +268,7 @@ function Send-ScapeVirtualInput {
 }
 
 Export-ModuleMember -Function 'Get-ScapeInputIntent',
-    'Get-ScapeHydratedOption',
+'Resolve-ScapeDynamicText',
 'Update-ScapeMenuViewModel',
 'Invoke-ScapeStateMutation',
 'Get-ScapeHydratedOption',

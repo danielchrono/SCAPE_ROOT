@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core
     Module: Scape.Core.Constants
@@ -44,7 +44,7 @@ function Get-ScapeConstant {
         }
         if ($null -eq $asset) { return $Fallback }
 
-        # NavegaÃ§Ã£o robusta em profundidade (Hashtables e PSObjects)
+        # Navegação robusta em profundidade (Hashtables e PSObjects)
         $current = $asset
         for ($i = 1; $i -lt $parts.Count; $i++) {
             $key = $parts[$i]
@@ -67,3 +67,7 @@ function Get-ScapeConstant {
 }
 
 Initialize-ScapeIconLevel
+
+Export-ModuleMember -Function 'Initialize-ScapeIconLevel',
+    'Get-ScapeDefaultIconLevel',
+    'Get-ScapeConstant'

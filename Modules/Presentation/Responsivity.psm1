@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Responsivity
     Module: Scape.Presentation.Responsivity
@@ -106,8 +106,9 @@ function Get-ScapeViewportRange {
         return @{ Start = $start; End = $end; Visible = $visible }
     }
 }
+
 Export-ModuleMember -Function 'Initialize-ScapeViewportState',
-    'Test-ScapeViewportChanged',
-    'Get-ScapeSafeCoordinate',
-    'Set-ScapeViewportLock',
-    'Get-ScapeViewportRange'
+'Test-ScapeViewportChanged',
+'Get-ScapeSafeCoordinate',
+'Set-ScapeViewportLock',
+'Get-ScapeViewportRange'

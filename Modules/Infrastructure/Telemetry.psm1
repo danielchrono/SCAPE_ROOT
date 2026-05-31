@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Telemetry
     Description: Real-time hardware health monitoring and WMI polling.
@@ -145,7 +145,7 @@ function Invoke-ScapeTelemetryWorkflow {
                 ActionNeeded = $actionNeeded
             }
 
-            # Atualiza o cache global (CorreÃ§Ã£o do bug de zeros contÃ­nuos apontado pelo auditor)
+            # Atualiza o cache global (Correção do bug de zeros contí­nuos apontado pelo auditor)
             $Script:Metrics.Thermal.Current = $temp
             $Script:Metrics.Thermal.Warning = $metrics.Thermal.Warning
             $Script:Metrics.Thermal.Critical = $metrics.Thermal.Critical
@@ -172,4 +172,9 @@ function Invoke-ScapeTelemetryWorkflow {
 }
 
 Export-ModuleMember -Function 'Initialize-ScapeTelemetry',
-'Get-ScapeTelemetrySnapshot'
+'Get-ScapeTelemetryCpu',
+'Get-ScapeTelemetryRam',
+'Get-ScapeTelemetryThermal',
+'Get-ScapeTelemetryIo',
+'Get-ScapeTelemetrySnapshot',
+'Invoke-ScapeTelemetryWorkflow'

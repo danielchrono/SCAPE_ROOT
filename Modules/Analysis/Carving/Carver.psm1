@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Carving.Carver
@@ -101,3 +101,5 @@ function Invoke-ScapeCarvedBatchFlush {
     Publish-ScapeEvent -Type "CARVED_ARTIFACT_BATCH" -Payload @{ VolumeSerial = $Batch[0].VolumeSerial; Count = $Batch.Count; Artifacts = $Batch; Timestamp = [DateTime]::UtcNow }
 }
 
+Export-ModuleMember -Function 'Invoke-ScapeRawCarving',
+    'Invoke-ScapeCarvedBatchFlush'

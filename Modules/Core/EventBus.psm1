@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core | Module: Scape.Core.EventBus
     Architecture: Thread-Safe, Lock-Free Asynchronous Event Bus.
@@ -46,7 +46,7 @@ function Publish-ScapeEvent {
         catch { Write-Verbose "Suppressed error:         catch { }"; }
     }
 
-    # IDENTIFICAÃ‡ÃƒO DE ORIGEM (CALLER ID REAL)
+    # IDENTIFICAÇÃO DE ORIGEM (CALLER ID REAL)
     $caller = if (-not [string]::IsNullOrWhiteSpace($Source)) { $Source } else { "SYSTEM_CORE" }
 
     $timeFormat = if ($sysConfig["TIME_FORMAT"]) { $sysConfig["TIME_FORMAT"] } else { "yyyy-MM-ddTHH:mm:ss.fffZ" }
@@ -157,11 +157,11 @@ function Invoke-ScapeIdlePump {
                     $isMatch = $true
                 }
                 elseif ($pattern -match '[\^\$\(\)\|\+]') {
-                    # Contains regex metacharacters â€” use -match
+                    # Contains regex metacharacters use -match
                     try { $isMatch = $eventFrame.Type -match $pattern } catch { $isMatch = $false }
                 }
                 elseif ($pattern -match '[\*\?]') {
-                    # Contains wildcard chars â€” use -like
+                    # Contains wildcard chars use -like
                     try { $isMatch = $eventFrame.Type -like $pattern } catch { $isMatch = $false }
                 }
                 else {
@@ -183,10 +183,11 @@ function Invoke-ScapeIdlePump {
         [System.Threading.Interlocked]::Exchange([ref]$Script:PumpActive, 0) | Out-Null
     }
 }
-Export-ModuleMember -Function 'Publish-ScapeError',
+
+Export-ModuleMember -Function 'Publish-ScapeEvent',
+'Publish-ScapeError',
 'Receive-ScapeEvent',
-'Publish-ScapeFault',
-'Invoke-ScapeIdlePump',
-'Register-ScapeEventListener',
 'Get-ScapeEventQueue',
-'Publish-ScapeEvent'
+'Publish-ScapeFault',
+'Register-ScapeEventListener',
+'Invoke-ScapeIdlePump'

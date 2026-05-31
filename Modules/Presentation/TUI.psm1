@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\TUI
     Module: Scape.Presentation.TUI
@@ -177,7 +177,16 @@ function Clear-ScapeLine {
     }
 }
 
-Export-ModuleMember -Function Get-ScapeConsoleDimension, Set-ScapeCursorPosition, Set-ScapeCursorVisibility, Read-ScapeKeyPress, Clear-ScapeInputBuffer, Clear-ScapeRegion, Clear-ScapeLine
 function Test-ScapeKeyAvailable { return [Console]::KeyAvailable }
 
 function Read-ScapeRawKey { return [Console]::ReadKey($true) }
+
+Export-ModuleMember -Function 'Get-ScapeConsoleDimension',
+    'Set-ScapeCursorPosition',
+    'Set-ScapeCursorVisibility',
+    'Read-ScapeKeyPress',
+    'Clear-ScapeInputBuffer',
+    'Clear-ScapeRegion',
+    'Clear-ScapeLine',
+    'Test-ScapeKeyAvailable',
+    'Read-ScapeRawKey'

@@ -1,7 +1,7 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Acquisition | Module: Scape.Acquisition.Bitwise
-    Architecture: Native P/Invoke com suporte a Long Paths (\\?\) e ResiliÃªncia em Lote.
+    Architecture: Native P/Invoke com suporte a Long Paths (\\?\) e Resiliência em Lote.
     Capacity: Otimizado para datasets de 20TB+
     Delegates to: Scape.Core.Native.Win32Bitwise (Single Source of Truth)
 #>
@@ -47,7 +47,7 @@ function Invoke-ScapeBulkBitwise {
     process {
         foreach ($path in $Paths) {
             try {
-                # NormalizaÃ§Ã£o para Long Paths (\\?\)
+                # Normalização para Long Paths (\\?\)
                 $normalizedPath = if ($path.StartsWith("\\")) { $path } else { "\\?\$path" }
 
                 $currentAttr = [Scape.Core.Native.Win32Bitwise]::GetFileAttributesW($normalizedPath)
@@ -82,4 +82,5 @@ function Invoke-ScapeBulkBitwise {
     }
 }
 
-Export-ModuleMember -Function 'Invoke-ScapeBulkBitwise'
+Export-ModuleMember -Function 'Initialize-ScapeBitwise',
+'Invoke-ScapeBulkBitwise'

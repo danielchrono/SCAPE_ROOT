@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.ZFS
@@ -72,4 +72,6 @@ function Get-ScapeZFSMeta {
 
     return $null
 }
-Export-ModuleMember -Function 'Initialize-ScapeZFSParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeZFSParser',
+    'Get-ScapeZFSMeta'

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.Utils
     Pure logic helpers: mathematics, data transformation, safe extraction, and I/O Wrapper.
@@ -276,13 +276,19 @@ function Test-ScapeNullOrWhiteSpace {
         return [string]::IsNullOrWhiteSpace($Text)
     }
 }
-Export-ModuleMember -Function 'ConvertTo-ScapeHex',
-'Test-ScapeNullOrWhiteSpace',
-'Convert-ScapeSeverityToInt',
-'Get-ScapeUtcTimestamp',
-'Format-ScapeTemplate',
-'Test-ScapePath',
-'Invoke-ScapeMathClamp',
-'Test-ScapeAlignment',
+
+Export-ModuleMember -Function 'Invoke-ScapeIO',
+'Get-ScapeProperty',
+'Format-ScapeByte',
+'ConvertTo-ScapeHex',
 'ConvertTo-ScapeHexString',
-'Join-ScapePath'
+'Convert-ScapeHexToByte',
+'Test-ScapeAlignment',
+'Invoke-ScapeMathClamp',
+'Join-ScapePath',
+'Test-ScapePath',
+'Invoke-ScapeI18NFormat',
+'Format-ScapeTemplate',
+'Get-ScapeUtcTimestamp',
+'Convert-ScapeSeverityToInt',
+'Test-ScapeNullOrWhiteSpace'

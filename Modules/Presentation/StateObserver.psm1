@@ -1,10 +1,10 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\StateObserver
     Module: Scape.Presentation.StateObserver
     Architecture: SRP Event Handlers | Debounced Rendering
     [FIX] Corrigidos unapproved verbs (Handle -> Invoke).
-    [FIX] Restaurada a legibilidade e verificaÃ§Ãµes defensivas profundas.
+    [FIX] Restaurada a legibilidade e verificações defensivas profundas.
 #>
 [CmdletBinding()] param()
 
@@ -109,7 +109,7 @@ function Invoke-ScapeRedrawRequestEvent {
     $p = $IncomingEventData.Payload
     if ($null -eq $p) { return }
 
-    # ExtraÃ§Ã£o defensiva do RouterState
+    # Extração defensiva do RouterState
     $routerState = if ($p -is [System.Collections.IDictionary]) { $p['State'] }
     elseif ($null -ne $p.PSObject -and $p.PSObject.Properties['State']) { $p.State }
     else { $null }
@@ -256,7 +256,7 @@ function Invoke-ScapeSelectionEvent {
         $task = Get-ScapePayloadField -Payload $payloadDef -Key 'Task'
 
         if (-not [string]::IsNullOrWhiteSpace($target)) {
-            # MVVM/SRP: delegate to ActionManager â€” single dispatch path
+            # MVVM/SRP: delegate to ActionManager single dispatch path
             Invoke-ScapeActionDispatcher -Target $target -Task $task -PayloadDef $payloadDef -MenuId $menuId -Cursor ([int]$cursorIdx) | Out-Null
 
         }
@@ -449,13 +449,13 @@ function Remove-ScapeStateObserver {
 }
 
 Export-ModuleMember -Function 'Invoke-ScapeTreeUpdateEvent',
-    'Invoke-ScapeActionScreenEvent',
-    'Invoke-ScapeRedrawRequestEvent',
-    'Invoke-ScapeTransientEvent',
-    'Get-ScapePayloadField',
-    'Invoke-ScapeSelectionEvent',
-    'Request-ScapeRedraw',
-    'Initialize-ScapeStateObserver',
-    'Convert-ScapeObservedEventData',
-    'Invoke-ScapeEventBatchProcessing',
-    'Remove-ScapeStateObserver'
+'Invoke-ScapeActionScreenEvent',
+'Invoke-ScapeRedrawRequestEvent',
+'Invoke-ScapeTransientEvent',
+'Get-ScapePayloadField',
+'Invoke-ScapeSelectionEvent',
+'Request-ScapeRedraw',
+'Initialize-ScapeStateObserver',
+'Convert-ScapeObservedEventData',
+'Invoke-ScapeEventBatchProcessing',
+'Remove-ScapeStateObserver'

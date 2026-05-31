@@ -1,4 +1,4 @@
-
+﻿
 $Script:DisplayList = New-Object System.Text.StringBuilder
 
 function Clear-ScapeDisplayList {
@@ -36,8 +36,8 @@ function Out-ScapeDisplayList {
 #>
 [CmdletBinding()]
 
-# ANSI strip pattern Ã¢â‚¬â€ definido uma vez, reusado em todo o mÃƒÂ³dulo (DRY)
-$Script:AnsiStrip = [regex]"(?:\x1B)\[[0-9;]*[a-zA-Z]"
+# ANSI strip pattern definido uma vez, reusado em todo o módulo (DRY)
+$Script:AnsiStrip = [regex](Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex")
 
 $Script:IconResolveCache = @{}
 $Script:MenuLineCache = @{}
@@ -347,7 +347,7 @@ function Write-ScapeMenuRow {
             $formattedDynStr = if ($formattedDynText) { $formattedDynText } else { "" }
 
             $cleanStrFull = "${strSel}$(" " * $padIcon)${strIcon}$(" " * $padTextSpace)${clippedText}$(" " * $padText)${formattedDynStr}"
-            $cleanStrPlain = $cleanStrFull -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
+            $cleanStrPlain = $cleanStrFull -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
             $visW = Get-ScapeVisualWidth $cleanStrPlain
 
             $usableClearWidth = [Math]::Max(1, $frameCoords.RightWallX - $coords.SelectorX - 1)
@@ -809,31 +809,20 @@ function Format-ScapeThemifiedMenuBuffer {
 }
 
 Export-ModuleMember -Function 'Clear-ScapeDisplayList',
-    'Add-ScapeDisplayList',
-    'Add-ScapeDisplayListAt',
-    'Out-ScapeDisplayList',
-    'Initialize-ScapeRenderer',
-    'Close-ScapeRenderer',
-    'Invoke-ScapeCachedIconResolve',
-    'Format-ScapeArtBlock',
-    'Write-ScapeScrollIndicator',
-    'Write-ScapeMenuLayout',
-    'Write-ScapeScrollIndicatorsView',
-    'Write-ScapeMenuRow',
-    'Write-ScapeMenuBuffer',
-    'Write-ScapeTransientView',
-    'Write-ScapeTreeView',
-    'Write-ScapeActionScreen',
-    'Format-ScapeGridLayout',
-    'Format-ScapeThemifiedMenuBuffer'
-
-
-
-
-
-
-
-
-
-
-
+'Add-ScapeDisplayList',
+'Add-ScapeDisplayListAt',
+'Out-ScapeDisplayList',
+'Initialize-ScapeRenderer',
+'Close-ScapeRenderer',
+'Invoke-ScapeCachedIconResolve',
+'Format-ScapeArtBlock',
+'Write-ScapeScrollIndicator',
+'Write-ScapeMenuLayout',
+'Write-ScapeScrollIndicatorsView',
+'Write-ScapeMenuRow',
+'Write-ScapeMenuBuffer',
+'Write-ScapeTransientView',
+'Write-ScapeTreeView',
+'Write-ScapeActionScreen',
+'Format-ScapeGridLayout',
+'Format-ScapeThemifiedMenuBuffer'

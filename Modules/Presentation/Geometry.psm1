@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Geometry
     Module: Scape.Presentation.Geometry
@@ -12,8 +12,8 @@ function Initialize-ScapeGeometry {
     [OutputType([void])]
     param()
     process {
-        # Geometry agora Ã© Math-only. Locks/Viewport estatais devem ser
-        # chamados pela orquestraÃ§Ã£o principal (ViewModel), nÃ£o aqui.
+        # Geometry agora é Math-only. Locks/Viewport estatais devem ser
+        # chamados pela orquestração principal (ViewModel), não aqui.
     }
 }
 
@@ -98,7 +98,7 @@ function Get-ScapeGridCoordinate {
             $plainIconLen = Get-ScapeVisualWidth -Text $ActiveIcon
         }
 
-        # Centro do Ã­cone no espaÃ§o de 5 colunas
+        # Centro do ícone no espaço de 5 colunas
         $iconPad = [Math]::Max(0, [Math]::Floor(($iconColWidth - $plainIconLen) / 2))
         $iconX = $iconColStart + $iconPad
 
@@ -132,7 +132,7 @@ function Invoke-ScapeStringClip {
         [switch]$CenterClip
     )
     process {
-        $plain = $Text -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
+        $plain = $Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
         $len = $plain.Length
 
         if ($len -le $MaxWidth) { return $Text }
@@ -149,7 +149,7 @@ function Invoke-ScapeStringClip {
     }
 }
 
-# [RESPONSIVITY] FunÃ§Ã£o helper para clamping de coordenadas
+# [RESPONSIVITY] Função helper para clamping de coordenadas
 function Get-ScapeClampedCoordinate {
     [CmdletBinding()]
     [OutputType([hashtable])]
@@ -173,7 +173,7 @@ function Get-ScapePlainTextLength {
     param([Parameter(Mandatory = $false)][AllowEmptyString()][string]$Text = '')
     process {
         if ([string]::IsNullOrWhiteSpace($Text)) { return 0 }
-        return ($Text -replace '\x1B\[[0-9;]*[a-zA-Z]', '').Length
+        return ($Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), '').Length
     }
 }
 
@@ -183,7 +183,7 @@ function Get-ScapeVisualWidth {
     param([Parameter(Mandatory = $true)][string]$Text)
     process {
         if ([string]::IsNullOrEmpty($Text)) { return 0 }
-        $clean = $Text -replace '\x1B\[[0-9;]*[a-zA-Z]', ''
+        $clean = $Text -replace (Get-ScapeConstant -Path "ui::ANSI::AnsiStripRegex"), ''
         if ([string]::IsNullOrEmpty($clean)) { return 0 }
 
         $len = $clean.Length
@@ -228,6 +228,13 @@ function Get-ScapeBannerVariant {
     }
 }
 
-Export-ModuleMember -Function 'Get-ScapeFrameCoordinate',
+Export-ModuleMember -Function 'Initialize-ScapeGeometry',
+'Get-ScapeMenuLayout',
+'Get-ScapeFrameCoordinate',
+'Get-ScapeGridCoordinate',
+'Invoke-ScapeStringClip',
 'Get-ScapeClampedCoordinate',
-'Get-ScapeGridCoordinate'
+'Get-ScapePlainTextLength',
+'Get-ScapeVisualWidth',
+'Get-ScapeJustifiedPadding',
+'Get-ScapeBannerVariant'

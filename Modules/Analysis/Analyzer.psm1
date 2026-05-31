@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Analyzer
@@ -25,7 +25,7 @@ function Start-ScapeAnalysisStream {
 
         if (-not $Script:Initialized) { Initialize-ScapeAnalyzer }
 
-        # â”€â”€ TreeView Hook: Notifica inÃ­cio do parsing por setor â”€â”€
+        # TreeView Hook: Notifica iní­cio do parsing por setor
         if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
             Publish-ScapeTreeUpdate -TreeId 'Analysis_Stream' -TitleKey 'ANALYSIS_FS_PARSED' -Nodes @(
                 @{ Path = "$VolumeSerial/Stream/Offset_$PhysicalOffset"; Icon = "Processing"; Status = 'Loading' }
@@ -39,7 +39,7 @@ function Start-ScapeAnalysisStream {
                 $result = Invoke-ScapeFSParser -FSType $fsType -Buffer $SectorBuffer -Offset $PhysicalOffset -VolumeSerial $VolumeSerial
 
                 if ($null -ne $result) {
-                    # â”€â”€ TreeView Hook: Atualiza status para Ready quando FS Ã© parseado â”€â”€
+                    # TreeView Hook: Atualiza status para Ready quando FS é parseado
                     if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
                         Publish-ScapeTreeUpdate -TreeId 'Analysis_Stream' -TitleKey 'ANALYSIS_FS_PARSED' -Nodes @(
                             @{ Path = "$VolumeSerial/FS/$fsType/Offset_$PhysicalOffset"; Icon = "Database"; Status = 'Ready' }
@@ -58,7 +58,7 @@ function Start-ScapeAnalysisStream {
 
         $result = Invoke-ScapeRawCarving -Buffer $SectorBuffer -PhysicalOffset $PhysicalOffset -VolumeSerial $VolumeSerial -EnableBackpressure:$enableBP
 
-        # â”€â”€ TreeView Hook: Notifica artefatos recuperados via carving â”€â”€
+        # TreeView Hook: Notifica artefatos recuperados via carving
         if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue -and $result.Carved -gt 0) {
             Publish-ScapeTreeUpdate -TreeId 'Analysis_Carving' -TitleKey 'CARVE_RECORD_ADDED' -Nodes @(
                 @{ Path = "$VolumeSerial/Carved/Artifacts_$($result.Carved)"; Icon = "FileArchive"; Status = 'Ready' }
@@ -97,7 +97,7 @@ function Invoke-ScapeBatchAnalysis {
             $results.Add(@{ Index = $i; Offset = $offset; Result = $result })
 
             if ($i % $progressInterval -eq 0) {
-                # MVVM estrito: Presentation nÃ£o deve buscar ProgressStyle em ColdState/estado global.
+                # MVVM estrito: Presentation não deve buscar ProgressStyle em ColdState/estado global.
                 # Aqui derivamos ProgressStyle como read-only e injetamos no Payload.
                 $progressStyle = $null
                 try { $progressStyle = (Get-ScapeColdState)['ProgressStyle'] } catch { Write-Verbose "Suppressed error:                 try { $progressStyle = (Get-ScapeColdState)['ProgressStyle'] } catch {}"; }
@@ -110,7 +110,7 @@ function Invoke-ScapeBatchAnalysis {
                     ProgressStyle = $(if ($null -ne $progressStyle -and -not [string]::IsNullOrWhiteSpace($progressStyle)) { [string]$progressStyle } else { 'Default' })
                 }
                 if (Get-Command Invoke-ScapeIdlePump -ErrorAction SilentlyContinue) { Invoke-ScapeIdlePump | Out-Null }
-                # â”€â”€ TreeView Hook: Atualiza progresso em lote â”€â”€
+                # TreeView Hook: Atualiza progresso em lote 
                 if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
                     Publish-ScapeTreeUpdate -TreeId 'Analysis_Batch' -TitleKey 'PIPE_BATCH_START' -Nodes @(
                         @{ Path = "$VolumeSerial/Batch/Progress_$i/$($SectorBatch.Count)"; Icon = "Processing"; Status = 'Loading' }
@@ -119,7 +119,7 @@ function Invoke-ScapeBatchAnalysis {
             }
         }
 
-        # â”€â”€ TreeView Hook: Finaliza batch â”€â”€
+        # TreeView Hook: Finaliza batch 
         if (Get-Command Publish-ScapeTreeUpdate -ErrorAction SilentlyContinue) {
             Publish-ScapeTreeUpdate -TreeId 'Analysis_Batch' -TitleKey 'PIPE_BATCH_COMPLETE' -Nodes @(
                 @{ Path = "$VolumeSerial/Batch/Complete"; Icon = "Success"; Status = 'Ready' }
@@ -130,4 +130,5 @@ function Invoke-ScapeBatchAnalysis {
     }
 }
 
-Export-ModuleMember -Function 'Invoke-ScapeBatchAnalysis'
+Export-ModuleMember -Function 'Start-ScapeAnalysisStream',
+'Invoke-ScapeBatchAnalysis'

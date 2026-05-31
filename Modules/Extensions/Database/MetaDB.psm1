@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Extensions
     Module: Scape.Extensions.Database.MetaDB
@@ -30,7 +30,7 @@ function Write-ScapeShadowRecord {
     }
     catch {
         if (Get-Command Publish-ScapeFault -ErrorAction SilentlyContinue) { Publish-ScapeFault -ErrorRecord $_ -Context "MetaDB_Write" }
-        throw $_ # Repassa a exceÃ§Ã£o para o Core.psm1 acionar o Rollback da TransaÃ§Ã£o
+        throw $_ # Repassa a exceção para o Core.psm1 acionar o Rollback da Transação
     }
     finally {
         if ($null -ne $cmd) { $cmd.Dispose() }

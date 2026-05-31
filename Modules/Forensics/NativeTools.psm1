@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Forensics | Module: Scape.Forensics.NativeTools
     Architecture: Specialized Native Forensics Handler
@@ -190,4 +190,3 @@ Register-ScapeActionHandler -Target 'Scape.Forensics.Native.FileHash' -Handler {
 
 # Registration-only module: handlers are registered via Register-ScapeActionHandler at load time.
 # No public functions to export directly.
-Export-ModuleMember -Function @()

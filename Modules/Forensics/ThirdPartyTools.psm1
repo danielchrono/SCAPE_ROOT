@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Forensics | Module: Scape.Forensics.ThirdPartyTools
     Architecture: Specialized Third-Party Forensics Handler

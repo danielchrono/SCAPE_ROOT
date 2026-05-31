@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.JFS
@@ -63,4 +63,6 @@ function Get-ScapeJFSMeta {
 
     return $result
 }
-Export-ModuleMember -Function 'Initialize-ScapeJFSParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeJFSParser',
+    'Get-ScapeJFSMeta'

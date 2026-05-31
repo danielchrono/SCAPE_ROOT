@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.BTRFS
@@ -31,14 +31,14 @@ function Get-ScapeBTRFSMeta {
 
 
 
-    # 1. ValidaÃ§Ã£o de Offset do Superblock
+    # 1. Validação de Offset do Superblock
     $sbOffset = (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_OFFSET
     if ($Offset -ne $sbOffset) { return $null }
 
-    # 2. Safety Check: Tamanho mÃ­nimo do Buffer
+    # 2. Safety Check: Tamanho mínimo do Buffer
     if ($Buffer.Length -lt ($sbOffset + 0x100)) { return $null }
 
-    # 3. ExtraÃ§Ã£o e ValidaÃ§Ã£o da Assinatura (Magic Number)
+    # 3. Extração e Validação da Assinatura (Magic Number)
     $magic = [System.Text.Encoding]::ASCII.GetString($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_MAGIC_OFF, 8)
     $expectedMagic = (Get-ScapeConstant -Path "storage::FS").BTRFS.MAGIC_STRING # "_BHRfS_M"
 
@@ -64,7 +64,7 @@ function Get-ScapeBTRFSMeta {
     $chunkRootGen = [System.BitConverter]::ToUInt64($Buffer, $sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_CHUNKROOT_OFF)
     $rootLevel = $Buffer[$sbOffset + (Get-ScapeConstant -Path "storage::FS").BTRFS.SB_ROOTLEVEL_OFF]
 
-    # 5. ConstruÃ§Ã£o do Objeto de DiagnÃ³stico
+    # 5. Construção do Objeto de Diagnóstico
     $inode = [PSCustomObject]@{
         VolumeSerial   = $VolumeSerial
         FSType         = "FS_BTRFS"
@@ -88,7 +88,7 @@ function Get-ScapeBTRFSMeta {
         ParsedAtTime   = [DateTime]::UtcNow
     }
 
-    # 6. Telemetria de ExtraÃ§Ã£o
+    # 6. Telemetria de Extração
     Publish-ScapeEvent -Type "FS_RECORD_EXTRACTED" -Payload @{
         VolumeSerial = $VolumeSerial
         Record       = $inode
@@ -99,4 +99,6 @@ function Get-ScapeBTRFSMeta {
 
     return $inode
 }
-Export-ModuleMember -Function 'Initialize-ScapeBTRFSParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeBTRFSParser',
+    'Get-ScapeBTRFSMeta'

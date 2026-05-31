@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Signature
@@ -59,3 +59,5 @@ function Find-ScapeSignatureAtOffset {
     }
     return $null
 }
+
+Export-ModuleMember -Function 'Find-ScapeSignatureAtOffset'

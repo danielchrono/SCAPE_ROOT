@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.State
     Description: Thread-safe Hybrid State Manager.
@@ -135,6 +135,6 @@ Export-ModuleMember -Function 'Initialize-ScapeState',
 'Update-ScapeColdState',
 'Get-ScapeColdState',
 'Get-ScapeHotState',
-'Test-ScapeDevMode',
 'Get-ScapeRoot',
+'Test-ScapeDevMode',
 'Get-ScapeManifest'

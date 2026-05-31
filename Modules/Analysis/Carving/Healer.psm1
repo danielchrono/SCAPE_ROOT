@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.Carving.Healer
@@ -65,7 +65,7 @@ function Repair-ScapeTruncatedFooter {
         return @{ Success = $false; Reason = "INVALID_FOOTER_DEF" }
     }
 
-    # CorreÃ§Ã£o do PSScriptAnalyzer: UtilizaÃ§Ã£o inteligente do ExpectedSize
+    # Correção do PSScriptAnalyzer: Utilização inteligente do ExpectedSize
     if ($ExpectedSize -gt 0 -and $Data.Length -gt $ExpectedSize) {
         $Data = $Data[0..($ExpectedSize - 1)]
     }
@@ -253,6 +253,11 @@ function Reset-ScapeHealerStat {
         $Script:Stats = @{ Repaired = 0; Stitched = 0; Validated = 0; Failed = 0 }
     }
 }
-Export-ModuleMember -Function 'Invoke-ScapeHealingPipeline',
-'Reset-ScapeHealerStat',
-'Get-ScapeHealerStat'
+
+Export-ModuleMember -Function 'Repair-ScapeCarvedHeader',
+'Repair-ScapeTruncatedFooter',
+'Repair-ScapeFragmentedRecord',
+'Test-ScapeCarvedIntegrity',
+'Invoke-ScapeHealingPipeline',
+'Get-ScapeHealerStat',
+'Reset-ScapeHealerStat'

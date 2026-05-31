@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Infrastructure | Module: Scape.Infrastructure.Compliance
     Description: Verifies integrity of system segments (PSD1, modules, binaries) using cryptographic hashes.
@@ -238,7 +238,6 @@ function Export-ScapeComplianceReport {
     }
 }
 
-Export-ModuleMember -Function 'Initialize-ScapeCompliance',
 'Get-ScapeSegmentHash',
 'Test-ScapeSegmentIntegrity',
 'Test-ScapeModuleIntegrity',
@@ -268,3 +267,10 @@ Register-ScapeActionHandler -Target 'Scape.Infrastructure.Compliance' -Handler {
         throw "Compliance module not available."
     }
 }
+
+Export-ModuleMember -Function 'Initialize-ScapeCompliance',
+    'Get-DefaultHashAlgorithm',
+    'Get-ScapeSegmentHash',
+    'Test-ScapeSegmentIntegrity',
+    'Test-ScapeModuleIntegrity',
+    'Export-ScapeComplianceReport'

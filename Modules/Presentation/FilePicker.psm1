@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation | Module: Scape.Presentation.FilePicker
     Architecture: Hybrid COM/TUI Input Dialog
@@ -74,3 +74,5 @@ Register-ScapeActionHandler -Target 'Scape.Presentation.FilePicker' -Handler {
     [void]$Target
     if (Get-Command Invoke-ScapeDirectoryPicker -ErrorAction SilentlyContinue) { Invoke-ScapeDirectoryPicker -Payload $PayloadDef }
 }
+
+Export-ModuleMember -Function 'Invoke-ScapeDirectoryPicker'

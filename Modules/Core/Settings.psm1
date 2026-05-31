@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Foundation | Module: Scape.Core.Settings
     Architecture: Dynamic State Mutator | JSON Portable Persistence | SSOT Compliant
@@ -6,7 +6,7 @@
     CRITICAL: $global:BootRoot REMOVED â†’ Uses Get-ScapeColdState["ROOT"] for lazy resolution.
 #>
 
-# Caminho resolvido de forma lazy via estado hidratado (nÃ£o via global)
+# Caminho resolvido de forma lazy via estado hidratado (não via global)
 $Script:SettingsPath = $null
 
 function Get-ScapeSettingsPath {
@@ -392,6 +392,10 @@ function Optimize-ScapeSettingsState {
     return $normalized
 }
 
-Export-ModuleMember -Function 'Sync-ScapeThemeHydration',
-'Optimize-ScapeSettingsState',
-'Invoke-LoadSettingsFromJson'
+Export-ModuleMember -Function 'Get-ScapeSettingsPath',
+'Get-ScapeSettingDefault',
+'Sync-ScapeThemeHydration',
+'Set-ScapeSettingMutation',
+'Reset-ScapeSettingToFactory',
+'Invoke-LoadSettingsFromJson',
+'Optimize-ScapeSettingsState'

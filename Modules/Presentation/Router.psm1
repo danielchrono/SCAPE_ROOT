@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Presentation\Router
     Module: Scape.Presentation.Router
@@ -229,6 +229,6 @@ function Start-ScapeRouter {
     }
 }
 
-Export-ModuleMember -Function 'Start-ScapeRouter',
-'Get-ScapeMenuData',
-'Invoke-ScapeRouterReducer'
+Export-ModuleMember -Function 'Get-ScapeMenuData',
+'Invoke-ScapeRouterReducer',
+'Start-ScapeRouter'

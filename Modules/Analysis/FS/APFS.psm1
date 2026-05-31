@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.APFS
@@ -67,4 +67,6 @@ function Get-ScapeAPFSMeta {
 
     return $result
 }
-Export-ModuleMember -Function 'Initialize-ScapeAPFSParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeAPFSParser',
+    'Get-ScapeAPFSMeta'

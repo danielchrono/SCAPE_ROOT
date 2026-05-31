@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.Network
     Architecture: SMB/CIFS Network Discovery and Mounting
@@ -296,5 +296,10 @@ function Invoke-ScapeNetworkAction {
 # ACTION REGISTRY BINDINGS (Pure & Decoupled)
 # ==============================================================================
 
-Export-ModuleMember -Function 'Find-ScapeNetworkNode', 'New-ScapeNetworkMount', 'Remove-ScapeNetworkMount', 'Clear-ScapeNetworkMount', 'Start-ScapeNetworkScan', 'Invoke-ScapeNetworkRadarAction', 'Invoke-ScapeNetworkAction',
-'Clear-ScapeNetworkMountssssss'
+Export-ModuleMember -Function 'Find-ScapeNetworkNode',
+'New-ScapeNetworkMount',
+'Remove-ScapeNetworkMount',
+'Clear-ScapeNetworkMount',
+'Start-ScapeNetworkScan',
+'Invoke-ScapeNetworkRadarAction',
+'Invoke-ScapeNetworkAction'

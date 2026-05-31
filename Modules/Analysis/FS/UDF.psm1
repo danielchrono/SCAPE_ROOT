@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.UDF
@@ -67,4 +67,6 @@ function Get-ScapeUDFMeta {
 
     return $result
 }
-Export-ModuleMember -Function 'Initialize-ScapeUDFParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeUDFParser',
+    'Get-ScapeUDFMeta'

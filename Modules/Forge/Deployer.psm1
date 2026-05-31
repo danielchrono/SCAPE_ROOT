@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Forge | Module: Scape.Forge.Deployer
 .DESCRIPTION
@@ -23,7 +23,7 @@ function Expand-MonolithToDirectory {
         throw "EXPAND_FATAL: Global memory matrix (SCAPE_MEM) is not initialized."
     }
 
-    # 1. Extrai MÃ³dulos respeitando a Topologia
+    # 1. Extrai Módulos respeitando a Topologia
     foreach ($domain in $Topology.Keys) {
         if ($domain -eq '__Meta__' -or $domain -eq 'Root') { continue }
         foreach ($mod in $Topology[$domain]) {
@@ -152,13 +152,13 @@ function Set-MainScript {
     [void]$sb.AppendLine('}')
     [void]$sb.AppendLine('')
 
-    # 1. INICIALIZAÃ‡ÃƒO EXPLÃCITA DO ESTADO
+    # 1. INICIALIZAÇÃO EXPLÍCITA DO ESTADO
     [void]$sb.AppendLine('Initialize-ScapeState | Out-Null')
     [void]$sb.AppendLine('if (Get-Command Initialize-ScapeInterop -ErrorAction SilentlyContinue) { Initialize-ScapeInterop | Out-Null }')
     [void]$sb.AppendLine('Update-ScapeColdState -NewProperties @{ ROOT = $Global:AppRoot; Registry = $registry; MANIFEST = $manifest; LoadedLayers = $loadedCore; WORKSPACE_ROOT = $workspaceRoot; WORKSPACE_LOGS = $workspaceLogs; WORKSPACE_TEMP = $workspaceTemp; WORKSPACE_DEPLOY = $workspaceDeploy } -Confirm:$false | Out-Null')
     [void]$sb.AppendLine('')
 
-    # 2. CARGA DE ASSETS (AGORA O STATE JÃ EXISTE)
+    # 2. CARGA DE ASSETS (AGORA O STATE JÁ EXISTE)
     [void]$sb.AppendLine('if (Get-Command Invoke-ScapeLoadAsset -ErrorAction SilentlyContinue) {')
     [void]$sb.AppendLine('    $state = Get-ScapeColdState')
     [void]$sb.AppendLine('    if (-not $state.ContainsKey("Assets")) { $state["Assets"] = @{} }')
@@ -270,7 +270,7 @@ function Invoke-ScapeDeployWorkflow {
         Update-ScapeColdState -NewProperties @{ DEV_MODE = $true } -Confirm:$false | Out-Null
     }
 
-    # Option 1 (Monolith): RAM-only, nÃ£o extrair/generar Main.ps1
+    # Option 1 (Monolith): RAM-only, não extrair/generar Main.ps1
     if ($Task -eq 'BUILD_AND_LAUNCH_MONOLITH') {
         Update-ScapeColdState -NewProperties @{ DEV_MODE = $false } -Confirm:$false | Out-Null
     }
@@ -282,7 +282,7 @@ function Invoke-ScapeDeployWorkflow {
     }
 
     # ========================================================
-    # CORREÃ‡ÃƒO: VariÃ¡vel $root declarada a partir do estado
+    # CORREÇÃO: Variável $root declarada a partir do estado
     # ========================================================
     $root = $state["ROOT"]
 
@@ -357,7 +357,7 @@ function Invoke-ScapeAtomicBuild {
         Expand-MonolithToDirectory -TargetDir $atomicDir -Topology $Topology -Registry $Registry
         $tempMain = Set-MainScript -TargetDir $atomicDir -Topology $Topology
 
-        # Garante diretÃ³rio de saÃ­da (IMPROVEMENT PRESERVED)
+        # Garante diretório de saída (IMPROVEMENT PRESERVED)
         if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
 
         switch ($Task) {
@@ -372,8 +372,14 @@ function Invoke-ScapeAtomicBuild {
         Publish-ScapeEvent -Type "BUILD_COMPLETED" -Severity "INFO" -Payload @{ Task = $Task; OutDir = $OutDir }
     }
     finally {
-        # LEGACY PRESERVED: Limpeza atÃ´mica
+        # LEGACY PRESERVED: Limpeza atômica
         Remove-Item $atomicDir -Recurse -Force -ErrorAction SilentlyContinue
         if ($PSCommandPath -match 'SCAPE_DEPLOY\.ps1$') { Remove-Item $PSCommandPath -Force -ErrorAction SilentlyContinue }
     }
 }
+
+Export-ModuleMember -Function 'Expand-MonolithToDirectory',
+'Set-MainScript',
+'New-ScapeHandoverArgument',
+'Invoke-ScapeDeployWorkflow',
+'Invoke-ScapeAtomicBuild'

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Extensions | Module: Scape.Extensions.CloudSync
     Architecture: Robocopy Cloud Engine integration and pre-flight space checks.
@@ -124,7 +124,6 @@ function Start-ScapeRobocopyConfiguration {
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $readyText -StatusFlag "Success"
 }
 
-Export-ModuleMember -Function 'Start-ScapeRobocopyConfiguration',
 'Get-ScapeSyncSpaceRequirement',
 'Invoke-ScapeRobocopy'
 
@@ -153,3 +152,7 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.CloudSync' -Handler {
     $txtDone = if (Get-Command Invoke-ScapeI18NFormat -ErrorAction SilentlyContinue) { Invoke-ScapeI18NFormat -Key "NET_SYNC_SUCCESS" -Args @("0") } else { "SYNC DONE" }
     Publish-ScapeActionProgress -Target $Target -Task $Task -StatusText $txtDone -StatusFlag "Success" -RunProgress 100 -StepProgress 100
 }
+
+Export-ModuleMember -Function 'Invoke-ScapeRobocopy',
+    'Get-ScapeSyncSpaceRequirement',
+    'Start-ScapeRobocopyConfiguration'

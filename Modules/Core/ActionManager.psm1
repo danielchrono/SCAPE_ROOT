@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Core\ActionManager
     Module: Scape.Core.ActionManager
@@ -209,7 +209,6 @@ function Resolve-ScapeActiveTarget {
 # ACTION DELEGATES (Pure Domain Functions)
 # ==============================================================================
 
-Export-ModuleMember -Function 'Register-ScapeActionHandler', 'Get-ScapeActionHandler', 'Invoke-ScapeActionDispatcher', 'Publish-ScapeActionProgress', 'Resolve-ScapeActiveTarget', 'Publish-ScapeTreeUpdate', 'Invoke-ScapeProgressWrapper'
 
 function Publish-ScapeTreeUpdate {
     [CmdletBinding()]
@@ -344,3 +343,11 @@ Register-ScapeActionHandler -Target 'Scape.Extensions.Network' -Handler {
     [void]$PayloadDef
     Invoke-ScapeNetworkAction -Task $Task -Target $Target
 }
+
+Export-ModuleMember -Function 'Register-ScapeActionHandler',
+    'Get-ScapeActionHandler',
+    'Publish-ScapeActionProgress',
+    'Invoke-ScapeActionDispatcher',
+    'Resolve-ScapeActiveTarget',
+    'Publish-ScapeTreeUpdate',
+    'Invoke-ScapeProgressWrapper'

@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Forge\Ignite
     Module: Scape.Forge.Ignite
@@ -87,4 +87,5 @@ foreach ($domain in $topo.Keys) {
     }
 }
 
-Export-ModuleMember -Function 'Read-ScapeAssetFile', 'Resolve-ScapeForgeModulePath'
+Export-ModuleMember -Function 'Read-ScapeAssetFile',
+    'Resolve-ScapeForgeModulePath'

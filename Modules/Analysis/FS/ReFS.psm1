@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Domain: Analysis
     Module: Scape.Analysis.FS.ReFS
@@ -69,4 +69,6 @@ function Get-ScapeREFSMeta {
 
     return $result
 }
-Export-ModuleMember -Function 'Initialize-ScapeREFSParser'
+
+Export-ModuleMember -Function 'Initialize-ScapeREFSParser',
+    'Get-ScapeREFSMeta'
